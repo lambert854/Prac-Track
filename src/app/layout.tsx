@@ -1,0 +1,33 @@
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Providers } from "@/components/providers";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+export const metadata: Metadata = {
+  title: "Prac-Track - Social Work Practicum Education Management",
+  description: "Comprehensive Practicum Education management system for social work programs",
+  icons: {
+    icon: '/favicon.svg',
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={`${inter.variable} font-sans antialiased`}>
+        <Providers>
+          {children}
+        </Providers>
+      </body>
+    </html>
+  );
+}
