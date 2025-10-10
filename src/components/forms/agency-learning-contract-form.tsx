@@ -16,27 +16,27 @@ interface AgencyLearningContract {
   agencyZip: string
   agencyTelephone: string
   agencyDirector: string
-  fieldInstructorName?: string
-  fieldInstructorFirstName?: string
-  fieldInstructorLastName?: string
-  fieldInstructorDegree?: string
-  fieldInstructorLicense?: string
-  fieldInstructorLicenseType?: string
-  fieldInstructorResume?: string
-  resourcesAvailable?: string
-  servicesProvided?: string
-  learningPlan?: string
-  learningOpportunities?: string
-  supervisionArrangement?: string
-  instructionMethods?: string
-  orientationArrangements?: string
-  specialRequirements?: string
-  handicapAccommodations?: string
-  handicapAccommodationsDetails?: string
-  promotionalMaterials?: string
-  comments?: string
-  completedByName?: string
-  completedByTitle?: string
+  fieldInstructorName?: string | null
+  fieldInstructorFirstName?: string | null
+  fieldInstructorLastName?: string | null
+  fieldInstructorDegree?: string | null
+  fieldInstructorLicense?: string | null
+  fieldInstructorLicenseType?: string | null
+  fieldInstructorResume?: string | null
+  resourcesAvailable?: string | null
+  servicesProvided?: string | null
+  learningPlan?: string | null
+  learningOpportunities?: string | null
+  supervisionArrangement?: string | null
+  instructionMethods?: string | null
+  orientationArrangements?: string | null
+  specialRequirements?: string | null
+  handicapAccommodations?: string | null
+  handicapAccommodationsDetails?: string | null
+  promotionalMaterials?: string | null
+  comments?: string | null
+  completedByName?: string | null
+  completedByTitle?: string | null
 }
 
 interface Site {
@@ -76,7 +76,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
     agencyTelephone: learningContract.agencyTelephone || '',
     agencyDirector: learningContract.agencyDirector || '',
     
-    // Field Instructor Information
+    // Practicum Instructor Information
     fieldInstructorName: learningContract.fieldInstructorName || '',
     fieldInstructorFirstName: learningContract.fieldInstructorFirstName || '',
     fieldInstructorLastName: learningContract.fieldInstructorLastName || '',
@@ -274,13 +274,13 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
         </div>
       </div>
 
-      {/* Field Instructor Information */}
+      {/* Practicum Instructor Information */}
       <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Field Instructor Information</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Practicum Instructor Information</h3>
         
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Name of The Agency Field Instructor
+            Name of The Agency Practicum Instructor
           </label>
           <select
             name="fieldInstructorName"
@@ -300,7 +300,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              First Name of Agency Field Instructor
+              First Name of Agency Practicum Instructor
             </label>
             <input
               type="text"
@@ -312,7 +312,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Last Name of Agency Field Instructor
+              Last Name of Agency Practicum Instructor
             </label>
             <input
               type="text"
@@ -327,7 +327,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Does the field instructor hold an MSW, BSW, or another relevant degree? *
+              Does the practicum instructor hold an MSW, BSW, or another relevant degree? *
             </label>
             <select
               name="fieldInstructorDegree"
@@ -344,7 +344,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Does the field instructor have an active social work license? *
+              Does the practicum instructor have an active social work license? *
             </label>
             <select
               name="fieldInstructorLicense"
@@ -384,7 +384,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
 
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Field Instructor Resume
+            Practicum Instructor Resume
           </label>
           <input
             type="file"
@@ -610,7 +610,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
           disabled={isSubmitting}
           className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? 'Submitting...' : 'Submit Learning Contract'}
+          {isSubmitting ? 'Submitting...' : 'Submit'}
         </button>
       </div>
     </form>
