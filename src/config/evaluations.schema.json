@@ -1,0 +1,593 @@
+{
+  "version": 1,
+  "titleStudent": {
+    "MIDTERM": "Mid-Term Self-Evaluation",
+    "FINAL": "Final Self-Evaluation"
+  },
+  "titleSupervisor": {
+    "MIDTERM": "Mid-Term Evaluation",
+    "FINAL": "Final Evaluation"
+  },
+  "pages": [
+    {
+      "id": "competency1",
+      "title": "Competency 1: Demonstrate Ethical and Professional Behavior",
+      "description": "Social workers demonstrate ethical and professional behavior through the application of ethical principles and critical thinking.",
+      "fields": [
+        {
+          "id": "c1_item1",
+          "type": "single-select",
+          "label": "Makes ethical decisions by applying the standards of the NASW Code of Ethics, relevant laws and regulations, models for ethical decision-making, ethical conduct of research, and additional codes of ethics as appropriate to context",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c1_item2",
+          "type": "single-select",
+          "label": "Uses reflection and self-regulation to manage personal values and maintain professionalism in practice situations",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c1_item3",
+          "type": "single-select",
+          "label": "Demonstrates professional demeanor in behavior; appearance; and oral, written, and electronic communication",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c1_item4",
+          "type": "single-select",
+          "label": "Uses technology ethically and appropriately to facilitate practice outcomes",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c1_item5",
+          "type": "single-select",
+          "label": "Uses supervision and consultation to guide professional judgment and behavior",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c1_comment",
+          "type": "textarea",
+          "label": "Comments for Competency 1 (optional)",
+          "required": false,
+          "maxLength": 2000,
+          "placeholder": "Provide additional context, examples, or areas for growth..."
+        }
+      ]
+    },
+    {
+      "id": "competency2",
+      "title": "Competency 2: Engage Diversity and Difference in Practice",
+      "description": "Social workers understand how diversity and difference characterize and shape the human experience.",
+      "fields": [
+        {
+          "id": "c2_item1",
+          "type": "single-select",
+          "label": "Applies and communicates understanding of the importance of diversity and difference in shaping life experiences in practice at the micro, mezzo, and macro levels",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c2_item2",
+          "type": "single-select",
+          "label": "Presents themselves as learners and engages clients and constituencies as experts of their own experiences",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c2_item3",
+          "type": "single-select",
+          "label": "Applies self-awareness and self-regulation to manage the influence of personal biases and values in working with diverse clients and constituencies",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c2_comment",
+          "type": "textarea",
+          "label": "Comments for Competency 2 (optional)",
+          "required": false,
+          "maxLength": 2000,
+          "placeholder": "Provide additional context, examples, or areas for growth..."
+        }
+      ]
+    },
+    {
+      "id": "competency3",
+      "title": "Competency 3: Advance Human Rights and Social, Economic, and Environmental Justice",
+      "description": "Social workers understand that every person regardless of position in society has fundamental human rights.",
+      "fields": [
+        {
+          "id": "c3_item1",
+          "type": "single-select",
+          "label": "Applies understanding of social, economic, and environmental justice to advocate for human rights at the individual and system levels",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c3_item2",
+          "type": "single-select",
+          "label": "Engages in practices that advance social, economic, and environmental justice",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c3_comment",
+          "type": "textarea",
+          "label": "Comments for Competency 3 (optional)",
+          "required": false,
+          "maxLength": 2000,
+          "placeholder": "Provide additional context, examples, or areas for growth..."
+        }
+      ]
+    },
+    {
+      "id": "competency4",
+      "title": "Competency 4: Engage in Practice-Informed Research and Research-Informed Practice",
+      "description": "Social workers understand quantitative and qualitative research methods and their respective roles in advancing practice.",
+      "fields": [
+        {
+          "id": "c4_item1",
+          "type": "single-select",
+          "label": "Uses practice experience and theory to inform scientific inquiry and research",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c4_item2",
+          "type": "single-select",
+          "label": "Applies critical thinking to engage in analysis of quantitative and qualitative research methods and research findings",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c4_item3",
+          "type": "single-select",
+          "label": "Uses and translates research evidence to inform and improve practice, policy, and service delivery",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c4_comment",
+          "type": "textarea",
+          "label": "Comments for Competency 4 (optional)",
+          "required": false,
+          "maxLength": 2000,
+          "placeholder": "Provide additional context, examples, or areas for growth..."
+        }
+      ]
+    },
+    {
+      "id": "competency5",
+      "title": "Competency 5: Engage in Policy Practice",
+      "description": "Social workers understand that human rights and social justice, as well as social welfare and services, are mediated by policy.",
+      "fields": [
+        {
+          "id": "c5_item1",
+          "type": "single-select",
+          "label": "Identifies social policy at the local, state, and federal level that impacts well-being, service delivery, and access to social services",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c5_item2",
+          "type": "single-select",
+          "label": "Assesses how social welfare and economic policies impact the delivery of and access to social services",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c5_item3",
+          "type": "single-select",
+          "label": "Applies critical thinking to analyze, formulate, and advocate for policies that advance human rights and social, economic, and environmental justice",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c5_comment",
+          "type": "textarea",
+          "label": "Comments for Competency 5 (optional)",
+          "required": false,
+          "maxLength": 2000,
+          "placeholder": "Provide additional context, examples, or areas for growth..."
+        }
+      ]
+    },
+    {
+      "id": "competency6",
+      "title": "Competency 6: Engage with Individuals, Families, Groups, Organizations, and Communities",
+      "description": "Social workers understand that engagement is an ongoing component of the dynamic and interactive process.",
+      "fields": [
+        {
+          "id": "c6_item1",
+          "type": "single-select",
+          "label": "Applies knowledge of human behavior and the social environment, person-in-environment, and other multidisciplinary theoretical frameworks to engage with clients and constituencies",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c6_item2",
+          "type": "single-select",
+          "label": "Uses empathy, reflection, and interpersonal skills to effectively engage diverse clients and constituencies",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c6_comment",
+          "type": "textarea",
+          "label": "Comments for Competency 6 (optional)",
+          "required": false,
+          "maxLength": 2000,
+          "placeholder": "Provide additional context, examples, or areas for growth..."
+        }
+      ]
+    },
+    {
+      "id": "competency7",
+      "title": "Competency 7: Assess Individuals, Families, Groups, Organizations, and Communities",
+      "description": "Social workers understand that assessment is an ongoing component of the dynamic and interactive process.",
+      "fields": [
+        {
+          "id": "c7_item1",
+          "type": "single-select",
+          "label": "Collects and organizes data, and applies critical thinking to interpret information from clients and constituencies",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c7_item2",
+          "type": "single-select",
+          "label": "Applies knowledge of human behavior and the social environment, person-in-environment, and other multidisciplinary theoretical frameworks in the analysis of assessment data from clients and constituencies",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c7_item3",
+          "type": "single-select",
+          "label": "Develops mutually agreed-on intervention goals and objectives based on the critical assessment of strengths, needs, and challenges within clients and constituencies",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c7_item4",
+          "type": "single-select",
+          "label": "Selects appropriate intervention strategies based on the assessment, research knowledge, and values and preferences of clients and constituencies",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c7_comment",
+          "type": "textarea",
+          "label": "Comments for Competency 7 (optional)",
+          "required": false,
+          "maxLength": 2000,
+          "placeholder": "Provide additional context, examples, or areas for growth..."
+        }
+      ]
+    },
+    {
+      "id": "competency8",
+      "title": "Competency 8: Intervene with Individuals, Families, Groups, Organizations, and Communities",
+      "description": "Social workers understand that intervention is an ongoing component of the dynamic and interactive process.",
+      "fields": [
+        {
+          "id": "c8_item1",
+          "type": "single-select",
+          "label": "Critically chooses and implements interventions to achieve practice goals and enhance capacities of clients and constituencies",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c8_item2",
+          "type": "single-select",
+          "label": "Applies knowledge of human behavior and the social environment, person-in-environment, and other multidisciplinary theoretical frameworks in interventions with clients and constituencies",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c8_item3",
+          "type": "single-select",
+          "label": "Uses inter-professional collaboration as appropriate to achieve beneficial practice outcomes",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c8_item4",
+          "type": "single-select",
+          "label": "Negotiates, mediates, and advocates with and on behalf of diverse clients and constituencies",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c8_item5",
+          "type": "single-select",
+          "label": "Facilitates effective transitions and endings that advance mutually agreed-on goals",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c8_comment",
+          "type": "textarea",
+          "label": "Comments for Competency 8 (optional)",
+          "required": false,
+          "maxLength": 2000,
+          "placeholder": "Provide additional context, examples, or areas for growth..."
+        }
+      ]
+    },
+    {
+      "id": "competency9",
+      "title": "Competency 9: Evaluate Practice with Individuals, Families, Groups, Organizations, and Communities",
+      "description": "Social workers understand that evaluation is an ongoing component of the dynamic and interactive process.",
+      "fields": [
+        {
+          "id": "c9_item1",
+          "type": "single-select",
+          "label": "Selects and uses appropriate methods for evaluation of outcomes",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c9_item2",
+          "type": "single-select",
+          "label": "Applies knowledge of human behavior and the social environment, person-in-environment, and other multidisciplinary theoretical frameworks in the evaluation of outcomes",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c9_item3",
+          "type": "single-select",
+          "label": "Critically analyzes, monitors, and evaluates intervention and program processes and outcomes",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c9_item4",
+          "type": "single-select",
+          "label": "Applies evaluation findings to improve practice effectiveness at the micro, mezzo, and macro levels",
+          "required": true,
+          "options": [
+            { "value": 0, "label": "Has not met expectations" },
+            { "value": 1, "label": "Met expectations" },
+            { "value": 2, "label": "Functioning above expectations" },
+            { "value": 3, "label": "Excelled" },
+            { "value": 9, "label": "Not Applicable" }
+          ]
+        },
+        {
+          "id": "c9_comment",
+          "type": "textarea",
+          "label": "Comments for Competency 9 (optional)",
+          "required": false,
+          "maxLength": 2000,
+          "placeholder": "Provide additional context, examples, or areas for growth..."
+        }
+      ]
+    },
+    {
+      "id": "overall",
+      "title": "Overall Assessment",
+      "description": "Provide an overall assessment and summary of the student's performance during this evaluation period.",
+      "fields": [
+        {
+          "id": "strengths",
+          "type": "textarea",
+          "label": "Student's Key Strengths",
+          "required": true,
+          "maxLength": 3000,
+          "placeholder": "Describe the student's main strengths and positive qualities observed during this period..."
+        },
+        {
+          "id": "areas_for_growth",
+          "type": "textarea",
+          "label": "Areas for Growth and Development",
+          "required": true,
+          "maxLength": 3000,
+          "placeholder": "Identify areas where the student can continue to develop and grow..."
+        },
+        {
+          "id": "overall_rating",
+          "type": "single-select",
+          "label": "Overall Performance Rating",
+          "required": true,
+          "options": [
+            { "value": 1, "label": "Pass" },
+            { "value": 2, "label": "Pass with reservations" },
+            { "value": 3, "label": "Fail" }
+          ]
+        },
+        {
+          "id": "overall_comments",
+          "type": "textarea",
+          "label": "Additional Comments and Recommendations",
+          "required": false,
+          "maxLength": 3000,
+          "placeholder": "Provide any additional comments, recommendations, or context..."
+        }
+      ]
+    }
+  ]
+}
