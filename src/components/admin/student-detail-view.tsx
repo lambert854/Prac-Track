@@ -18,6 +18,7 @@ import {
   EyeIcon
 } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { StudentEvaluationsSection } from './student-evaluations-section'
 
 interface StudentDetailViewProps {
   studentId: string
@@ -101,7 +102,7 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
     queryFn: async () => {
       const response = await fetch(`/api/admin/students/${studentId}`)
       if (!response.ok) throw new Error('Failed to fetch student')
-      return response.json() as Student
+      return await response.json() as Student
     },
   })
 
@@ -131,7 +132,7 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] })
-      router.push('/faculty')
+      router.push('/faculty/students')
     },
   })
 
@@ -149,7 +150,7 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
     const statusClasses = {
       DRAFT: 'bg-gray-100 text-gray-800',
       PENDING: 'bg-yellow-100 text-yellow-800',
-      APPROVED_PENDING_CHECKLIST: 'bg-green-100 text-green-800',
+      APPROVED_PENDING_CHECKLIST: 'bg-blue-100 text-blue-800',
       ACTIVE: 'bg-green-100 text-green-800',
       COMPLETE: 'bg-purple-100 text-purple-800',
     }
@@ -187,10 +188,10 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
           <h3 className="text-lg font-medium text-gray-900 mb-2">Student Not Found</h3>
           <p className="text-gray-600 mb-4">The requested student could not be found.</p>
           <button
-            onClick={() => router.push('/faculty')}
+            onClick={() => router.push('/faculty/students')}
             className="btn-primary"
           >
-            Back to Dashboard
+            Back to Students
           </button>
         </div>
       </div>
@@ -199,7 +200,7 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
 
   const totalHours = student.studentPlacements.reduce((total, placement) => {
     return total + placement.timesheetEntries.reduce((placementTotal, entry) => {
-      return placementTotal + (entry.status === 'APPROVED' ? entry.hours : 0)
+      return placementTotal + (entry.status === 'APPROVED' ? Number(entry.hours) : 0)
     }, 0)
   }, 0)
 
@@ -209,11 +210,11 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => router.push('/faculty')}
+            onClick={() => router.push('/faculty/students')}
             className="btn-outline flex items-center"
           >
             <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            Back to Students
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
@@ -369,6 +370,7 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
                       </div>
                       <div>
                         <p><strong>Required Hours:</strong> {placement.requiredHours || 'Not specified'}</p>
+                        <p><strong>Hours Completed:</strong> {placement.timesheetEntries.reduce((total, entry) => total + (entry.status === 'APPROVED' ? Number(entry.hours) : 0), 0)}</p>
                         {placement.supervisor && (
                           <p><strong>Supervisor:</strong> {placement.supervisor.firstName} {placement.supervisor.lastName}</p>
                         )}
@@ -414,21 +416,11 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
         {/* Summary Sidebar */}
         <div className="space-y-6">
           <div className="card">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Summary</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total Placements</span>
-                <span className="font-medium">{student.studentPlacements.length}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Hours Completed</span>
-                <span className="font-medium">{totalHours}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Faculty Assigned</span>
-                <span className="font-medium">{student.studentFacultyAssignments.length}</span>
-              </div>
-            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Evaluations</h3>
+            <StudentEvaluationsSection 
+              studentId={student.id} 
+              placements={student.studentPlacements}
+            />
           </div>
         </div>
       </div>
@@ -450,7 +442,7 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
               if (placement.cellPolicy) {
                 documents.push({
                   id: `cell-policy-${placement.id}`,
-                  name: 'Cell Phone Usage Policy',
+                  name: 'Fair Use Policies',
                   type: 'Document Upload',
                   uploadedAt: placement.approvedAt || placement.startDate,
                   documentPath: placement.cellPolicy,
