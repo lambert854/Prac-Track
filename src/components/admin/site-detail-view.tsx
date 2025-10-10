@@ -540,7 +540,7 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
             <div>
               <p className="text-sm font-medium text-gray-600">Pending Placements</p>
               <p className="text-2xl font-bold text-gray-900">
-                {site.placements?.filter(p => p.status === 'PENDING').length || 0}
+                {site.placements?.filter((p: { status: string }) => p.status === 'PENDING').length || 0}
               </p>
             </div>
           </div>
@@ -552,7 +552,7 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
             <div>
               <p className="text-sm font-medium text-gray-600">Completed Placements</p>
               <p className="text-2xl font-bold text-gray-900">
-                {site.placements?.filter(p => p.status === 'COMPLETE').length || 0}
+                {site.placements?.filter((p: { status: string }) => p.status === 'COMPLETE').length || 0}
               </p>
             </div>
           </div>
