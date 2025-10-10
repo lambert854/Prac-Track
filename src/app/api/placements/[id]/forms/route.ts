@@ -63,7 +63,7 @@ export async function GET(
         id: `cell-policy-${placementId}`,
         title: 'Cell Policy',
         documentPath: placement.cellPolicy,
-        uploadedAt: placement.approvedAt || placement.createdAt,
+        uploadedAt: placement.approvedAt || new Date(),
         type: 'UPLOADED_DOCUMENT',
         placement: {
           site: {
@@ -77,7 +77,7 @@ export async function GET(
         id: `learning-contract-${placementId}`,
         title: 'Learning Contract',
         documentPath: placement.learningContract,
-        uploadedAt: placement.approvedAt || placement.createdAt,
+        uploadedAt: placement.approvedAt || new Date(),
         type: 'UPLOADED_DOCUMENT',
         placement: {
           site: {
@@ -91,7 +91,7 @@ export async function GET(
         id: `checklist-${placementId}`,
         title: 'Placement Checklist',
         documentPath: placement.checklist,
-        uploadedAt: placement.approvedAt || placement.createdAt,
+        uploadedAt: placement.approvedAt || new Date(),
         type: 'UPLOADED_DOCUMENT',
         placement: {
           site: {
