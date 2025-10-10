@@ -25,7 +25,7 @@ export async function GET(
       const fileBuffer = await readFile(filePath)
       console.log('✅ File found, size:', fileBuffer.length)
       
-      return new NextResponse(fileBuffer, {
+      return new NextResponse(new Uint8Array(fileBuffer), {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `inline; filename="${fullPath.split('/').pop()}"`,
