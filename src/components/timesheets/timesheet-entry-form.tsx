@@ -57,7 +57,7 @@ export function TimesheetEntryForm({ placementId, date, entry, onClose }: Timesh
     defaultValues: {
       date: date || entry?.date || '',
       hours: entry?.hours || 0,
-      category: entry?.category || 'DIRECT',
+      category: (entry?.category as 'ADMIN' | 'DIRECT' | 'INDIRECT' | 'TRAINING') || 'DIRECT',
       notes: entry?.notes || '',
     },
   })
