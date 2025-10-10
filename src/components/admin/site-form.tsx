@@ -135,7 +135,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
   const startYear = watch('agreementStartYear')
 
   const createSiteMutation = useMutation({
-    mutationFn: async (data: SiteFormData) => {
+    mutationFn: async (data: any) => {
       const response = await fetch('/api/sites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -151,7 +151,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
   })
 
   const updateSiteMutation = useMutation({
-    mutationFn: async (data: SiteFormData) => {
+    mutationFn: async (data: any) => {
       const response = await fetch(`/api/sites/${site!.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
