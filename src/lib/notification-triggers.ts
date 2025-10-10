@@ -148,22 +148,6 @@ export class NotificationTriggers {
   }
 
   /**
-   * Send notification when a timesheet is submitted (to supervisor)
-   */
-  static async timesheetSubmitted(timesheetId: string, supervisorId: string, studentName: string, hours: number) {
-    return await emailService.sendNotification({
-      userId: supervisorId,
-      type: 'TIMESHEET_APPROVED', // Reusing existing type
-      title: 'Timesheet Submitted for Approval',
-      message: `${studentName} has submitted a timesheet with ${hours} hours for your review and approval.`,
-      relatedEntityId: timesheetId,
-      relatedEntityType: 'TIMESHEET',
-      priority: 'MEDIUM',
-      metadata: { studentName, hours, timesheetId }
-    })
-  }
-
-  /**
    * Send notification when a timesheet is approved by supervisor (to faculty)
    */
   static async timesheetSupervisorApproved(timesheetId: string, facultyId: string, studentName: string, supervisorName: string, hours: number) {
