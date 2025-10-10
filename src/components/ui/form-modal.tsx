@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode, useEffect, useRef } from 'react'
-import { useForm, UseFormReturn } from 'react-hook-form'
+import { useForm, UseFormReturn, FieldValues } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { z } from 'zod'
@@ -14,7 +14,7 @@ interface FormModalProps<TSchema extends z.ZodType> {
   schema: TSchema
   defaultValues?: Partial<z.infer<TSchema>>
   onSubmit: (data: z.infer<TSchema>) => Promise<void>
-  children: (form: UseFormReturn<z.infer<TSchema>>) => ReactNode
+  children: (form: UseFormReturn<any>) => ReactNode
   submitLabel?: string
   cancelLabel?: string
   isSubmitting?: boolean
