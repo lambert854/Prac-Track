@@ -335,7 +335,7 @@ export function FacultyTimesheets({ facultyId }: FacultyTimesheetsProps) {
                     <CheckCircleIcon className="h-5 w-5 text-green-600" />
                     <div>
                       <p className="text-sm font-medium text-green-900">
-                        Approved by {timesheet.supervisorApprovedBy.firstName} {timesheet.supervisorApprovedBy.lastName}
+                        Approved by {timesheet.supervisorApprovedBy?.firstName} {timesheet.supervisorApprovedBy?.lastName}
                       </p>
                       <p className="text-xs text-green-700">
                         {formatDate(timesheet.supervisorApprovedAt)}
