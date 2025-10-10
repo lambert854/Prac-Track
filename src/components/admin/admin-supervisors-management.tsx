@@ -452,19 +452,6 @@ Best regards,
                         )}
                       </p>
                     )}
-                    {supervisor.supervisorProfile.resume && (
-                      <p className="text-sm text-gray-700">
-                        <span className="font-medium">Resume:</span>{' '}
-                        <a 
-                          href={`/api/files/${encodeURIComponent(supervisor.supervisorProfile.resume)}`}
-                          className="text-blue-600 hover:underline"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          View Resume
-                        </a>
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
