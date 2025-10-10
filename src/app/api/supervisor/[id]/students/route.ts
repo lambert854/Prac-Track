@@ -57,7 +57,7 @@ export async function GET(
     } catch (testError) {
       console.error('Supervisor students API: Database connection test failed:', testError)
       return NextResponse.json(
-        { error: 'Database connection failed', details: testError.message },
+        { error: 'Database connection failed', details: testError instanceof Error ? testError.message : 'Unknown error' },
         { status: 500 }
       )
     }
