@@ -69,12 +69,14 @@ export async function GET(request: NextRequest) {
           }
         },
         studentFacultyAssignments: {
-          include: {
+          select: {
+            id: true,
             faculty: {
               select: {
                 id: true,
                 firstName: true,
                 lastName: true,
+                email: true,
                 facultyProfile: true
               }
             }

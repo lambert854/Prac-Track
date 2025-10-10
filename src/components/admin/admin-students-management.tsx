@@ -68,10 +68,12 @@ interface Student {
     }[]
   }[]
   studentFacultyAssignments?: {
+    id: string
     faculty: {
       id: string
       firstName: string
       lastName: string
+      email: string
       facultyProfile?: {
         honorific?: string
       }
