@@ -138,7 +138,7 @@ export async function GET(
     } catch (dbError) {
       console.error('Supervisor students API: Database error:', dbError)
       return NextResponse.json(
-        { error: 'Database query failed', details: dbError.message },
+        { error: 'Database query failed', details: dbError instanceof Error ? dbError.message : 'Unknown error' },
         { status: 500 }
       )
     }
