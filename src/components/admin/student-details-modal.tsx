@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { XMarkIcon, UserIcon, AcademicCapIcon, BuildingOfficeIcon, ClockIcon, DocumentTextIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ConfirmationModal } from './confirmation-modal'
+import { PlacementEvaluationsSection } from './placement-evaluations-section'
 
 interface Student {
   id: string
@@ -69,6 +70,162 @@ interface StudentDetailsModalProps {
   userRole?: 'ADMIN' | 'FACULTY' | 'SUPERVISOR' | 'STUDENT'
 }
 
+interface TimesheetWeekGroupingProps {
+  entries: any[]
+}
+
+// Helper component to group timesheet entries by week
+function TimesheetWeekGrouping({ entries }: TimesheetWeekGroupingProps) {
+  // Helper function to format date without timezone conversion
+  const formatDate = (dateString: string) => {
+    const datePart = dateString.split('T')[0] // Get YYYY-MM-DD part
+    const [year, month, day] = datePart.split('-')
+    return `${month}/${day}/${year}`
+  }
+
+  // Helper function to get week dates (exactly like timesheet week view)
+  const getWeekDates = (startDate: string) => {
+    const start = new Date(startDate + 'T00:00:00') // Force local timezone
+    const dates = []
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(start)
+      date.setDate(start.getDate() + i)
+      // Use local date formatting to avoid timezone issues
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const dateStr = `${year}-${month}-${day}`
+      dates.push(dateStr)
+    }
+    return dates
+  }
+
+  // Generate work weeks (exactly like timesheet week view)
+  const generateWorkWeeks = () => {
+    const weeks = []
+    const today = new Date()
+    const currentWeekStart = new Date(today)
+    currentWeekStart.setDate(today.getDate() - today.getDay()) // Go to Sunday
+    
+    // Generate 11 weeks: 8 weeks before current, current week, 2 weeks after
+    for (let i = -8; i <= 2; i++) {
+      const weekStart = new Date(currentWeekStart)
+      weekStart.setDate(currentWeekStart.getDate() + (i * 7))
+      
+      const weekEnd = new Date(weekStart)
+      weekEnd.setDate(weekStart.getDate() + 6) // Saturday
+      
+      const weekStartStr = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`
+      const weekEndStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`
+      
+      weeks.push({
+        weekStart: weekStartStr,
+        weekEnd: weekEndStr,
+        weekDates: getWeekDates(weekStartStr)
+      })
+    }
+    return weeks
+  }
+
+  // Group entries by week using the same logic as timesheet
+  const groupEntriesByWeek = (entries: any[]) => {
+    const workWeeks = generateWorkWeeks()
+    const weekGroups: { [key: string]: { entries: any[], weekStart: string, weekEnd: string } } = {}
+    
+    // For each work week, find entries that fall within that week
+    workWeeks.forEach(week => {
+      const weekEntries = entries.filter(entry => {
+        const entryDate = entry.date.split('T')[0] // Extract YYYY-MM-DD part
+        return week.weekDates.includes(entryDate)
+      })
+      
+      if (weekEntries.length > 0) {
+        weekGroups[week.weekStart] = {
+          entries: weekEntries,
+          weekStart: week.weekStart,
+          weekEnd: week.weekEnd
+        }
+      }
+    })
+    
+    return Object.values(weekGroups).sort((a, b) => 
+      new Date(a.weekStart).getTime() - new Date(b.weekStart).getTime()
+    )
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-100 text-green-800'
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'approved':
+        return 'bg-green-100 text-green-800'
+      case 'approved_pending_checklist':
+        return 'bg-green-100 text-green-800'
+      case 'draft':
+        return 'bg-gray-100 text-gray-800'
+      case 'complete':
+        return 'bg-purple-100 text-purple-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const weekGroups = groupEntriesByWeek(entries)
+
+  // Helper function to determine week status
+  const getWeekStatus = (entries: any[]) => {
+    const hasApprovedEntries = entries.some(entry => entry.status === 'APPROVED')
+    const hasPendingSupervisorEntries = entries.some(entry => entry.status === 'PENDING_SUPERVISOR')
+    const hasPendingFacultyEntries = entries.some(entry => entry.status === 'PENDING_FACULTY')
+    const allApproved = entries.every(entry => entry.status === 'APPROVED')
+    const allDraft = entries.every(entry => entry.status === 'DRAFT')
+
+    if (allApproved) {
+      return { status: 'Approved', color: 'bg-green-100 text-green-800' }
+    } else if (hasPendingFacultyEntries) {
+      return { status: 'Pending Faculty', color: 'bg-blue-100 text-blue-800' }
+    } else if (hasPendingSupervisorEntries) {
+      return { status: 'Pending Supervisor', color: 'bg-yellow-100 text-yellow-800' }
+    } else if (allDraft) {
+      return { status: 'Draft', color: 'bg-gray-100 text-gray-800' }
+    } else {
+      return { status: 'Mixed Status', color: 'bg-orange-100 text-orange-800' }
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {weekGroups.map((week) => {
+        const weekTotalHours = week.entries.reduce((sum, entry) => sum + (typeof entry.hours === 'number' ? entry.hours : parseFloat(entry.hours) || 0), 0)
+        const weekStatus = getWeekStatus(week.entries)
+        
+        return (
+          <div key={`${week.weekStart}-${week.weekEnd}`} className="border border-gray-200 rounded-lg bg-white">
+            {/* Week Summary */}
+            <div className="px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h5 className="text-sm font-medium text-gray-900">
+                    Week of {formatDate(week.weekStart)} - {formatDate(week.weekEnd)}
+                  </h5>
+                  <p className="text-xs text-gray-500">
+                    {weekTotalHours.toFixed(1)} hours • {week.entries.length} entries
+                  </p>
+                </div>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${weekStatus.color}`}>
+                  {weekStatus.status}
+                </span>
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function StudentDetailsModal({ student, onClose, userRole }: StudentDetailsModalProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'placements' | 'timesheets'>('overview')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -117,12 +274,33 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
         return 'bg-yellow-100 text-yellow-800'
       case 'approved':
         return 'bg-blue-100 text-blue-800'
+      case 'approved_pending_checklist':
+        return 'bg-green-100 text-green-800'
       case 'draft':
         return 'bg-gray-100 text-gray-800'
       case 'complete':
         return 'bg-purple-100 text-purple-800'
       default:
         return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'Active Placement'
+      case 'pending':
+        return 'Pending'
+      case 'approved':
+        return 'Active Placement'
+      case 'approved_pending_checklist':
+        return 'Active Placement'
+      case 'draft':
+        return 'Draft'
+      case 'complete':
+        return 'Complete'
+      default:
+        return status
     }
   }
 
@@ -255,7 +433,7 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
                           <AcademicCapIcon className="h-5 w-5 text-gray-400" />
                           <div>
                             <p className="text-sm font-medium text-gray-900">
-                              {assignment.faculty.firstName} {assignment.faculty.lastName}
+                              {assignment.faculty.facultyProfile?.honorific && `${assignment.faculty.facultyProfile.honorific} `}{assignment.faculty.firstName} {assignment.faculty.lastName}
                             </p>
                             <p className="text-sm text-gray-500">{assignment.faculty.email}</p>
                           </div>
@@ -281,7 +459,7 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
                 <div className="card text-center">
                   <ClockIcon className="h-8 w-8 text-green-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-gray-900">
-                    {studentData.studentPlacements?.reduce((total, placement) => 
+                    {studentData.studentPlacements?.reduce((total: number, placement: any) => 
                       total + getTotalHours(placement), 0) || 0}
                   </p>
                   <p className="text-sm text-gray-500">Hours Completed</p>
@@ -290,7 +468,7 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
                 <div className="card text-center">
                   <DocumentTextIcon className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-gray-900">
-                    {studentData.studentPlacements?.reduce((total, placement) => 
+                    {studentData.studentPlacements?.reduce((total: number, placement: any) => 
                       total + (placement.timesheetEntries?.length || 0), 0) || 0}
                   </p>
                   <p className="text-sm text-gray-500">Timesheet Entries</p>
@@ -311,7 +489,7 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
                           <div className="flex items-center space-x-3 mb-2">
                             <h4 className="text-lg font-medium text-gray-900">{placement.site.name}</h4>
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(placement.status)}`}>
-                              {placement.status}
+                              {getStatusLabel(placement.status)}
                             </span>
                           </div>
                           
@@ -323,7 +501,7 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
                             
                             <div>
                               <span className="text-gray-500">Faculty Advisor:</span>
-                              <p className="text-gray-900">{placement.faculty.firstName} {placement.faculty.lastName}</p>
+                              <p className="text-gray-900">{placement.faculty.facultyProfile?.honorific && `${placement.faculty.facultyProfile.honorific} `}{placement.faculty.firstName} {placement.faculty.lastName}</p>
                             </div>
                             
                             {placement.supervisor && (
@@ -354,6 +532,13 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
                             </div>
                           </div>
                         </div>
+                        
+                        {/* Evaluations Section */}
+                        <PlacementEvaluationsSection
+                          placementId={placement.id}
+                          placementName={placement.site.name}
+                          placementStatus={placement.status}
+                        />
                       </div>
                     </div>
                   ))}
@@ -376,38 +561,7 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
                     placement.timesheetEntries && placement.timesheetEntries.length > 0 && (
                       <div key={placement.id} className="card">
                         <h4 className="text-lg font-medium text-gray-900 mb-4">{placement.site.name}</h4>
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                              {placement.timesheetEntries.map((entry: any) => (
-                                <tr key={entry.id}>
-                                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {formatDate(entry.date)}
-                                  </td>
-                                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {entry.hours}
-                                  </td>
-                                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {entry.category}
-                                  </td>
-                                  <td className="px-4 py-4 whitespace-nowrap">
-                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(entry.status)}`}>
-                                      {entry.status}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                        <TimesheetWeekGrouping entries={placement.timesheetEntries} />
                       </div>
                     )
                   ))}
