@@ -582,7 +582,7 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {site.placements.map((placement) => (
+                {site.placements.map((placement: { id: string; student: { firstName: string; lastName: string; email: string }; status: string; startDate: string; endDate: string }) => (
                   <tr key={placement.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
