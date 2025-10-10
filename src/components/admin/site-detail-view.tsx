@@ -453,7 +453,7 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
         
         {site.supervisors && site.supervisors.length > 0 ? (
           <div className="space-y-3">
-            {site.supervisors.map((supervisor: { id: string; title?: string; user: { id: string; firstName: string; lastName: string; email: string } }) => (
+            {site.supervisors.map((supervisor: { id: string; title?: string; user: { id: string; firstName: string; lastName: string; email: string; phone?: string | null } }) => (
               <div key={supervisor.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <UserGroupIcon className="h-5 w-5 text-gray-400" />
