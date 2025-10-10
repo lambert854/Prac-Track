@@ -177,7 +177,7 @@ export function AddHoursModal({ isOpen, onClose, placementId }: AddHoursModalPro
             />
             {form.formState.errors.date && (
               <p id="date-error" className="form-error" role="alert">
-                {form.formState.errors.date?.message}
+                {String(form.formState.errors.date?.message || '')}
               </p>
             )}
           </div>
@@ -199,7 +199,7 @@ export function AddHoursModal({ isOpen, onClose, placementId }: AddHoursModalPro
             />
             {form.formState.errors.hours && (
               <p id="hours-error" className="form-error" role="alert">
-                {form.formState.errors.hours?.message}
+                {String(form.formState.errors.hours?.message || '')}
               </p>
             )}
           </div>
@@ -222,7 +222,7 @@ export function AddHoursModal({ isOpen, onClose, placementId }: AddHoursModalPro
             </select>
             {form.formState.errors.category && (
               <p id="category-error" className="form-error" role="alert">
-                {form.formState.errors.category?.message}
+                {String(form.formState.errors.category?.message || '')}
               </p>
             )}
           </div>
@@ -241,7 +241,7 @@ export function AddHoursModal({ isOpen, onClose, placementId }: AddHoursModalPro
             />
             {form.formState.errors.notes && (
               <p id="notes-error" className="form-error" role="alert">
-                {form.formState.errors.notes?.message}
+                {String(form.formState.errors.notes?.message || '')}
               </p>
             )}
           </div>
