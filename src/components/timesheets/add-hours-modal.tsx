@@ -95,7 +95,7 @@ export function AddHoursModal({ isOpen, onClose, placementId }: AddHoursModalPro
         onClose={onClose}
         title="Add Hours"
         schema={timesheetEntrySchema}
-        onSubmit={() => {}}
+        onSubmit={async () => {}}
         disabled={true}
       >
         {(form) => (
@@ -117,7 +117,7 @@ export function AddHoursModal({ isOpen, onClose, placementId }: AddHoursModalPro
         onClose={onClose}
         title="Add Hours"
         schema={timesheetEntrySchema}
-        onSubmit={() => {}}
+        onSubmit={async () => {}}
         disabled={true}
       >
         {(form) => (
