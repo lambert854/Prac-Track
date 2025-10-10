@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, ReactNode } from 'react'
 import { XMarkIcon, QuestionMarkCircleIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 interface FAQItem {
   id: string
   question: string
-  answer: string | JSX.Element
+  answer: string | ReactNode
   category: string
 }
 
