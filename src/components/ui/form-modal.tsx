@@ -35,7 +35,7 @@ export function FormModal<TSchema extends z.ZodType>({
   disabled = false,
 }: FormModalProps<TSchema>) {
   const form = useForm<any>({
-    resolver: zodResolver(schema) as any,
+    resolver: zodResolver(schema as any) as any,
     defaultValues: defaultValues as any,
   })
 
