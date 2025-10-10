@@ -46,7 +46,7 @@ export async function POST(
         },
         placementId: id,
         submittedAt: { not: null },
-        approvedAt: null,
+        supervisorApprovedAt: null,
       },
     })
 
@@ -66,8 +66,8 @@ export async function POST(
           },
         },
         data: {
-          approvedAt: new Date(),
-          approvedBy: session.user.id,
+          supervisorApprovedAt: new Date(),
+          supervisorApprovedBy: session.user.id,
           status: 'PENDING_FACULTY',
           locked: true,
         },
