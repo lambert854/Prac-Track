@@ -192,8 +192,8 @@ export async function GET(
 
     // Combine form submissions and uploaded documents
     const allDocuments = [...allForms, ...uploadedDocuments].sort((a, b) => {
-      const dateA = new Date(a.createdAt || a.uploadedAt)
-      const dateB = new Date(b.createdAt || b.uploadedAt)
+      const dateA = new Date('createdAt' in a ? a.createdAt : a.uploadedAt)
+      const dateB = new Date('createdAt' in b ? b.createdAt : b.uploadedAt)
       return dateB.getTime() - dateA.getTime()
     })
 
