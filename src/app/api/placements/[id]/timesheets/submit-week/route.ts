@@ -83,12 +83,16 @@ export async function POST(
     if (placement.supervisor) {
       try {
         const totalHours = timesheetEntries.reduce((sum, entry) => sum + Number(entry.hours), 0)
+        const weekRange = validatedData.weekStart // Using weekStart as weekRange
         
         await NotificationTriggers.timesheetSubmitted(
           placement.id, // Using placement ID as timesheet ID for now
           placement.supervisor.id,
           `${placement.student.firstName} ${placement.student.lastName}`,
-          totalHours
+          placement.site.name,
+          weekRange,
+          totalHours,
+          timesheetEntries.length
         )
       } catch (notificationError) {
         console.error('Failed to send timesheet submission notification:', notificationError)
