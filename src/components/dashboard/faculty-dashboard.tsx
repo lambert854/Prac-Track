@@ -80,9 +80,9 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
         <h1 className="text-2xl font-bold text-gray-900">Faculty Dashboard</h1>
         <p className="mt-1 text-gray-600">
           Welcome, {user.name}! 
-          {user.facultyProfile && (
+          {user.facultyProfile?.title && (
             <span className="ml-2 text-sm">
-              {user.facultyProfile.title} - {user.facultyProfile.department}
+              {user.facultyProfile.title}
             </span>
           )}
         </p>
