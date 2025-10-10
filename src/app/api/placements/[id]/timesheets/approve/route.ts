@@ -12,16 +12,17 @@ const approveTimesheetsSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await requireSupervisor()
     
     const body = await request.json()
     const validatedData = approveTimesheetsSchema.parse(body)
 
     const placement = await prisma.placement.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         student: true,
         faculty: true,
@@ -43,7 +44,7 @@ export async function POST(
         id: {
           in: validatedData.entryIds,
         },
-        placementId: params.id,
+        placementId: id,
         submittedAt: { not: null },
         approvedAt: null,
       },
@@ -78,7 +79,7 @@ export async function POST(
           const totalHours = timesheetEntries.reduce((sum, entry) => sum + Number(entry.hours), 0)
           
           await NotificationTriggers.timesheetSupervisorApproved(
-            params.id, // Using placement ID as timesheet ID
+            id, // Using placement ID as timesheet ID
             placement.faculty.id,
             `${placement.student.firstName} ${placement.student.lastName}`,
             `${session.user.firstName} ${session.user.lastName}`,
