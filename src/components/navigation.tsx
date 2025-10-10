@@ -207,9 +207,11 @@ export function Navigation() {
           {/* Navigation Section - Separated from logo */}
           <nav className="flex-1 px-4 py-10 space-y-2">
             {groupedNavigation.map((item, index) => {
-              if (item.type === 'separator') {
+              if ('type' in item && item.type === 'separator') {
                 return <hr key={`separator-${index}`} className="border-gray-200 my-2" />
               }
+              
+              if (!item.href) return null
               
               const isActive = pathname === item.href
               return (
