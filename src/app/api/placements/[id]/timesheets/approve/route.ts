@@ -82,7 +82,7 @@ export async function POST(
             id, // Using placement ID as timesheet ID
             placement.faculty.id,
             `${placement.student.firstName} ${placement.student.lastName}`,
-            `${session.user.firstName} ${session.user.lastName}`,
+            session.user.name || 'Supervisor',
             totalHours
           )
         } catch (notificationError) {
