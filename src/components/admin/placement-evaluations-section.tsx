@@ -184,8 +184,8 @@ export function PlacementEvaluationsSection({
           <div className="flex items-center justify-between text-xs text-gray-500">
             <span>Total: {evaluations.length} evaluations</span>
             <span>
-              {evaluations.filter(e => e.status === 'LOCKED').length} completed, {' '}
-              {evaluations.filter(e => e.status !== 'LOCKED').length} pending
+              {evaluations.filter((e: any) => e.status === 'LOCKED').length} completed, {' '}
+              {evaluations.filter((e: any) => e.status !== 'LOCKED').length} pending
             </span>
           </div>
         </div>
