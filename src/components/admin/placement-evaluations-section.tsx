@@ -72,8 +72,8 @@ export function PlacementEvaluationsSection({
   }
 
   // Separate student and supervisor evaluations
-  const studentEvaluations = evaluations.filter(e => e.role === 'STUDENT')
-  const supervisorEvaluations = evaluations.filter(e => e.role === 'SUPERVISOR')
+  const studentEvaluations = evaluations.filter((e: any) => e.role === 'STUDENT')
+  const supervisorEvaluations = evaluations.filter((e: any) => e.role === 'SUPERVISOR')
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-200">
