@@ -31,7 +31,7 @@ interface NavItem {
 const navigation: NavItem[] = [
   // Student navigation
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: [UserRole.STUDENT, UserRole.SUPERVISOR, UserRole.ADMIN] },
-  { name: 'Browse Agencies', href: '/placements/browse', icon: BuildingOfficeIcon, roles: [UserRole.STUDENT] },
+  { name: 'Browse Field Sites', href: '/placements/browse', icon: BuildingOfficeIcon, roles: [UserRole.STUDENT] },
   { name: 'My Placements', href: '/placements', icon: BuildingOfficeIcon, roles: [UserRole.STUDENT] },
   { name: 'Timesheets', href: '/timesheets', icon: ClipboardDocumentListIcon, roles: [UserRole.STUDENT] },
   { name: 'Forms', href: '/forms', icon: DocumentTextIcon, roles: [UserRole.STUDENT] },
@@ -47,12 +47,12 @@ const navigation: NavItem[] = [
   { name: 'Faculty', href: '/admin/faculty', icon: AcademicCapIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
   { name: 'Faculty Assignments', href: '/admin/faculty-assignments', icon: UserGroupIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
   { name: 'Supervisor Management', href: '/admin/supervisors', icon: UserGroupIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
-  { name: 'Agency Management', href: '/admin/sites', icon: BuildingOfficeIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
+  { name: 'Site Management', href: '/admin/sites', icon: BuildingOfficeIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
   { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
   
   // Admin-only navigation
   { name: 'Class Management', href: '/admin/classes', icon: AcademicCapIcon, roles: [UserRole.ADMIN] },
-  { name: 'Settings', href: '/admin/settings', icon: CogIcon, roles: [UserRole.ADMIN] },
+  { name: 'User Management', href: '/admin/users', icon: UserGroupIcon, roles: [UserRole.ADMIN] },
   
   // Help - available to all roles
   { name: 'Help', href: '/help', icon: QuestionMarkCircleIcon, roles: [UserRole.STUDENT, UserRole.FACULTY, UserRole.SUPERVISOR, UserRole.ADMIN] },
@@ -93,10 +93,10 @@ export function Navigation() {
         { name: 'Faculty Assignments', href: '/admin/faculty-assignments', icon: UserGroupIcon },
         { type: 'separator' },
         { name: 'Supervisor Management', href: '/admin/supervisors', icon: UserGroupIcon },
-        { name: 'Agency Management', href: '/admin/sites', icon: BuildingOfficeIcon },
+        { name: 'Site Management', href: '/admin/sites', icon: BuildingOfficeIcon },
         { type: 'separator' },
         { name: 'Class Management', href: '/admin/classes', icon: AcademicCapIcon },
-        { name: 'User Management', href: '/admin/settings', icon: CogIcon },
+        { name: 'User Management', href: '/admin/users', icon: UserGroupIcon },
         { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
       ]
     } else if (userRole === UserRole.FACULTY) {
@@ -112,7 +112,7 @@ export function Navigation() {
         { name: 'Faculty Assignments', href: '/admin/faculty-assignments', icon: UserGroupIcon },
         { type: 'separator' },
         { name: 'Supervisor Management', href: '/admin/supervisors', icon: UserGroupIcon },
-        { name: 'Agency Management', href: '/admin/sites', icon: BuildingOfficeIcon },
+        { name: 'Site Management', href: '/admin/sites', icon: BuildingOfficeIcon },
         { type: 'separator' },
         { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
       ]
@@ -153,7 +153,7 @@ export function Navigation() {
             </div>
             <nav className="flex-1 px-4 py-4 space-y-2">
               {groupedNavigation.map((item, index) => {
-                if (item.type === 'separator') {
+                if ('type' in item && item.type === 'separator') {
                   return <hr key={`separator-${index}`} className="border-gray-200 my-2" />
                 }
                 
@@ -198,12 +198,12 @@ export function Navigation() {
       <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0">
         <div className="sidebar">
           {/* Logo Section - Fixed at top */}
-          <div className="flex justify-center px-6 pt-4 pb-[80px] border-b border-gray-200">
+          <div className="flex justify-center px-6 pt-8 pb-12 border-b border-gray-200">
             <Logo size="md" />
           </div>
           
           {/* Navigation Section - Separated from logo */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-4 py-10 space-y-2">
             {groupedNavigation.map((item, index) => {
               if (item.type === 'separator') {
                 return <hr key={`separator-${index}`} className="border-gray-200 my-2" />
