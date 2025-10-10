@@ -122,13 +122,15 @@ export async function POST(
       // Send notification to faculty for each student
       for (const group of Object.values(studentGroups)) {
         if (group.faculty) {
+          const totalHours = group.entries.reduce((sum: number, entry: any) => sum + Number(entry.hours), 0)
+          const studentName = `${group.student.firstName} ${group.student.lastName}`
+          
           await NotificationTriggers.timesheetSupervisorApproved(
+            group.entries[0]?.id || 'unknown', // timesheetId
             group.faculty.id,
-            group.student.firstName,
-            group.student.lastName,
-            group.site.name,
-            group.entries.length,
-            group.entries.reduce((sum: number, entry: any) => sum + Number(entry.hours), 0)
+            studentName,
+            session.user.name || 'Supervisor',
+            totalHours
           )
         }
       }
