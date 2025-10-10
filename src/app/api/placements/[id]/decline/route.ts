@@ -74,9 +74,8 @@ export async function POST(
       data: {
         userId: session.user.id,
         action: 'PLACEMENT_DECLINED',
-        resourceType: 'PLACEMENT',
-        resourceId: placementId,
         details: JSON.stringify({
+          placementId: placementId,
           studentId: placement.studentId,
           siteId: placement.siteId,
           notes: notes || null
