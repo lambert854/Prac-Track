@@ -184,7 +184,7 @@ export async function GET(
     } catch (processingError) {
       console.error('Supervisor students API: Data processing error:', processingError)
       return NextResponse.json(
-        { error: 'Data processing failed', details: processingError.message },
+        { error: 'Data processing failed', details: processingError instanceof Error ? processingError.message : 'Unknown error' },
         { status: 500 }
       )
     }
