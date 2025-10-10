@@ -91,6 +91,8 @@ export function AdminStudentsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-students'] })
+      queryClient.invalidateQueries({ queryKey: ['faculty-assignments'] })
+      queryClient.invalidateQueries({ queryKey: ['students-for-assignment'] })
     },
   })
 
@@ -106,6 +108,8 @@ export function AdminStudentsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-students'] })
+      queryClient.invalidateQueries({ queryKey: ['faculty-assignments'] })
+      queryClient.invalidateQueries({ queryKey: ['students-for-assignment'] })
     },
   })
 
@@ -116,7 +120,7 @@ export function AdminStudentsManagement() {
       student.email.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'with-placement' && student.studentPlacements?.length > 0) ||
+      (statusFilter === 'with-placement' && (student.studentPlacements?.length ?? 0) > 0) ||
       (statusFilter === 'without-placement' && (!student.studentPlacements || student.studentPlacements.length === 0))
     
     const matchesActiveStatus = showInactive ? !student.active : student.active
@@ -246,7 +250,7 @@ export function AdminStudentsManagement() {
 
       {/* Filters */}
       <div className="card">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-3 md:gap-4">
           <div className="flex-1">
             <div className="relative">
               <input
@@ -254,46 +258,51 @@ export function AdminStudentsManagement() {
                 placeholder="Search students..."
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                className="w-full pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-sm md:text-base"
               />
             </div>
           </div>
           
-          <div>
-            <select
-              value={statusFilter}
-              onChange={(e) => handleFilterChange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-            >
-              <option value="all">All Students</option>
-              <option value="with-placement">With Placement</option>
-              <option value="without-placement">Without Placement</option>
-            </select>
-          </div>
-          
-          <div>
-            <button
-              onClick={() => setShowInactive(!showInactive)}
-              className={`px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent ${
-                showInactive
-                  ? 'bg-gray-200 text-gray-800'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {showInactive ? 'Show Active' : 'Show Inactive'} ({students?.filter((s: Student) => !s.active).length || 0})
-            </button>
+          <div className="flex flex-col sm:flex-row gap-2 md:gap-4">
+            <div className="flex-1">
+              <select
+                value={statusFilter}
+                onChange={(e) => handleFilterChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-sm md:text-base"
+              >
+                <option value="all">All Students</option>
+                <option value="with-placement">With Placement</option>
+                <option value="without-placement">Without Placement</option>
+              </select>
+            </div>
+            
+            <div className="flex-1 sm:flex-none">
+              <button
+                onClick={() => setShowInactive(!showInactive)}
+                className={`w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-sm md:text-base ${
+                  showInactive
+                    ? 'bg-gray-200 text-gray-800'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {showInactive 
+                  ? `Show Active (${students?.filter((s: Student) => s.active).length || 0})` 
+                  : `Show Inactive (${students?.filter((s: Student) => !s.active).length || 0})`
+                }
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
         <div className="card">
           <div className="flex items-center">
             <UserIcon className="h-8 w-8 text-blue-600 mr-3" />
             <div>
               <p className="text-sm font-medium text-gray-600">Total Students</p>
-              <p className="text-2xl font-bold text-gray-900">{students?.length || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">{students?.filter((s: Student) => s.active).length || 0}</p>
             </div>
           </div>
         </div>
@@ -304,7 +313,7 @@ export function AdminStudentsManagement() {
             <div>
               <p className="text-sm font-medium text-gray-600">With Placements</p>
               <p className="text-2xl font-bold text-gray-900">
-                {students?.filter((s: Student) => s.studentPlacements && s.studentPlacements.length > 0).length || 0}
+                {students?.filter((s: Student) => s.active && s.studentPlacements && s.studentPlacements.length > 0).length || 0}
               </p>
             </div>
           </div>
@@ -316,7 +325,7 @@ export function AdminStudentsManagement() {
             <div>
               <p className="text-sm font-medium text-gray-600">Without Placements</p>
               <p className="text-2xl font-bold text-gray-900">
-                {students?.filter((s: Student) => !s.studentPlacements || s.studentPlacements.length === 0).length || 0}
+                {students?.filter((s: Student) => s.active && (!s.studentPlacements || s.studentPlacements.length === 0)).length || 0}
               </p>
             </div>
           </div>
@@ -691,7 +700,7 @@ export function AdminStudentsManagement() {
         isOpen={showConfirmModal}
         title={modalAction === 'deactivate' ? 'Deactivate Student' : 'Reactivate Student'}
         message={modalAction === 'deactivate' 
-          ? `Are you sure you want to deactivate ${studentToDeactivate?.firstName} ${studentToDeactivate?.lastName}? They will be moved to the inactive section but their information will be preserved.`
+          ? <><span className="font-bold text-red-600">Deactivating student will unassign faculty.</span> Are you sure you want to deactivate {studentToDeactivate?.firstName} {studentToDeactivate?.lastName}?</>
           : `Are you sure you want to reactivate ${studentToReactivate?.firstName} ${studentToReactivate?.lastName}? They will be moved back to the active section.`
         }
         confirmText={modalAction === 'deactivate' ? 'Deactivate' : 'Reactivate'}
