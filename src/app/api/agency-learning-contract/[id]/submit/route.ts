@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
+import bcrypt from 'bcryptjs'
 
 export async function POST(
   request: NextRequest,
@@ -94,6 +95,51 @@ export async function POST(
         submittedAt: new Date(),
       }
     })
+
+    // Create supervisor account if field instructor information is provided
+    if (formFields.fieldInstructorName && formFields.fieldInstructorFirstName && formFields.fieldInstructorLastName) {
+      // Check if supervisor already exists
+      const existingSupervisor = await prisma.user.findFirst({
+        where: {
+          email: formFields.agencyEmail, // Using agency email as supervisor email
+          role: 'SUPERVISOR'
+        }
+      })
+
+      if (!existingSupervisor) {
+        // Generate a temporary password
+        const tempPassword = Math.random().toString(36).slice(-8)
+        const hashedPassword = await bcrypt.hash(tempPassword, 12)
+
+        // Create supervisor user
+        const supervisorUser = await prisma.user.create({
+          data: {
+            email: formFields.agencyEmail,
+            firstName: formFields.fieldInstructorFirstName,
+            lastName: formFields.fieldInstructorLastName,
+            role: 'SUPERVISOR',
+            active: true,
+            password: hashedPassword,
+          }
+        })
+
+        // Create supervisor profile
+        await prisma.supervisorProfile.create({
+          data: {
+            userId: supervisorUser.id,
+            siteId: learningContract.siteId,
+            title: formFields.completedByTitle || 'Field Instructor',
+            licensedSW: formFields.fieldInstructorLicense ? 'YES' : 'NO',
+            licenseNumber: formFields.fieldInstructorLicense || null,
+            highestDegree: formFields.fieldInstructorDegree || null,
+            otherDegree: null,
+            resume: formFields.fieldInstructorResume || null,
+          }
+        })
+
+        console.log(`Created supervisor account for ${formFields.fieldInstructorFirstName} ${formFields.fieldInstructorLastName} with temporary password: ${tempPassword}`)
+      }
+    }
 
     // Update site status to pending agreement review
     await prisma.site.update({

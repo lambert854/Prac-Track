@@ -8,53 +8,40 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log('Supervisor forms API: Starting request')
-    
     const session = await getServerSession(authOptions)
     
     if (!session) {
-      console.log('Supervisor forms API: No session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    console.log('Supervisor forms API: Session found for user:', session.user.id, 'role:', session.user.role)
-
-    // Only supervisors can access this endpoint
-    if (session.user.role !== 'SUPERVISOR') {
-      console.log('Supervisor forms API: Access denied for role:', session.user.role)
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
     const { id: supervisorId } = await params
-    console.log('Supervisor forms API: Fetching forms for supervisor:', supervisorId)
 
-    // Verify supervisor exists
+    // Verify the supervisor exists
     const supervisor = await prisma.user.findUnique({
-      where: { id: supervisorId },
+      where: { 
+        id: supervisorId,
+        role: 'SUPERVISOR'
+      }
     })
 
     if (!supervisor) {
-      console.log('Supervisor forms API: Supervisor not found:', supervisorId)
       return NextResponse.json({ error: 'Supervisor not found' }, { status: 404 })
     }
 
-    console.log('Supervisor forms API: Supervisor found:', supervisor.firstName, supervisor.lastName)
-
-    // Get form submissions where this supervisor was involved
-    console.log('Supervisor forms API: Querying database...')
-    const supervisorForms = await prisma.formSubmission.findMany({
+    // Get form submissions that need supervisor review
+    const pendingForms = await prisma.formSubmission.findMany({
       where: {
         placement: {
           supervisorId: supervisorId
-        }
+        },
+        status: 'SUBMITTED'
       },
       include: {
-        submitter: {
+        template: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+            key: true,
+            title: true
           }
         },
         placement: {
@@ -64,95 +51,168 @@ export async function GET(
                 id: true,
                 firstName: true,
                 lastName: true,
-                email: true,
-              }
-            },
-            faculty: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
+                email: true
               }
             },
             site: {
               select: {
-                id: true,
-                name: true,
+                name: true
               }
             }
           }
         },
-        template: {
+        submitter: {
           select: {
-            id: true,
-            name: true,
-            description: true,
-          }
-        },
-        approver: {
-          select: {
-            id: true,
             firstName: true,
             lastName: true,
-            email: true,
+            email: true
           }
         }
       },
       orderBy: {
-        createdAt: 'desc', // Most recent first
+        createdAt: 'desc'
       }
     })
 
-    console.log('Supervisor forms API: Found', supervisorForms.length, 'forms')
+    // Get all form submissions for the supervisor's students (including approved/rejected)
+    const allForms = await prisma.formSubmission.findMany({
+      where: {
+        placement: {
+          supervisorId: supervisorId
+        }
+      },
+      include: {
+        template: {
+          select: {
+            id: true,
+            key: true,
+            title: true
+          }
+        },
+        placement: {
+          include: {
+            student: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            },
+            site: {
+              select: {
+                name: true
+              }
+            }
+          }
+        },
+        submitter: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        approver: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
 
-    // Process forms to add status and metadata
-    const processedForms = supervisorForms.map(form => ({
-      id: form.id,
-      template: form.template,
-      status: form.status,
-      role: form.role,
-      data: form.data,
-      locked: form.locked,
-      student: form.placement.student,
-      placement: form.placement,
-      faculty: form.placement.faculty,
-      site: form.placement.site,
-      submitter: form.submitter,
-      approver: form.approver,
-      createdAt: form.createdAt,
-      updatedAt: form.updatedAt,
-      // Add computed status for display
-      displayStatus: getFormDisplayStatus(form),
-    }))
+    // Get uploaded documents from placements
+    const placements = await prisma.placement.findMany({
+      where: {
+        supervisorId: supervisorId
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
+        site: {
+          select: {
+            name: true
+          }
+        }
+      }
+    })
 
-    console.log('Supervisor forms API: Returning', processedForms.length, 'processed forms')
+    const uploadedDocuments = []
+    for (const placement of placements) {
+      if (placement.cellPolicy) {
+        uploadedDocuments.push({
+          id: `cell-policy-${placement.id}`,
+          type: 'UPLOADED_DOCUMENT',
+          title: 'Fair Use Policies',
+          siteName: placement.site.name,
+          documentPath: placement.cellPolicy,
+          uploadedAt: placement.approvedAt || placement.startDate,
+          placementId: placement.id,
+          student: placement.student
+        })
+      }
+      
+      if (placement.learningContract) {
+        uploadedDocuments.push({
+          id: `learning-contract-${placement.id}`,
+          type: 'UPLOADED_DOCUMENT',
+          title: 'Student Learning Contract',
+          siteName: placement.site.name,
+          documentPath: placement.learningContract,
+          uploadedAt: placement.approvedAt || placement.startDate,
+          placementId: placement.id,
+          student: placement.student
+        })
+      }
+      
+      if (placement.checklist) {
+        uploadedDocuments.push({
+          id: `checklist-${placement.id}`,
+          type: 'UPLOADED_DOCUMENT',
+          title: 'Placement Checklist',
+          siteName: placement.site.name,
+          documentPath: placement.checklist,
+          uploadedAt: placement.approvedAt || placement.startDate,
+          placementId: placement.id,
+          student: placement.student
+        })
+      }
+    }
+
+    // Combine form submissions and uploaded documents
+    const allDocuments = [...allForms, ...uploadedDocuments].sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.uploadedAt)
+      const dateB = new Date(b.createdAt || b.uploadedAt)
+      return dateB.getTime() - dateA.getTime()
+    })
 
     return NextResponse.json({
-      forms: processedForms,
-      totalForms: supervisorForms.length,
+      pendingForms,
+      allDocuments,
+      summary: {
+        totalForms: allForms.length,
+        pendingForms: pendingForms.length,
+        uploadedDocuments: uploadedDocuments.length,
+        totalDocuments: allDocuments.length
+      }
     })
 
   } catch (error) {
-    console.error('Supervisor forms GET error:', error)
+    console.error('Supervisor forms API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
   }
-}
-
-function getFormDisplayStatus(form: any): string {
-  if (form.status === 'SUBMITTED') {
-    return 'Pending Signature'
-  } else if (form.status === 'SUPERVISOR_SIGNED') {
-    return 'Supervisor Signed'
-  } else if (form.status === 'FACULTY_SIGNED') {
-    return 'Faculty Signed'
-  } else if (form.status === 'COMPLETED') {
-    return 'Completed'
-  } else if (form.status === 'REJECTED') {
-    return 'Rejected'
-  }
-  return 'Unknown'
 }

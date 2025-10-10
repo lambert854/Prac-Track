@@ -43,18 +43,49 @@ export async function GET(
       }
     })
 
-    // Add activePlacement field to each student
-    const studentsWithActivePlacement = assignedStudents.map(student => ({
-      ...student,
-      activePlacement: student.studentPlacements.find(placement => placement.status === 'ACTIVE') || null
-    }))
+    // Add activePlacement and document status to each student
+    const studentsWithActivePlacement = assignedStudents.map(student => {
+      const activePlacement = student.studentPlacements.find(placement => placement.status === 'ACTIVE') || null
+      const approvedPlacement = student.studentPlacements.find(placement => 
+        placement.status === 'APPROVED' || placement.status === 'APPROVED_PENDING_CHECKLIST' || placement.status === 'ACTIVE'
+      ) || null
+      
+      // Check document status for approved placements
+      let documentStatus = null
+      if (approvedPlacement) {
+        const hasCellPolicy = !!approvedPlacement.cellPolicy
+        const hasLearningContract = !!approvedPlacement.learningContract
+        const hasChecklist = !!approvedPlacement.checklist
+        
+        documentStatus = {
+          cellPolicy: hasCellPolicy,
+          learningContract: hasLearningContract,
+          checklist: hasChecklist,
+          allComplete: hasCellPolicy && hasLearningContract && hasChecklist,
+          pendingCount: [hasCellPolicy, hasLearningContract, hasChecklist].filter(Boolean).length
+        }
+      }
+      
+      return {
+        ...student,
+        activePlacement,
+        approvedPlacement,
+        documentStatus
+      }
+    })
 
-    // Get pending placements that need faculty approval or are in checklist phase
+    // Get pending placements that need faculty approval (exclude checklist phase)
+    // Only show placements for students currently assigned to this faculty
     const pendingPlacements = await prisma.placement.findMany({
       where: {
         facultyId: facultyId,
-        status: {
-          in: ['PENDING', 'APPROVED_PENDING_CHECKLIST']
+        status: 'PENDING', // Only show applications that need initial approval
+        student: {
+          studentFacultyAssignments: {
+            some: {
+              facultyId: facultyId
+            }
+          }
         }
       },
       include: {
@@ -71,6 +102,7 @@ export async function GET(
         startDate: 'desc'
       }
     })
+    
 
     // Note: Supervisor assignment is now handled during student application, so no need to check for missing supervisors
 
@@ -140,10 +172,26 @@ export async function GET(
       take: 5 // Limit to 5 most recent
     })
 
+    // Get checklist phase count separately since we removed it from pendingPlacements
+    const checklistPhaseCount = await prisma.placement.count({
+      where: {
+        facultyId: facultyId,
+        status: 'APPROVED_PENDING_CHECKLIST',
+        checklist: null,
+        student: {
+          studentFacultyAssignments: {
+            some: {
+              facultyId: facultyId
+            }
+          }
+        }
+      }
+    })
+
     const summaryStats = {
       assignedStudents: studentsWithActivePlacement.length,
-      pendingPlacements: pendingPlacements.filter(p => p.status === 'PENDING').length,
-      checklistPhase: pendingPlacements.filter(p => p.status === 'APPROVED_PENDING_CHECKLIST' && !p.checklist).length,
+      pendingPlacements: pendingPlacements.length, // Now only includes PENDING status
+      checklistPhase: checklistPhaseCount, // Count of students waiting on checklist
       pendingForms: pendingForms.length,
       approvedPlacements: studentsWithActivePlacement.filter(student => 
         student.activePlacement !== null

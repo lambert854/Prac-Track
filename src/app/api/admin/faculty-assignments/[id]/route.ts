@@ -9,7 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requireAdmin()
+    const session = await requireFacultyOrAdmin()
     const { id } = await params
 
     const body = await request.json()
@@ -33,6 +33,25 @@ export async function PATCH(
         { status: 404 }
       )
     }
+
+    // Get the current assignment to find the student ID
+    const currentAssignment = await prisma.facultyAssignment.findUnique({
+      where: { id },
+      include: {
+        student: {
+          select: { id: true }
+        }
+      }
+    })
+
+    if (!currentAssignment) {
+      return NextResponse.json(
+        { error: 'Faculty assignment not found' },
+        { status: 404 }
+      )
+    }
+
+    const studentId = currentAssignment.student.id
 
     // Update the faculty assignment
     const updatedAssignment = await prisma.facultyAssignment.update({
@@ -68,6 +87,32 @@ export async function PATCH(
         }
       }
     })
+
+    // Update any pending placements for this student to the new faculty
+    const updatedPlacements = await prisma.placement.updateMany({
+      where: {
+        studentId: studentId,
+        status: {
+          in: ['PENDING', 'APPROVED_PENDING_CHECKLIST']
+        }
+      },
+      data: {
+        facultyId: facultyId
+      }
+    })
+    
+
+    // Clear faculty mismatch notifications for the OLD faculty member when assignment is corrected
+    // This ensures that when a student is reassigned to the correct faculty for their class,
+    // the mismatch notification disappears from the old faculty member's dashboard
+    const clearedNotifications = await prisma.notification.deleteMany({
+      where: {
+        userId: currentAssignment.facultyId, // Clear notifications for the OLD faculty member
+        type: 'FACULTY_CLASS_MISMATCH',
+        relatedEntityId: studentId
+      }
+    })
+    
 
     return NextResponse.json(updatedAssignment)
 

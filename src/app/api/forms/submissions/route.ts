@@ -81,7 +81,7 @@ export async function GET() {
           docs.push({
             id: `cell-policy-${placement.id}`,
             type: 'UPLOADED_DOCUMENT',
-            title: 'Cell Phone Usage Policy',
+            title: 'Fair Use Policies',
             siteName: placement.site.name,
             documentPath: placement.cellPolicy,
             uploadedAt: placement.approvedAt || placement.startDate,

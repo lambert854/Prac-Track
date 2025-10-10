@@ -42,7 +42,7 @@ export async function GET(
 
     // Get timesheet entries that are pending faculty approval
     console.log('Faculty timesheets API: Querying database...')
-    const pendingTimesheets = await prisma.timesheetEntry.findMany({
+    const pendingFacultyTimesheets = await prisma.timesheetEntry.findMany({
       where: {
         placement: {
           facultyId: facultyId,
@@ -88,10 +88,52 @@ export async function GET(
       }
     })
 
-    console.log('Faculty timesheets API: Found', pendingTimesheets.length, 'pending timesheets')
+    // Get timesheet entries that are pending supervisor approval for assigned students
+    const pendingSupervisorTimesheets = await prisma.timesheetEntry.findMany({
+      where: {
+        placement: {
+          facultyId: facultyId,
+        },
+        status: 'PENDING_SUPERVISOR',
+      },
+      include: {
+        placement: {
+          include: {
+            student: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              }
+            },
+            supervisor: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              }
+            },
+            site: {
+              select: {
+                id: true,
+                name: true,
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        submittedAt: 'desc', // Most recently submitted first
+      }
+    })
 
-    // Group timesheets by student and week for better organization
-    const groupedTimesheets = pendingTimesheets.reduce((acc, entry) => {
+    console.log('Faculty timesheets API: Found', pendingFacultyTimesheets.length, 'pending faculty timesheets')
+    console.log('Faculty timesheets API: Found', pendingSupervisorTimesheets.length, 'pending supervisor timesheets')
+
+    // Group faculty timesheets by student and week for better organization
+    const groupedFacultyTimesheets = pendingFacultyTimesheets.reduce((acc, entry) => {
       const studentId = entry.placement.student.id
       const weekStart = new Date(entry.date)
       weekStart.setDate(weekStart.getDate() - weekStart.getDay()) // Start of week
@@ -108,6 +150,7 @@ export async function GET(
           weekEnd: new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           entries: [],
           totalHours: 0,
+          status: 'PENDING_FACULTY'
         }
       }
       
@@ -117,16 +160,50 @@ export async function GET(
       return acc
     }, {} as Record<string, any>)
 
-    // Convert to array and sort by supervisor approval date
-    const timesheetGroups = Object.values(groupedTimesheets).sort((a: any, b: any) => 
+    // Group supervisor timesheets by student and week for better organization
+    const groupedSupervisorTimesheets = pendingSupervisorTimesheets.reduce((acc, entry) => {
+      const studentId = entry.placement.student.id
+      const weekStart = new Date(entry.date)
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay()) // Start of week
+      const weekKey = `${studentId}_${weekStart.toISOString().split('T')[0]}`
+      
+      if (!acc[weekKey]) {
+        acc[weekKey] = {
+          student: entry.placement.student,
+          supervisor: entry.placement.supervisor,
+          site: entry.placement.site,
+          weekStart: weekStart.toISOString().split('T')[0],
+          weekEnd: new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          entries: [],
+          totalHours: 0,
+          status: 'PENDING_SUPERVISOR',
+          submittedAt: entry.submittedAt
+        }
+      }
+      
+      acc[weekKey].entries.push(entry)
+      acc[weekKey].totalHours += Number(entry.hours)
+      
+      return acc
+    }, {} as Record<string, any>)
+
+    // Convert to arrays and sort appropriately
+    const facultyTimesheetGroups = Object.values(groupedFacultyTimesheets).sort((a: any, b: any) => 
       new Date(b.supervisorApprovedAt).getTime() - new Date(a.supervisorApprovedAt).getTime()
     )
 
-    console.log('Faculty timesheets API: Returning', timesheetGroups.length, 'timesheet groups')
+    const supervisorTimesheetGroups = Object.values(groupedSupervisorTimesheets).sort((a: any, b: any) => 
+      new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+    )
+
+    console.log('Faculty timesheets API: Returning', facultyTimesheetGroups.length, 'faculty timesheet groups')
+    console.log('Faculty timesheets API: Returning', supervisorTimesheetGroups.length, 'supervisor timesheet groups')
 
     return NextResponse.json({
-      timesheets: timesheetGroups,
-      totalPending: pendingTimesheets.length,
+      facultyTimesheets: facultyTimesheetGroups,
+      supervisorTimesheets: supervisorTimesheetGroups,
+      totalPendingFaculty: pendingFacultyTimesheets.length,
+      totalPendingSupervisor: pendingSupervisorTimesheets.length,
     })
 
   } catch (error) {

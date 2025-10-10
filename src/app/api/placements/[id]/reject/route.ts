@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { NotificationTriggers } from '@/lib/notification-triggers'
 
 const rejectPlacementSchema = z.object({
   reason: z.string().min(1, 'Rejection reason is required'),
@@ -33,7 +34,8 @@ export async function POST(
       where: { id: placementId },
       include: {
         student: true,
-        faculty: true
+        faculty: true,
+        site: true
       }
     })
 
@@ -58,7 +60,19 @@ export async function POST(
       }
     })
 
-    // TODO: Send notification to student when application is rejected
+    // Send notification to student when application is rejected
+    try {
+      await NotificationTriggers.placementRejected(
+        placement.id,
+        placement.student.id,
+        placement.site?.name || 'Unknown Site',
+        reason
+      )
+    } catch (notificationError) {
+      console.error('Failed to send rejection notification:', notificationError)
+      // Don't fail the entire request if notification fails
+    }
+
     console.log(`Placement ${placementId} rejected by ${session.user.id}. Reason: ${reason}`)
 
     return NextResponse.json({ 
@@ -71,7 +85,7 @@ export async function POST(
     if (error instanceof z.ZodError) {
       return NextResponse.json({ 
         error: 'Validation error',
-        details: error.errors 
+        details: error.issues 
       }, { status: 400 })
     }
     return NextResponse.json(

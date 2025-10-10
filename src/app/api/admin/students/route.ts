@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireFacultyOrAdmin } from '@/lib/auth-helpers'
 
 export async function GET(request: NextRequest) {
   try {
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAdmin()
+    const session = await requireFacultyOrAdmin()
     const body = await request.json()
     const { firstName, lastName, email, password, aNumber, program, cohort, facultyId } = body
 

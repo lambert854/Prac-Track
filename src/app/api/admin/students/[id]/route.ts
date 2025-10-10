@@ -109,6 +109,13 @@ export async function PATCH(
       updateData.passwordHash = await bcrypt.hash(password, 12)
     }
 
+    // If deactivating student, also remove faculty assignments
+    if (active === false) {
+      await prisma.facultyAssignment.deleteMany({
+        where: { studentId: studentId }
+      })
+    }
+
     // Update student
     const updatedStudent = await prisma.user.update({
       where: { id: studentId },

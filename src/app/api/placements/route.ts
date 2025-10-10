@@ -19,6 +19,10 @@ const createPlacementRequestSchema = z.object({
   supervisorEmail: z.string().email().optional(),
   supervisorPhone: z.string().optional(),
   supervisorTitle: z.string().optional(),
+  supervisorLicensedSW: z.enum(['YES', 'NO']).optional(),
+  supervisorLicenseNumber: z.string().optional(),
+  supervisorHighestDegree: z.enum(['BSW', 'MSW', 'OTHER']).optional(),
+  supervisorOtherDegree: z.string().optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -103,21 +107,37 @@ export async function POST(request: NextRequest) {
     const session = await requireStudentFacultyOrAdmin()
     
     const body = await request.json()
+    console.log('Placement request body:', JSON.stringify(body, null, 2))
+    
     const validatedData = createPlacementRequestSchema.parse(body)
 
     // Determine the student ID - use provided studentId for Faculty/Admin, or session user for students
-    const studentId = validatedData.studentId || session.user.id
+    let studentId = validatedData.studentId || session.user.id
     
     // If Faculty/Admin is creating for a student, validate the student exists
     if (validatedData.studentId) {
       const student = await prisma.user.findUnique({
-        where: { id: validatedData.studentId, role: 'STUDENT' }
+        where: { id: validatedData.studentId, role: 'STUDENT' },
+        include: { studentProfile: true }
       })
       if (!student) {
         return NextResponse.json(
           { error: 'Student not found' },
           { status: 404 }
         )
+      }
+      // Use the student profile ID instead of user ID
+      if (student.studentProfile) {
+        studentId = student.studentProfile.id
+      }
+    } else {
+      // For students creating their own placement, get their student profile ID
+      const student = await prisma.user.findUnique({
+        where: { id: session.user.id, role: 'STUDENT' },
+        include: { studentProfile: true }
+      })
+      if (student?.studentProfile) {
+        studentId = student.studentProfile.id
       }
     }
 
@@ -136,21 +156,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if student already has a placement application for the same term
-    const existingTermPlacement = await prisma.placement.findFirst({
-      where: {
-        studentId: studentId,
-        term: validatedData.term,
-        status: { in: ['PENDING', 'APPROVED_PENDING_CHECKLIST', 'APPROVED', 'ACTIVE'] },
-      },
-    })
-
-    if (existingTermPlacement) {
-      return NextResponse.json(
-        { error: `You already have a placement application for ${validatedData.term.replace('_', ' ')} term` },
-        { status: 400 }
-      )
-    }
+    // Note: Term-based validation removed as term field is not in current schema
 
     // Get the site to find a supervisor
     const site = await prisma.site.findUnique({
@@ -261,35 +267,21 @@ export async function POST(request: NextRequest) {
     if (selectedClass && selectedClass.facultyId && selectedClass.facultyId !== faculty.id) {
       facultyMismatch = true
       
-      // Create notifications for faculty mismatch
+      // Create notification for the student's assigned faculty about the mismatch
       await prisma.notification.createMany({
         data: [
           {
             userId: faculty.id,
             type: 'FACULTY_CLASS_MISMATCH',
-            title: 'Student Applied for Class Not Assigned to You',
-            message: `A student has applied for ${selectedClass.name} which is not assigned to you. You may need to reassign the student to the correct faculty member.`,
+            title: 'Pending Application Assigned to Different Faculty',
+            message: `Pending Application is assigned to a different faculty member. Reassign the student's faculty assignment.`,
             relatedEntityId: studentId,
-            relatedEntityType: 'STUDENT',
+            relatedEntityType: 'PLACEMENT',
             priority: 'HIGH',
             metadata: JSON.stringify({
               studentId,
               className: selectedClass.name,
               classFacultyId: selectedClass.facultyId,
-              placementClassId: validatedData.classId
-            })
-          },
-          {
-            userId: selectedClass.facultyId,
-            type: 'FACULTY_CLASS_MISMATCH',
-            title: 'Student Applied for Your Class',
-            message: `A student has applied for ${selectedClass.name} but is currently assigned to a different faculty member.`,
-            relatedEntityId: studentId,
-            relatedEntityType: 'STUDENT',
-            priority: 'MEDIUM',
-            metadata: JSON.stringify({
-              studentId,
-              className: selectedClass.name,
               currentFacultyId: faculty.id,
               placementClassId: validatedData.classId
             })
@@ -311,7 +303,7 @@ export async function POST(request: NextRequest) {
             title: 'Faculty-Class Mismatch Detected',
             message: `A student has applied for ${selectedClass.name} but is assigned to a different faculty member. Review the faculty assignment.`,
             relatedEntityId: studentId,
-            relatedEntityType: 'STUDENT',
+            relatedEntityType: 'PLACEMENT',
             priority: 'HIGH',
             metadata: JSON.stringify({
               studentId,
@@ -324,6 +316,17 @@ export async function POST(request: NextRequest) {
         })
       }
     }
+
+    // Clear any existing rejection notices when a new placement is applied
+    await prisma.placement.updateMany({
+      where: {
+        studentId: studentId,
+        status: 'DECLINED'
+      },
+      data: {
+        facultyNotes: null // Clear the rejection reason to hide the notice
+      }
+    })
 
     const placement = await prisma.placement.create({
       data: {
@@ -350,6 +353,10 @@ export async function POST(request: NextRequest) {
             email: validatedData.supervisorEmail!,
             phone: validatedData.supervisorPhone || null,
             title: validatedData.supervisorTitle || null,
+            licensedSW: validatedData.supervisorLicensedSW || null,
+            licenseNumber: validatedData.supervisorLicenseNumber || null,
+            highestDegree: validatedData.supervisorHighestDegree || null,
+            otherDegree: validatedData.supervisorOtherDegree || null,
             siteId: validatedData.siteId,
             status: 'PENDING'
           }
@@ -390,8 +397,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.log('Validation errors:', error.issues)
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }

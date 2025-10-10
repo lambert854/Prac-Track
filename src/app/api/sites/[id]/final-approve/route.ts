@@ -48,13 +48,20 @@ export async function POST(
       }
     })
 
-    // Update the site status to active
+    // Update the site status to active and set agreement dates
+    const currentDate = new Date()
+    const agreementStartMonth = currentDate.getMonth() + 1 // JavaScript months are 0-indexed
+    const agreementStartYear = currentDate.getFullYear()
+    
     await prisma.site.update({
       where: { id },
       data: {
         status: 'ACTIVE',
         learningContractStatus: 'APPROVED',
-        active: true
+        active: true,
+        agreementStartMonth: agreementStartMonth,
+        agreementStartYear: agreementStartYear,
+        agreementExpirationDate: new Date(agreementStartYear + 3, agreementStartMonth - 1, 1) // 3 years from start date
       }
     })
 

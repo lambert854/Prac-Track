@@ -168,7 +168,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    if (placement.status !== 'ACTIVE') {
+    if (!['ACTIVE', 'APPROVED', 'APPROVED_PENDING_CHECKLIST'].includes(placement.status)) {
       console.log('Timesheet API - Placement not active:', placement.status)
       return NextResponse.json(
         { error: 'Cannot log hours for inactive placement' },
@@ -216,7 +216,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
