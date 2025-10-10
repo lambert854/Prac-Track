@@ -190,6 +190,9 @@ export async function GET(
 
       // Add evaluation tasks from notifications
       for (const notification of evaluationNotifications) {
+        // Skip if no related entity ID
+        if (!notification.relatedEntityId) continue
+        
         // Get the evaluation submission for this student
         const evaluationSubmission = await prisma.evaluationSubmission.findFirst({
           where: {
