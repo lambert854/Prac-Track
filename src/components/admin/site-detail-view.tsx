@@ -528,7 +528,7 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
             <div>
               <p className="text-sm font-medium text-gray-600">Active Placements</p>
               <p className="text-2xl font-bold text-gray-900">
-                {site.placements?.filter(p => p.status === 'ACTIVE').length || 0}
+                {site.placements?.filter((p: { status: string }) => p.status === 'ACTIVE').length || 0}
               </p>
             </div>
           </div>
