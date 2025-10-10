@@ -4,11 +4,11 @@ import { join } from 'path'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ docPath: string[] }> }
+  { params }: { params: Promise<{ docPath: string }> }
 ) {
   try {
     const { docPath } = await params
-    const fullPath = Array.isArray(docPath) ? docPath.join('/') : docPath
+    const fullPath = docPath
     
     console.log('📄 Document API called with path:', docPath, 'fullPath:', fullPath)
     
