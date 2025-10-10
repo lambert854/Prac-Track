@@ -338,7 +338,7 @@ export function FacultyTimesheets({ facultyId }: FacultyTimesheetsProps) {
                         Approved by {timesheet.supervisorApprovedBy?.firstName} {timesheet.supervisorApprovedBy?.lastName}
                       </p>
                       <p className="text-xs text-green-700">
-                        {formatDate(timesheet.supervisorApprovedAt)}
+                        {timesheet.supervisorApprovedAt && formatDate(timesheet.supervisorApprovedAt)}
                       </p>
                     </div>
                   </div>
