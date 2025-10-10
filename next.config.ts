@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
         search: '',
       },
     ],
+    // Disable image optimization caching for logo
+    unoptimized: false,
+    minimumCacheTTL: 0,
   },
   // Configure for mobile development
   async headers() {
@@ -34,6 +37,24 @@ const nextConfig: NextConfig = {
           {
             key: 'Access-Control-Allow-Headers',
             value: 'Content-Type, Authorization',
+          },
+        ],
+      },
+      // Add cache-busting headers for logo
+      {
+        source: '/logo.svg',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
           },
         ],
       },
