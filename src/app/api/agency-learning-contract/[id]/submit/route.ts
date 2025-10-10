@@ -133,7 +133,6 @@ export async function POST(
             licenseNumber: formFields.fieldInstructorLicense || null,
             highestDegree: formFields.fieldInstructorDegree || null,
             otherDegree: null,
-            resume: formFields.fieldInstructorResume || null,
           }
         })
 
