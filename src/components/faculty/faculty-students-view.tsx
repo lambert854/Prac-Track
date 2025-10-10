@@ -26,22 +26,24 @@ export function FacultyStudentsView() {
     return 'all'
   })
 
-  // Fetch assigned students data
-  const { data: dashboardData, isLoading, error } = useQuery({
-    queryKey: ['faculty-dashboard', session?.user?.id],
+  // Fetch assigned students data (faculty can only see their assigned students)
+  const { data: students, isLoading, error } = useQuery({
+    queryKey: ['faculty-students', session?.user?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/faculty/${session?.user?.id}/dashboard`)
-      if (!response.ok) throw new Error('Failed to fetch dashboard data')
+      const response = await fetch(`/api/faculty/${session?.user?.id}/students`, {
+        credentials: 'include'
+      })
+      if (!response.ok) throw new Error('Failed to fetch assigned students')
       return response.json()
     },
     enabled: !!session?.user?.id,
   })
 
-  const assignedStudents = dashboardData?.assignedStudents || []
+  const allStudents = students || []
 
   // Filter and search logic
   const filteredStudents = useMemo(() => {
-    let filtered = assignedStudents
+    let filtered = allStudents
 
     // Apply search filter
     if (searchTerm) {
@@ -54,13 +56,19 @@ export function FacultyStudentsView() {
     // Apply status filter
     if (filterStatus !== 'all') {
       filtered = filtered.filter((student: any) => {
+        const hasPlacements = student.studentPlacements && student.studentPlacements.length > 0
+        const activePlacement = student.studentPlacements?.find((p: any) => 
+          ['ACTIVE', 'APPROVED', 'APPROVED_PENDING_CHECKLIST'].includes(p.status)
+        )
+        const pendingPlacement = student.studentPlacements?.find((p: any) => p.status === 'PENDING')
+        
         switch (filterStatus) {
           case 'with-placements':
-            return student.activePlacement && student.activePlacement.status !== 'PENDING'
+            return hasPlacements && activePlacement
           case 'without-placements':
-            return !student.activePlacement || student.activePlacement.status === 'PENDING'
+            return !hasPlacements || (!activePlacement && !pendingPlacement)
           case 'pending-placements':
-            return student.activePlacement && student.activePlacement.status === 'PENDING'
+            return pendingPlacement
           default:
             return true
         }
@@ -68,7 +76,7 @@ export function FacultyStudentsView() {
     }
 
     return filtered
-  }, [assignedStudents, searchTerm, filterStatus])
+  }, [allStudents, searchTerm, filterStatus])
 
   const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
@@ -95,7 +103,7 @@ export function FacultyStudentsView() {
       <div className="space-y-6">
         <div className="card">
           <h1 className="text-2xl font-bold text-gray-900">My Students</h1>
-          <p className="text-red-600 mt-1">Error loading students: {error.message}</p>
+          <p className="text-red-600 mt-1">Error loading assigned students: {error.message}</p>
         </div>
       </div>
     )
@@ -109,7 +117,7 @@ export function FacultyStudentsView() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">My Students</h1>
             <p className="text-gray-600 mt-1">
-              View and manage your assigned students ({filteredStudents.length} of {assignedStudents.length} total)
+              View and manage your assigned students ({filteredStudents.length} of {allStudents.length} total)
             </p>
           </div>
           {totalPages > 1 && (
@@ -122,31 +130,31 @@ export function FacultyStudentsView() {
         </div>
 
         {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col gap-3 md:gap-4 mb-4 md:mb-6">
           {/* Search Box */}
           <div className="flex-1">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                <MagnifyingGlassIcon className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
               </div>
               <input
                 type="text"
-                placeholder="Search students by name or email..."
+                placeholder="Search students..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value)
                   setCurrentPage(1) // Reset to first page when searching
                 }}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full pl-8 md:pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
               />
             </div>
           </div>
 
           {/* Filter Dropdown */}
-          <div className="sm:w-64">
+          <div className="w-full sm:w-64">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FunnelIcon className="h-5 w-5 text-gray-400" />
+                <FunnelIcon className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
               </div>
               <select
                 value={filterStatus}
@@ -154,7 +162,7 @@ export function FacultyStudentsView() {
                   setFilterStatus(e.target.value)
                   setCurrentPage(1) // Reset to first page when filtering
                 }}
-                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full pl-8 md:pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
               >
                 <option value="all">All Students</option>
                 <option value="with-placements">With Placements</option>
@@ -282,7 +290,11 @@ export function FacultyStudentsView() {
           <div className="card">
             <div className="space-y-3">
               {currentStudents.map((student: any) => (
-                <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <button
+                  key={student.id}
+                  onClick={() => router.push(`/admin/students/${student.id}`)}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 hover:shadow-sm transition-all duration-200 text-left cursor-pointer"
+                >
                   <div className="flex items-center">
                     <UserGroupIcon className="h-5 w-5 text-gray-400 mr-3" />
                     <div>
@@ -293,40 +305,44 @@ export function FacultyStudentsView() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {student.activePlacement ? (
+                    {student.studentPlacements && student.studentPlacements.length > 0 ? (
                       <div className="flex flex-col items-end space-y-1">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                          Approved
-                        </span>
-                        {student.activePlacement.status === 'APPROVED_PENDING_CHECKLIST' && !student.activePlacement.checklist && (
-                          <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-                            Waiting on checklist
-                          </span>
-                        )}
-                        {student.activePlacement.status === 'APPROVED_PENDING_CHECKLIST' && student.activePlacement.checklist && (
-                          <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                            Checklist Complete
-                          </span>
-                        )}
-                        {student.activePlacement.status === 'ACTIVE' && (
-                          <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                            Checklist completed
-                          </span>
-                        )}
+                        {(() => {
+                          // Use same logic as student dashboard - consider these statuses as "active" for evaluations
+                          const activePlacement = student.studentPlacements.find((p: any) => 
+                            ['ACTIVE', 'APPROVED', 'APPROVED_PENDING_CHECKLIST'].includes(p.status)
+                          )
+                          const pendingPlacement = student.studentPlacements.find((p: any) => p.status === 'PENDING')
+                          
+                          if (activePlacement) {
+                            return (
+                              <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                Active Placement
+                              </span>
+                            )
+                          } else if (pendingPlacement) {
+                            return (
+                              <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                                Pending Placement
+                              </span>
+                            )
+                          } else {
+                            // Student has placements but none are active (all completed/ended)
+                            return (
+                              <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                                No active placement
+                              </span>
+                            )
+                          }
+                        })()}
                       </div>
                     ) : (
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
                         No Placement
                       </span>
                     )}
-                    <button
-                      onClick={() => router.push(`/admin/students/${student.id}`)}
-                      className="text-primary hover:text-accent text-sm"
-                    >
-                      View Details
-                    </button>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -429,9 +445,12 @@ export function FacultyStudentsView() {
         <div className="card">
           <div className="text-center py-8">
             <UserGroupIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Assigned Students</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Students Found</h3>
             <p className="text-gray-600">
-              You don't have any students assigned to you yet.
+              {searchTerm || filterStatus !== 'all' 
+                ? 'Try adjusting your search or filter criteria.'
+                : 'No students have been assigned to you yet.'
+              }
             </p>
           </div>
         </div>
