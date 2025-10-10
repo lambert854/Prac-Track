@@ -27,9 +27,10 @@ class EmailService {
    * Send an email (logs in development, actually sends in production)
    */
   async sendEmail(template: EmailTemplate): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    let emailRecord: any = null
     try {
       // Always store the email attempt in the database for tracking
-      const emailRecord = await this.storeEmailRecord(template, 'PENDING')
+      emailRecord = await this.storeEmailRecord(template, 'PENDING')
 
       if (!this.isEmailEnabled) {
         // Development mode - log the email instead of sending
