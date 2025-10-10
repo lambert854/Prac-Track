@@ -18,11 +18,23 @@ const siteSchema = z.object({
   contactEmail: z.string().email('Valid email is required'),
   contactPhone: z.string().min(1, 'Contact phone is required'),
   practiceAreas: z.string().min(1, 'Practice areas are required'),
-  // Practicum Placement Agreement fields
-  agreementStartMonth: z.number().min(1).max(12).optional(),
-  agreementStartYear: z.number().min(2020).max(2030).optional(),
-  staffHasActiveLicense: z.enum(['YES', 'NO']).optional(),
-  supervisorTraining: z.enum(['YES', 'NO']).optional(),
+  // Practicum Placement Agreement fields - all optional, handle empty strings
+  agreementStartMonth: z.preprocess(
+    (val) => val === '' || val === undefined ? undefined : Number(val),
+    z.number().min(1).max(12).optional()
+  ),
+  agreementStartYear: z.preprocess(
+    (val) => val === '' || val === undefined ? undefined : Number(val),
+    z.number().min(2020).max(2030).optional()
+  ),
+  staffHasActiveLicense: z.preprocess(
+    (val) => val === '' || val === undefined ? undefined : val,
+    z.enum(['YES', 'NO']).optional()
+  ),
+  supervisorTraining: z.preprocess(
+    (val) => val === '' || val === undefined ? undefined : val,
+    z.enum(['YES', 'NO']).optional()
+  ),
 })
 
 type SiteFormData = z.infer<typeof siteSchema>
@@ -85,8 +97,8 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
       practiceAreas: site.practiceAreas,
       agreementStartMonth: site.agreementStartMonth || undefined,
       agreementStartYear: site.agreementStartYear || undefined,
-      staffHasActiveLicense: site.staffHasActiveLicense || undefined,
-      supervisorTraining: site.supervisorTraining || undefined,
+      staffHasActiveLicense: (site.staffHasActiveLicense === 'YES' || site.staffHasActiveLicense === 'NO') ? site.staffHasActiveLicense : undefined,
+      supervisorTraining: (site.supervisorTraining === 'YES' || site.supervisorTraining === 'NO') ? site.supervisorTraining : undefined,
     } : {
       name: '',
       address: '',
@@ -180,7 +192,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            {site ? 'Edit Agency' : 'Add New Agency'}
+            {site ? 'Edit Field Placement Site' : 'Add New Field Placement Site'}
           </h2>
           <button
             onClick={onClose}
@@ -194,13 +206,13 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <label htmlFor="name" className="form-label">
-                Agency Name *
+                Site Name *
               </label>
               <input
                 {...register('name')}
                 type="text"
                 className="form-input"
-                placeholder="Enter agency name"
+                placeholder="Enter site name"
               />
               {errors.name && (
                 <p className="form-error">{errors.name.message}</p>
@@ -269,7 +281,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
 
             <div>
               <label htmlFor="contactName" className="form-label">
-                Agency Contact Name *
+                Site Contact Name *
               </label>
               <input
                 {...register('contactName')}
@@ -284,7 +296,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
 
             <div>
               <label htmlFor="contactEmail" className="form-label">
-                Agency Contact Email *
+                Site Contact Email *
               </label>
               <input
                 {...register('contactEmail')}
@@ -299,7 +311,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
 
             <div>
               <label htmlFor="contactPhone" className="form-label">
-                Agency Contact Phone *
+                Site Contact Phone *
               </label>
               <input
                 {...register('contactPhone')}
@@ -337,10 +349,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
                   Start Month
                 </label>
                 <select
-                  {...register('agreementStartMonth', { 
-                    valueAsNumber: true,
-                    setValueAs: (value) => value === '' ? undefined : parseInt(value, 10)
-                  })}
+                  {...register('agreementStartMonth')}
                   className="form-input"
                 >
                   <option value="">Select month</option>
@@ -367,10 +376,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
                   Start Year
                 </label>
                 <select
-                  {...register('agreementStartYear', { 
-                    valueAsNumber: true,
-                    setValueAs: (value) => value === '' ? undefined : parseInt(value, 10)
-                  })}
+                  {...register('agreementStartYear')}
                   className="form-input"
                 >
                   <option value="">Select year</option>
@@ -479,7 +485,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
                   {site ? 'Updating...' : 'Creating...'}
                 </>
               ) : (
-                site ? 'Update Agency' : 'Create Agency'
+                site ? 'Update Field Site' : 'Create Field Site'
               )}
             </button>
           </div>
