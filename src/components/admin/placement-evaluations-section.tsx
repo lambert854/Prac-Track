@@ -90,7 +90,7 @@ export function PlacementEvaluationsSection({
               Student Self-Evaluations
             </h5>
             <div className="space-y-2">
-              {studentEvaluations.map((evaluation) => (
+              {studentEvaluations.map((evaluation: any) => (
                 <div key={evaluation.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className={`w-2 h-2 rounded-full ${
@@ -138,7 +138,7 @@ export function PlacementEvaluationsSection({
               Supervisor Evaluations
             </h5>
             <div className="space-y-2">
-              {supervisorEvaluations.map((evaluation) => (
+              {supervisorEvaluations.map((evaluation: any) => (
                 <div key={evaluation.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className={`w-2 h-2 rounded-full ${
