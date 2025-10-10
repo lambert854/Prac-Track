@@ -88,7 +88,7 @@ class EmailService {
   /**
    * Create and send a notification email
    */
-  async sendNotification(data: NotificationData): Promise<{ success: boolean; notificationId?: string; emailId?: string }> {
+  async sendNotification(data: NotificationData): Promise<{ success: boolean; notificationId?: string; emailId?: string; error?: string }> {
     try {
       // Get user details
       const user = await prisma.user.findUnique({
