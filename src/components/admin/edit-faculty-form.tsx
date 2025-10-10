@@ -10,10 +10,10 @@ interface Faculty {
   lastName: string
   email: string
   facultyProfile?: {
-    honorific?: string
-    title?: string
-    officePhone?: string
-    roomNumber?: string
+    honorific?: string | null
+    title?: string | null
+    officePhone?: string | null
+    roomNumber?: string | null
   }
 }
 
