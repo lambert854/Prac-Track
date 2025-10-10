@@ -72,9 +72,9 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="card">
+      <div className="card rounded-lg p-6 shadow-sm border">
         <h1 className="text-2xl font-bold text-gray-900">Faculty Dashboard</h1>
-        <p className="text-gray-600 mt-1">
+        <p className="mt-1 text-gray-600">
           Welcome, {user.name}! 
           {user.facultyProfile && (
             <span className="ml-2 text-sm">
@@ -85,8 +85,11 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-        <div className="card">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div 
+          className="card card-hover cursor-pointer"
+          onClick={() => router.push('/faculty/students')}
+        >
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <UserGroupIcon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
@@ -96,7 +99,10 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
           </div>
         </div>
         
-        <div className="card">
+        <div 
+          className="card card-hover cursor-pointer"
+          onClick={() => router.push('/faculty/students?filter=pending-placements')}
+        >
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <ClipboardDocumentListIcon className="h-8 w-8 text-orange-600 mx-auto mb-2" />
@@ -126,7 +132,10 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
           </div>
         </div>
         
-        <div className="card">
+        <div 
+          className="card card-hover cursor-pointer"
+          onClick={() => router.push('/faculty/students?filter=with-placements')}
+        >
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <ClockIcon className="h-8 w-8 text-purple-600 mx-auto mb-2" />
@@ -143,18 +152,8 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <ExclamationTriangleIcon className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-600">Pending Sites</p>
+              <p className="text-sm font-medium text-gray-600">Pending Agencies</p>
               <p className="text-2xl font-bold text-gray-900">{summaryStats.pendingSites || 0}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="card">
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <ExclamationTriangleIcon className="h-8 w-8 text-red-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-600">Class Mismatches</p>
-              <p className="text-2xl font-bold text-gray-900">{summaryStats.classMismatchCount || 0}</p>
             </div>
           </div>
         </div>
@@ -235,7 +234,7 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
                       Placement request from {placement.student.firstName} {placement.student.lastName}
                     </span>
                     <p className="text-xs text-gray-600">
-                      {placement.site.name} • {placement.term.replace('_', ' ')} • {placement.requiredHours}h
+                      {placement.site.name} • {placement.class?.name || 'Unknown Class'} • {placement.requiredHours}h
                     </p>
                     <p className="text-xs text-gray-500">
                       {new Date(placement.startDate).toLocaleDateString()} - {new Date(placement.endDate).toLocaleDateString()}
@@ -301,10 +300,9 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
             ))}
             
             {classMismatchNotifications.map((notification: any, index: number) => (
-              <button
+              <div
                 key={`mismatch-${index}`}
-                onClick={() => router.push('/admin/faculty-assignments')}
-                className="w-full flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer text-left"
+                className="w-full flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg"
               >
                 <div className="flex items-center">
                   <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-3" />
@@ -316,9 +314,8 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
                   <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full">
                     High Priority
                   </span>
-                  <span className="text-xs text-gray-500">Review assignment →</span>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>

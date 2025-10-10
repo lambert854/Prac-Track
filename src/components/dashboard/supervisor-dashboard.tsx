@@ -65,7 +65,7 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="card">
+      <div className="card rounded-lg">
         <h1 className="text-2xl font-bold text-gray-900">Supervisor Dashboard</h1>
         <p className="text-gray-600 mt-1">
           Welcome, {user.name}! 

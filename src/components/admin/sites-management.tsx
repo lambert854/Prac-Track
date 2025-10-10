@@ -7,6 +7,7 @@ import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon, EnvelopeIcon } from '@heroi
 import { SiteForm } from './site-form'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ConfirmationModal } from './confirmation-modal'
+import { SendLearningContractModal } from './send-learning-contract-modal'
 
 interface Site {
   id: string
@@ -20,7 +21,8 @@ interface Site {
   contactPhone: string
   practiceAreas: string
   active: boolean
-  status: 'ACTIVE' | 'PENDING_APPROVAL' | 'REJECTED'
+  status: 'ACTIVE' | 'PENDING_APPROVAL' | 'PENDING_LEARNING_CONTRACT' | 'REJECTED'
+  learningContractStatus?: 'PENDING' | 'SENT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | null
   createdAt: string
   // practicum placement Agreement fields
   agreementStartMonth?: number | null
@@ -28,6 +30,23 @@ interface Site {
   agreementExpirationDate?: string | null
   staffHasActiveLicense?: string | null
   supervisorTraining?: string | null
+  // Supervisors
+  supervisors?: Array<{
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+    supervisorProfile?: {
+      title?: string
+    }
+  }>
+  pendingSupervisors?: Array<{
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+    status: string
+  }>
 }
 
 // Helper function to get agreement status
@@ -67,14 +86,15 @@ export function SitesManagement() {
   const [modalAction, setModalAction] = useState<'deactivate' | 'reactivate' | null>(null)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [selectedSiteForEmail, setSelectedSiteForEmail] = useState<Site | null>(null)
+  const [showLearningContractModal, setShowLearningContractModal] = useState(false)
+  const [selectedSiteForLearningContract, setSelectedSiteForLearningContract] = useState<Site | null>(null)
   const queryClient = useQueryClient()
   const router = useRouter()
 
   const { data: allSites, isLoading, error } = useQuery({
-    queryKey: ['sites', searchQuery],
+    queryKey: ['sites'],
     queryFn: async () => {
       const params = new URLSearchParams()
-      if (searchQuery) params.append('query', searchQuery)
       params.append('includeInactive', 'true') // Always fetch all sites
       
       const response = await fetch(`/api/sites?${params}`)
@@ -103,8 +123,21 @@ export function SitesManagement() {
       site.practiceAreas.toLowerCase().includes(searchQuery.toLowerCase()))
   ) || []
 
+  // Sites waiting for learning contract to be sent
   const pendingSites = allSites?.filter((site: Site) => 
     site.status === 'PENDING_APPROVAL' &&
+    (!site.learningContractStatus || site.learningContractStatus === 'PENDING') &&
+    (searchQuery === '' || 
+      site.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      site.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      site.contactEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      site.practiceAreas.toLowerCase().includes(searchQuery.toLowerCase()))
+  ) || []
+
+  // Sites with submitted learning contracts ready for final approval
+  const pendingLearningContractSites = allSites?.filter((site: Site) => 
+    (site.status === 'PENDING_APPROVAL' && site.learningContractStatus === 'SUBMITTED') ||
+    site.status === 'PENDING_LEARNING_CONTRACT' &&
     (searchQuery === '' || 
       site.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       site.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -142,19 +175,6 @@ export function SitesManagement() {
     },
   })
 
-  const approveSiteMutation = useMutation({
-    mutationFn: async (siteId: string) => {
-      const response = await fetch(`/api/sites/${siteId}/approve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-      if (!response.ok) throw new Error('Failed to approve site')
-      return response.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sites'] })
-    },
-  })
 
   const rejectSiteMutation = useMutation({
     mutationFn: async ({ siteId, reason }: { siteId: string; reason: string }) => {
@@ -164,6 +184,20 @@ export function SitesManagement() {
         body: JSON.stringify({ reason }),
       })
       if (!response.ok) throw new Error('Failed to reject site')
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sites'] })
+    },
+  })
+
+  const finalApproveSiteMutation = useMutation({
+    mutationFn: async (siteId: string) => {
+      const response = await fetch(`/api/sites/${siteId}/final-approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      if (!response.ok) throw new Error('Failed to approve site')
       return response.json()
     },
     onSuccess: () => {
@@ -207,7 +241,8 @@ export function SitesManagement() {
   }
 
   const handleApprove = (site: Site) => {
-    approveSiteMutation.mutate(site.id)
+    setSelectedSiteForLearningContract(site)
+    setShowLearningContractModal(true)
   }
 
   const handleReject = (site: Site) => {
@@ -215,6 +250,10 @@ export function SitesManagement() {
     if (reason && reason.trim()) {
       rejectSiteMutation.mutate({ siteId: site.id, reason: reason.trim() })
     }
+  }
+
+  const handleFinalApprove = (site: Site) => {
+    finalApproveSiteMutation.mutate(site.id)
   }
 
   const handleReactivate = (site: Site) => {
@@ -308,17 +347,18 @@ export function SitesManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Placement Sites</h1>
-          <p className="text-gray-600">Manage practicum placement sites</p>
+          <h1 className="text-2xl font-bold text-gray-900">Agency Management</h1>
+          <p className="text-gray-600">Manage practicum placement agencies</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
           className="btn-primary flex items-center"
         >
           <PlusIcon className="h-5 w-5 mr-2" />
-          Add Site
+          Add Agency
         </button>
       </div>
+
 
       {/* Search and Filters */}
       <div className="card">
@@ -327,7 +367,7 @@ export function SitesManagement() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search sites by name, contact, email, or practice areas..."
+                placeholder="Search agencies by name, contact, email, or practice areas..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="form-input"
@@ -354,7 +394,7 @@ export function SitesManagement() {
       {pendingSites.length > 0 && (
         <div className="card border-orange-200 bg-orange-50">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Pending Site Approvals ({pendingSites.length})</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Pending Agency Approvals ({pendingSites.length})</h2>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
               Awaiting Review
             </span>
@@ -382,10 +422,61 @@ export function SitesManagement() {
                   <div className="flex items-center space-x-2 ml-4">
                     <button
                       onClick={() => handleApprove(site)}
-                      disabled={approveSiteMutation.isPending}
+                      className="bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Send Learning Contract
+                    </button>
+                    <button
+                      onClick={() => handleReject(site)}
+                      disabled={rejectSiteMutation.isPending}
+                      className="bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {rejectSiteMutation.isPending ? 'Rejecting...' : 'Reject'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pending Learning Contract Review */}
+      {pendingLearningContractSites.length > 0 && (
+        <div className="card border-blue-200 bg-blue-50">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Pending Agreement Review ({pendingLearningContractSites.length})</h2>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              Ready for Final Approval
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {pendingLearningContractSites.map((site: Site) => (
+              <div key={site.id} className="bg-white rounded-lg border border-blue-200 p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-medium text-gray-900">{site.name}</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {site.address}, {site.city}, {site.state} {site.zip}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <strong>Contact:</strong> {site.contactName} ({site.contactEmail})
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <strong>Practice Areas:</strong> {site.practiceAreas}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Learning Contract Submitted: {site.learningContractStatus === 'SUBMITTED' ? 'Ready for Review' : 'Under Review'}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2 ml-4">
+                    <button
+                      onClick={() => handleFinalApprove(site)}
+                      disabled={finalApproveSiteMutation.isPending}
                       className="bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {approveSiteMutation.isPending ? 'Approving...' : 'Approve'}
+                      {finalApproveSiteMutation.isPending ? 'Approving...' : 'Final Approve'}
                     </button>
                     <button
                       onClick={() => handleReject(site)}
@@ -405,7 +496,7 @@ export function SitesManagement() {
       {/* Active Sites */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">{showInactive ? 'Inactive' : 'Active'} Sites ({currentSites.length})</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{showInactive ? 'Inactive' : 'Active'} Agencies ({currentSites.length})</h2>
           {totalPages > 1 && (
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-700">
@@ -413,6 +504,23 @@ export function SitesManagement() {
               </span>
             </div>
           )}
+        </div>
+
+        {/* Demo Data Notice - Remove in Production */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-800">
+                <strong>Demo Data Notice:</strong> This system contains demonstration data for testing purposes. 
+                All agency information shown here is sample data and will be replaced with real data in production.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Top Pagination */}
@@ -514,16 +622,19 @@ export function SitesManagement() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '35%' }}>
-                  Site Name
+                  Agency Name
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '25%' }}>
                   Contact
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '20%' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
                   Practice Areas
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '20%' }}>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
                   Agreement Status
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
+                  Agency Application
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '10%' }}>
                   Actions
@@ -576,7 +687,7 @@ export function SitesManagement() {
                         </button>
                       )}
                     </div>
-                    {site.agreementExpirationDate && (
+                    {site.agreementExpirationDate && !isNaN(new Date(site.agreementExpirationDate).getTime()) && (
                       <div className="text-xs text-gray-500 mt-1">
                         {getAgreementStatus(site).status === 'expired' ? 'Expired:' : 'Expires:'} {new Date(site.agreementExpirationDate).toLocaleDateString('en-US', { 
                           year: 'numeric', 
@@ -584,6 +695,46 @@ export function SitesManagement() {
                         })}
                       </div>
                     )}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      {site.learningContractStatus ? (
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          site.learningContractStatus === 'APPROVED' 
+                            ? 'bg-green-100 text-green-800'
+                            : site.learningContractStatus === 'SUBMITTED'
+                            ? 'bg-blue-100 text-blue-800'
+                            : site.learningContractStatus === 'SENT'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {site.learningContractStatus === 'APPROVED' ? 'Approved' :
+                           site.learningContractStatus === 'SUBMITTED' ? 'Submitted' :
+                           site.learningContractStatus === 'SENT' ? 'Sent' :
+                           site.learningContractStatus === 'REJECTED' ? 'Rejected' :
+                           'Pending'}
+                        </span>
+                      ) : (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                          None
+                        </span>
+                      )}
+                      {site.status === 'ACTIVE' && (!site.learningContractStatus || site.learningContractStatus === 'REJECTED') && 
+                       (getAgreementStatus(site).status === 'expired' || 
+                        (site.agreementExpirationDate && isExpiringSoon(new Date(site.agreementExpirationDate)))) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedSiteForLearningContract(site)
+                            setShowLearningContractModal(true)
+                          }}
+                          className="text-blue-600 hover:text-blue-900 transition-colors"
+                          title="Send agency application"
+                        >
+                          <EnvelopeIcon className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
@@ -624,7 +775,7 @@ export function SitesManagement() {
 
         {activeSites.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-500">No active sites found</p>
+            <p className="text-gray-500">No active agencies found</p>
           </div>
         )}
 
@@ -735,7 +886,7 @@ export function SitesManagement() {
       {modalAction && (
         <ConfirmationModal
           isOpen={showConfirmModal}
-          title={modalAction === 'deactivate' ? 'Deactivate Site' : 'Reactivate Site'}
+          title={modalAction === 'deactivate' ? 'Deactivate Agency' : 'Reactivate Agency'}
           message={modalAction === 'deactivate' 
             ? `Are you sure you want to deactivate "${siteToDeactivate?.name}"? It will be moved to the inactive section.`
             : `Are you sure you want to reactivate "${siteToReactivate?.name}"? It will be moved to the active section.`
@@ -753,7 +904,7 @@ export function SitesManagement() {
       <ConfirmationModal
         isOpen={showEmailModal}
         title="Email Agreement"
-        message="Email functions coming in production. This feature will allow you to send agreement renewal emails to site contacts."
+        message="Email functions coming in production. This feature will allow you to send agreement renewal emails to agency contacts."
         confirmText="OK"
         cancelText=""
         onConfirm={cancelEmailModal}
@@ -761,6 +912,18 @@ export function SitesManagement() {
         isLoading={false}
         variant="info"
       />
+
+      {/* Send Learning Contract Modal */}
+      {selectedSiteForLearningContract && (
+        <SendLearningContractModal
+          site={selectedSiteForLearningContract}
+          isOpen={showLearningContractModal}
+          onClose={() => {
+            setShowLearningContractModal(false)
+            setSelectedSiteForLearningContract(null)
+          }}
+        />
+      )}
     </div>
   )
 }

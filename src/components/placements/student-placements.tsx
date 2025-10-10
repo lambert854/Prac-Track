@@ -36,6 +36,7 @@ interface Placement {
     lastName: string
     facultyProfile?: {
       title?: string
+      honorific?: string
     }
   }
 }
@@ -115,8 +116,22 @@ export function StudentPlacements() {
                         <div>
                           <p className="text-sm font-medium text-gray-900">Location</p>
                           <p className="text-sm text-gray-600">
-                            {placement.site.address}<br />
-                            {placement.site.city}, {placement.site.state} {placement.site.zip}
+                            {placement.site.address ? (
+                              <a 
+                                href={`https://maps.google.com/?q=${encodeURIComponent(`${placement.site.address}, ${placement.site.city}, ${placement.site.state} ${placement.site.zip}`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 hover:underline"
+                              >
+                                {placement.site.address}<br />
+                                {placement.site.city}, {placement.site.state} {placement.site.zip}
+                              </a>
+                            ) : (
+                              <>
+                                {placement.site.address}<br />
+                                {placement.site.city}, {placement.site.state} {placement.site.zip}
+                              </>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -156,6 +171,7 @@ export function StudentPlacements() {
                         <div>
                           <p className="text-sm font-medium text-gray-900">Faculty Liaison</p>
                           <p className="text-sm text-gray-600">
+                            {placement.faculty.facultyProfile?.honorific && `${placement.faculty.facultyProfile.honorific} `}
                             {placement.faculty.firstName} {placement.faculty.lastName}
                           </p>
                           {placement.faculty.facultyProfile?.title && (
@@ -174,7 +190,7 @@ export function StudentPlacements() {
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-sm font-medium text-gray-900 mb-1">Site Contact</p>
+                    <p className="text-sm font-medium text-gray-900 mb-1">Agency Contact</p>
                     <p className="text-sm text-gray-600">
                       {placement.site.contactName}<br />
                       {placement.site.contactEmail}<br />

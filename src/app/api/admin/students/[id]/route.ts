@@ -221,12 +221,17 @@ export async function GET(
             status: true,
             startDate: true,
             endDate: true,
-            term: true,
             requiredHours: true,
             approvedAt: true,
             cellPolicy: true,
             learningContract: true,
             checklist: true,
+            class: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
             site: {
               select: {
                 id: true,

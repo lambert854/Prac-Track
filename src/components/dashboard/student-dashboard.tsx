@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { ClockIcon, DocumentTextIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { ClockIcon, DocumentTextIcon, CheckCircleIcon, ExclamationTriangleIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { AddHoursModal } from '@/components/timesheets/add-hours-modal'
 
 interface StudentDashboardProps {
   user: {
@@ -18,6 +20,7 @@ interface StudentDashboardProps {
 
 export function StudentDashboard({ user }: StudentDashboardProps) {
   const router = useRouter()
+  const [showAddHoursModal, setShowAddHoursModal] = useState(false)
   
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['student-dashboard', user.id],
@@ -64,9 +67,9 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="card">
+      <div className="card rounded-lg p-6 shadow-sm border">
         <h1 className="text-2xl font-bold text-gray-900">Welcome, {user.name}!</h1>
-        <p className="text-gray-600 mt-1">
+        <p className="mt-1 text-gray-600">
           {user.studentProfile?.program} - {user.studentProfile?.cohort} Cohort
         </p>
       </div>
@@ -86,7 +89,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
                   <p className="text-green-800"><strong>Supervisor:</strong> {placement.supervisor ? `${placement.supervisor.firstName} ${placement.supervisor.lastName}` : 'Not Assigned'}</p>
                 </div>
                 <div>
-                  <p className="text-green-800"><strong>Term:</strong> {placement.term?.replace('_', ' ')}</p>
+                  <p className="text-green-800"><strong>Class:</strong> {placement.class?.name || 'Unknown Class'}</p>
                   <p className="text-green-800"><strong>Required Hours:</strong> {placement.requiredHours || user.studentProfile?.requiredHours || 0}</p>
                 </div>
               </div>
@@ -143,7 +146,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
                   {app.status === 'PENDING' ? 'Pending Review' : 'Approved'}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {app.term.replace('_', ' ')} • {app.requiredHours} hours
+                  {app.class?.name || 'Unknown Class'} • {app.requiredHours} hours
                 </p>
                 {app.status === 'APPROVED_PENDING_CHECKLIST' && (
                   <div className="mt-2">
@@ -201,9 +204,17 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
               <p className="text-sm text-gray-600">Record your field hours</p>
             </div>
           </div>
-          <div className="mt-4">
-            <a href="/timesheets" className="btn-primary w-full text-center block">
-              Manage
+          <div className="mt-4 space-y-2">
+            <button
+              onClick={() => setShowAddHoursModal(true)}
+              className="btn-primary w-full flex items-center justify-center"
+              disabled={!placement?.id}
+            >
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Add Hours
+            </button>
+            <a href="/timesheets" className="btn-outline w-full text-center block">
+              Manage All
             </a>
           </div>
         </div>
@@ -264,6 +275,15 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Add Hours Modal */}
+      {placement?.id && (
+        <AddHoursModal
+          isOpen={showAddHoursModal}
+          onClose={() => setShowAddHoursModal(false)}
+          placementId={placement.id}
+        />
       )}
     </div>
   )

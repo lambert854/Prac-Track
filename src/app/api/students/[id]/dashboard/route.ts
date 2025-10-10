@@ -31,7 +31,8 @@ export async function GET(
       include: {
         site: true,
         supervisor: true,
-        faculty: true
+        faculty: true,
+        class: true
       }
     })
 
@@ -45,7 +46,8 @@ export async function GET(
       },
       include: {
         site: true,
-        faculty: true
+        faculty: true,
+        class: true
       },
       orderBy: {
         startDate: 'desc'

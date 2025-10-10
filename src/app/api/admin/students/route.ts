@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireAdmin()
     const body = await request.json()
-    const { firstName, lastName, email, password, aNumber, program, cohort, requiredHours, term, facultyId } = body
+    const { firstName, lastName, email, password, aNumber, program, cohort, facultyId } = body
 
     // Validate required fields
     if (!firstName || !lastName || !email || !password || !aNumber || !program || !cohort || !facultyId) {
@@ -147,9 +147,7 @@ export async function POST(request: NextRequest) {
           create: {
             aNumber,
             program,
-            cohort,
-            requiredHours: requiredHours || 900,
-            term: term || 'FALL'
+            cohort
           }
         }
       },

@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, Term, PlacementStatus, TimesheetCategory, FormTemplateKey, FormSubmissionRole, FormSubmissionStatus } from '@prisma/client'
+import { PrismaClient, UserRole, PlacementStatus, TimesheetCategory, FormTemplateKey, FormSubmissionRole, FormSubmissionStatus } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -84,8 +84,6 @@ async function main() {
           aNumber: 'A0001001',
           program: 'MSW',
           cohort: '2024',
-          requiredHours: 900,
-          term: Term.FALL,
         },
       },
     },
@@ -105,12 +103,34 @@ async function main() {
           aNumber: 'A0001002',
           program: 'MSW',
           cohort: '2024',
-          requiredHours: 900,
-          term: Term.FALL,
         },
       },
     },
   })
+
+  // Create classes
+  const classes = await Promise.all([
+    prisma.class.upsert({
+      where: { id: 'class-1' },
+      update: {},
+      create: {
+        id: 'class-1',
+        name: 'Social Work Practicum I',
+        hours: 900,
+        facultyId: faculty1.id,
+      },
+    }),
+    prisma.class.upsert({
+      where: { id: 'class-2' },
+      update: {},
+      create: {
+        id: 'class-2',
+        name: 'Social Work Practicum II',
+        hours: 900,
+        facultyId: faculty1.id,
+      },
+    }),
+  ])
 
   // Create sites
   const sites = await Promise.all([
@@ -221,9 +241,11 @@ async function main() {
         siteId: sites[0].id,
         supervisorId: supervisor1.id,
         facultyId: faculty1.id,
+        classId: classes[0].id,
         startDate,
         endDate,
         status: PlacementStatus.ACTIVE,
+        requiredHours: 900,
         complianceChecklist: JSON.stringify({
           orientation: true,
           safetyTraining: true,
@@ -241,9 +263,11 @@ async function main() {
         siteId: sites[1].id,
         supervisorId: supervisor1.id,
         facultyId: faculty1.id,
+        classId: classes[0].id,
         startDate,
         endDate,
         status: PlacementStatus.ACTIVE,
+        requiredHours: 900,
         complianceChecklist: JSON.stringify({
           orientation: true,
           safetyTraining: true,
@@ -261,9 +285,11 @@ async function main() {
         siteId: sites[2].id,
         supervisorId: supervisor1.id,
         facultyId: faculty1.id,
+        classId: classes[0].id,
         startDate: new Date('2024-01-15'),
         endDate: new Date('2024-05-10'),
         status: PlacementStatus.COMPLETE,
+        requiredHours: 900,
         complianceChecklist: JSON.stringify({
           orientation: true,
           safetyTraining: true,

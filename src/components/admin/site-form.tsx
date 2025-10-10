@@ -57,11 +57,12 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
 
   // Calculate expiration date (3 years from start date)
   const calculateExpirationDate = (month: number | undefined, year: number | undefined) => {
-    if (!month || !year) return null
+    if (!month || !year || isNaN(month) || isNaN(year)) return null
     const startDate = new Date(year, month - 1, 1) // month is 0-indexed
+    if (isNaN(startDate.getTime())) return null
     const expirationDate = new Date(startDate)
     expirationDate.setFullYear(startDate.getFullYear() + 3)
-    return expirationDate
+    return isNaN(expirationDate.getTime()) ? null : expirationDate
   }
 
   const {
@@ -179,7 +180,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            {site ? 'Edit Site' : 'Add New Site'}
+            {site ? 'Edit Agency' : 'Add New Agency'}
           </h2>
           <button
             onClick={onClose}
@@ -193,13 +194,13 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <label htmlFor="name" className="form-label">
-                Site Name *
+                Agency Name *
               </label>
               <input
                 {...register('name')}
                 type="text"
                 className="form-input"
-                placeholder="Enter site name"
+                placeholder="Enter agency name"
               />
               {errors.name && (
                 <p className="form-error">{errors.name.message}</p>
@@ -268,7 +269,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
 
             <div>
               <label htmlFor="contactName" className="form-label">
-                Contact Name *
+                Agency Contact Name *
               </label>
               <input
                 {...register('contactName')}
@@ -283,7 +284,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
 
             <div>
               <label htmlFor="contactEmail" className="form-label">
-                Contact Email *
+                Agency Contact Email *
               </label>
               <input
                 {...register('contactEmail')}
@@ -298,7 +299,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
 
             <div>
               <label htmlFor="contactPhone" className="form-label">
-                Contact Phone *
+                Agency Contact Phone *
               </label>
               <input
                 {...register('contactPhone')}
@@ -336,7 +337,10 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
                   Start Month
                 </label>
                 <select
-                  {...register('agreementStartMonth', { valueAsNumber: true })}
+                  {...register('agreementStartMonth', { 
+                    valueAsNumber: true,
+                    setValueAs: (value) => value === '' ? undefined : parseInt(value, 10)
+                  })}
                   className="form-input"
                 >
                   <option value="">Select month</option>
@@ -362,31 +366,27 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
                 <label htmlFor="agreementStartYear" className="form-label">
                   Start Year
                 </label>
-                <input
-                  {...register('agreementStartYear', { valueAsNumber: true })}
-                  type="number"
-                  min="2020"
-                  max="2030"
+                <select
+                  {...register('agreementStartYear', { 
+                    valueAsNumber: true,
+                    setValueAs: (value) => value === '' ? undefined : parseInt(value, 10)
+                  })}
                   className="form-input"
-                  placeholder="Enter year (e.g., 2024)"
-                />
+                >
+                  <option value="">Select year</option>
+                  {Array.from({ length: 10 }, (_, i) => {
+                    const year = new Date().getFullYear() - 6 + i
+                    return (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    )
+                  })}
+                </select>
                 {errors.agreementStartYear && (
                   <p className="form-error">{errors.agreementStartYear.message}</p>
                 )}
               </div>
-
-              {startMonth && startYear && (
-                <div className="md:col-span-2">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
-                      <strong>Agreement Expiration:</strong> {calculateExpirationDate(startMonth, startYear)?.toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'long' 
-                      })}
-                    </p>
-                  </div>
-                </div>
-              )}
 
               <div>
                 <label htmlFor="staffHasActiveLicense" className="form-label">
@@ -422,6 +422,41 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
                 )}
               </div>
             </div>
+            
+            {/* Agreement Expiration - only show when BOTH month AND year are valid numbers */}
+            {(() => {
+              // Check if both values are valid numbers (not default text)
+              const monthNum = parseInt(startMonth?.toString() || '');
+              const yearNum = parseInt(startYear?.toString() || '');
+              
+              // Only show if both are valid numbers and not NaN
+              if (isNaN(monthNum) || isNaN(yearNum) || 
+                  monthNum < 1 || monthNum > 12 || 
+                  yearNum < 1900 || yearNum > 2100) {
+                return null;
+              }
+              
+              try {
+                const startDate = new Date(yearNum, monthNum - 1, 1);
+                const expirationDate = new Date(startDate);
+                expirationDate.setFullYear(startDate.getFullYear() + 3);
+                
+                return (
+                  <div className="mt-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-800">
+                        <strong>Agreement Expiration:</strong> {expirationDate.toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long' 
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              } catch (error) {
+                return null;
+              }
+            })()}
           </div>
 
           <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
@@ -444,7 +479,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
                   {site ? 'Updating...' : 'Creating...'}
                 </>
               ) : (
-                site ? 'Update Site' : 'Create Site'
+                site ? 'Update Agency' : 'Create Agency'
               )}
             </button>
           </div>

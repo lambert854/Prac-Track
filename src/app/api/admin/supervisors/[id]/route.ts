@@ -62,7 +62,7 @@ export async function PATCH(
     await requireFacultyOrAdmin()
     const { id } = await params
     const body = await request.json()
-    const { firstName, lastName, email, phone, title, password } = body
+    const { firstName, lastName, email, phone, title, password, licensedSW, licenseNumber, highestDegree, otherDegree } = body
 
     // Validate required fields
     if (!firstName || !lastName || !email) {
@@ -99,7 +99,11 @@ export async function PATCH(
         passwordHash: passwordHash || undefined,
         supervisorProfile: {
           update: {
-            title: title || null
+            title: title || null,
+            licensedSW: licensedSW || null,
+            licenseNumber: licenseNumber || null,
+            highestDegree: highestDegree || null,
+            otherDegree: otherDegree || null
           }
         }
       },

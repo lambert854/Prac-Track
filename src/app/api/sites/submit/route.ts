@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
             title: 'Student Applied for Class Not Assigned to You',
             message: `A student has applied for ${selectedClass.name} which is not assigned to you. You may need to reassign the student to the correct faculty member.`,
             relatedEntityId: session.user.id,
-            relatedEntityType: 'STUDENT',
+            relatedEntityType: 'PLACEMENT',
             priority: 'HIGH',
             metadata: JSON.stringify({
               studentId: session.user.id,
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
             title: 'Student Applied for Your Class',
             message: `A student has applied for ${selectedClass.name} but is currently assigned to a different faculty member.`,
             relatedEntityId: session.user.id,
-            relatedEntityType: 'STUDENT',
+            relatedEntityType: 'PLACEMENT',
             priority: 'MEDIUM',
             metadata: JSON.stringify({
               studentId: session.user.id,
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
             title: 'Faculty-Class Mismatch Detected',
             message: `A student has applied for ${selectedClass.name} but is assigned to a different faculty member. Review the faculty assignment.`,
             relatedEntityId: session.user.id,
-            relatedEntityType: 'STUDENT',
+            relatedEntityType: 'PLACEMENT',
             priority: 'HIGH',
             metadata: JSON.stringify({
               studentId: session.user.id,
@@ -244,6 +244,10 @@ export async function POST(request: NextRequest) {
             email: validatedData.placementData.supervisorEmail!,
             phone: validatedData.placementData.supervisorPhone || null,
             title: validatedData.placementData.supervisorTitle || null,
+            licensedSW: validatedData.placementData.supervisorLicensedSW || null,
+            licenseNumber: validatedData.placementData.supervisorLicenseNumber || null,
+            highestDegree: validatedData.placementData.supervisorHighestDegree || null,
+            otherDegree: validatedData.placementData.supervisorOtherDegree || null,
             siteId: site.id,
             status: 'PENDING'
           }

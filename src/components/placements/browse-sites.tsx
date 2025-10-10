@@ -63,7 +63,7 @@ export function BrowseSites() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Browse Placement Sites</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Browse Placement Agencies</h1>
         <p className="text-gray-600">Find and request practicum placement opportunities</p>
       </div>
 
@@ -73,7 +73,7 @@ export function BrowseSites() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search sites by name, contact, or email..."
+              placeholder="Search agencies by name, contact, or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="form-input"
@@ -114,7 +114,7 @@ export function BrowseSites() {
       {/* My Site Not Listed Button */}
       <div className="card">
         <div className="text-center py-6">
-          <p className="text-gray-600 mb-4">Don't see your preferred placement site?</p>
+          <p className="text-gray-600 mb-4">Don't see your preferred placement agency?</p>
           <button 
             onClick={() => {
               setSelectedSite(null) // Use null to indicate this is a new site submission
@@ -122,7 +122,7 @@ export function BrowseSites() {
             }}
             className="btn-secondary"
           >
-            My Site Not Listed
+            My Agency Not Listed
           </button>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { DocumentArrowDownIcon, DocumentArrowUpIcon, EyeIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ConfirmationModal } from '@/components/admin/confirmation-modal'
 
 interface PlacementPendingApplicationProps {
   placementId: string
@@ -57,6 +58,8 @@ interface Placement {
 
 export function PlacementPendingApplication({ placementId, userRole }: PlacementPendingApplicationProps) {
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [docToDelete, setDocToDelete] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const { data: placement, isLoading, error } = useQuery<Placement>({
@@ -193,9 +196,21 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
   }
 
   const handleDeleteDocument = (docType: string) => {
-    if (confirm('Are you sure you want to delete this document?')) {
-      deleteDocumentMutation.mutate(docType)
+    setDocToDelete(docType)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDeleteDocument = () => {
+    if (docToDelete) {
+      deleteDocumentMutation.mutate(docToDelete)
+      setShowDeleteModal(false)
+      setDocToDelete(null)
     }
+  }
+
+  const cancelDeleteDocument = () => {
+    setShowDeleteModal(false)
+    setDocToDelete(null)
   }
 
   const downloadTemplate = (filename: string) => {
@@ -283,7 +298,7 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
             {placement.status === 'PENDING' ? 'Pending Review' : 'Approved'}
           </span>
           <span>Student: {placement.student.firstName} {placement.student.lastName}</span>
-          <span>Term: {placement.term.replace('_', ' ')}</span>
+          <span>Class: {placement.class?.name || 'Unknown Class'}</span>
           <span>Hours: {placement.requiredHours}</span>
         </div>
       </div>
@@ -410,6 +425,25 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Required Documents</h2>
         
+        {/* Instructional text */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-blue-800 mb-2">
+            The required signature forms, available at the links below, must be printed, completed, signed, and uploaded before you can begin your practicum hours.
+          </p>
+          <p className="text-sm text-blue-800 mb-2">
+            Once forms are completed, you may begin hours at your practicum placement one week before the start of the semester.
+          </p>
+          <p className="text-sm text-blue-800 mb-2">
+            <strong>Your hours must span 12 weeks; if they do not, you risk failing.</strong>
+          </p>
+          <p className="text-sm text-blue-800 mb-2">
+            You must complete all {placement.requiredHours} hours by noon on the Thursday of Finals Week.
+          </p>
+          <p className="text-sm text-blue-800">
+            You may also receive a printed copy of these forms from your Field Director. Please note that these forms require an actual signature and should not be electronically signed.
+          </p>
+        </div>
+        
         {/* Cell Phone Policy */}
         <div className="border border-gray-200 rounded-lg p-4 mb-4">
           <div className="flex items-center justify-between mb-2">
@@ -535,46 +569,47 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
           )}
         </div>
 
-        {/* Checklist (show if approved or active) */}
-        {(placement.status === 'APPROVED_PENDING_CHECKLIST' || placement.status === 'ACTIVE') && (
-          <div className="border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <h3 className="font-medium text-gray-900">Placement Checklist</h3>
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                  Due Week 2
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                {placement.checklist ? (
-                  <>
-                    <button
-                      onClick={() => viewDocument(placement.checklist!)}
-                      className="text-blue-600 hover:text-blue-800 p-1"
-                      title="View uploaded document"
-                    >
-                      <EyeIcon className="h-5 w-5" />
-                    </button>
-                    {isStudent && (
-                      <button
-                        onClick={() => handleDeleteDocument('checklist')}
-                        className="text-red-600 hover:text-red-800 p-1"
-                        title="Delete document"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
-                    )}
-                    <span className="text-green-600 text-sm font-medium">✓ Uploaded</span>
-                  </>
-                ) : (
-                  <span className="text-red-600 text-sm font-medium">✗ Required</span>
-                )}
-              </div>
+        {/* Checklist - always show */}
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+          <p className="text-sm text-orange-800 mb-3">
+            The expectation is that you will start your field hours by Week 2 and have your Placement Supervisor go over the checklist with you. Upload here once complete.
+          </p>
+        </div>
+        
+        <div className="border border-gray-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <h3 className="font-medium text-gray-900">Placement Checklist</h3>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                Due Week 2
+              </span>
             </div>
-            
-            <p className="text-sm text-gray-600 mb-3">
-              This checklist must be completed and signed by both the student and supervisor within the first 2 weeks of placement.
-            </p>
+            <div className="flex items-center space-x-2">
+              {placement.checklist ? (
+                <>
+                  <button
+                    onClick={() => viewDocument(placement.checklist!)}
+                    className="text-blue-600 hover:text-blue-800 p-1"
+                    title="View uploaded document"
+                  >
+                    <EyeIcon className="h-5 w-5" />
+                  </button>
+                  {isStudent && (
+                    <button
+                      onClick={() => handleDeleteDocument('checklist')}
+                      className="text-red-600 hover:text-red-800 p-1"
+                      title="Delete document"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                  <span className="text-green-600 text-sm font-medium">✓ Uploaded</span>
+                </>
+              ) : (
+                <span className="text-red-600 text-sm font-medium">✗ Required</span>
+              )}
+            </div>
+          </div>
             
             {isStudent && (
               <div className="flex items-center space-x-4">
@@ -603,8 +638,7 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
                 )}
               </div>
             )}
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Faculty Actions */}
@@ -741,6 +775,19 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
           </div>
         </div>
       )}
+
+      {/* Delete Document Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title="Delete Document"
+        message={`Are you sure you want to delete this document? This action cannot be undone.`}
+        confirmText="Delete Document"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteDocument}
+        onCancel={cancelDeleteDocument}
+        isLoading={deleteDocumentMutation.isPending}
+        variant="danger"
+      />
     </div>
   )
 }

@@ -31,7 +31,7 @@ interface NavItem {
 const navigation: NavItem[] = [
   // Student navigation
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: [UserRole.STUDENT, UserRole.SUPERVISOR, UserRole.ADMIN] },
-  { name: 'Browse Sites', href: '/placements/browse', icon: BuildingOfficeIcon, roles: [UserRole.STUDENT] },
+  { name: 'Browse Agencies', href: '/placements/browse', icon: BuildingOfficeIcon, roles: [UserRole.STUDENT] },
   { name: 'My Placements', href: '/placements', icon: BuildingOfficeIcon, roles: [UserRole.STUDENT] },
   { name: 'Timesheets', href: '/timesheets', icon: ClipboardDocumentListIcon, roles: [UserRole.STUDENT] },
   { name: 'Forms', href: '/forms', icon: DocumentTextIcon, roles: [UserRole.STUDENT] },
@@ -46,8 +46,8 @@ const navigation: NavItem[] = [
   { name: 'Placements', href: '/admin/placements', icon: ClipboardDocumentListIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
   { name: 'Faculty', href: '/admin/faculty', icon: AcademicCapIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
   { name: 'Faculty Assignments', href: '/admin/faculty-assignments', icon: UserGroupIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
-  { name: 'Supervisors', href: '/admin/supervisors', icon: UserGroupIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
-  { name: 'Placement Sites', href: '/admin/sites', icon: BuildingOfficeIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
+  { name: 'Supervisor Management', href: '/admin/supervisors', icon: UserGroupIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
+  { name: 'Agency Management', href: '/admin/sites', icon: BuildingOfficeIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
   { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon, roles: [UserRole.FACULTY, UserRole.ADMIN] },
   
   // Admin-only navigation
@@ -89,14 +89,15 @@ export function Navigation() {
         { name: 'Students', href: '/admin/students', icon: UserGroupIcon },
         { name: 'Placements', href: '/admin/placements', icon: ClipboardDocumentListIcon },
         { type: 'separator' },
-        { name: 'Faculty', href: '/admin/faculty', icon: AcademicCapIcon },
+        { name: 'Faculty Management', href: '/admin/faculty', icon: AcademicCapIcon },
         { name: 'Faculty Assignments', href: '/admin/faculty-assignments', icon: UserGroupIcon },
         { type: 'separator' },
-        { name: 'Supervisors', href: '/admin/supervisors', icon: UserGroupIcon },
-        { name: 'Placement Sites', href: '/admin/sites', icon: BuildingOfficeIcon },
+        { name: 'Supervisor Management', href: '/admin/supervisors', icon: UserGroupIcon },
+        { name: 'Agency Management', href: '/admin/sites', icon: BuildingOfficeIcon },
         { type: 'separator' },
+        { name: 'Class Management', href: '/admin/classes', icon: AcademicCapIcon },
+        { name: 'User Management', href: '/admin/settings', icon: CogIcon },
         { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
-        { name: 'Settings', href: '/admin/settings', icon: CogIcon },
       ]
     } else if (userRole === UserRole.FACULTY) {
       return [
@@ -110,8 +111,8 @@ export function Navigation() {
         { type: 'separator' },
         { name: 'Faculty Assignments', href: '/admin/faculty-assignments', icon: UserGroupIcon },
         { type: 'separator' },
-        { name: 'Supervisors', href: '/admin/supervisors', icon: UserGroupIcon },
-        { name: 'Placement Sites', href: '/admin/sites', icon: BuildingOfficeIcon },
+        { name: 'Supervisor Management', href: '/admin/supervisors', icon: UserGroupIcon },
+        { name: 'Agency Management', href: '/admin/sites', icon: BuildingOfficeIcon },
         { type: 'separator' },
         { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
       ]
@@ -171,12 +172,16 @@ export function Navigation() {
               })}
             </nav>
             <div className="p-4 border-t border-gray-200">
-              <div className="flex items-center mb-4">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{getDisplayName()}</p>
-                  <p className="text-xs text-gray-500 capitalize">{userRole.toLowerCase()}</p>
-                </div>
+            <div className="flex items-center mb-4">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-700 capitalize">
+                  {getDisplayName()}
+                </p>
+                <p className="text-xs text-gray-500 capitalize">
+                  {userRole.toLowerCase()}
+                </p>
               </div>
+            </div>
               <button
                 onClick={handleSignOut}
                 className="nav-item nav-item-inactive w-full"
@@ -220,8 +225,26 @@ export function Navigation() {
           <div className="p-4 border-t border-gray-200">
             <div className="flex items-center mb-4">
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{getDisplayName()}</p>
-                <p className="text-xs text-gray-500 capitalize">{userRole.toLowerCase()}</p>
+                <p 
+                  className="text-sm font-medium capitalize"
+                  style={{ 
+                    color: userRole === 'FACULTY' ? '#2563eb' : 
+                           userRole === 'ADMIN' ? '#dc2626' : 
+                           userRole === 'STUDENT' ? '#ca8a04' : '#6b7280'
+                  }}
+                >
+                  {getDisplayName()}
+                </p>
+                <p 
+                  className="text-xs capitalize"
+                  style={{ 
+                    color: userRole === 'FACULTY' ? '#2563eb' : 
+                           userRole === 'ADMIN' ? '#dc2626' : 
+                           userRole === 'STUDENT' ? '#ca8a04' : '#6b7280'
+                  }}
+                >
+                  {userRole.toLowerCase()}
+                </p>
               </div>
             </div>
             <button

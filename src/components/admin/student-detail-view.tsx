@@ -364,7 +364,7 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p><strong>Term:</strong> {placement.term?.replace('_', ' ')}</p>
+                        <p><strong>Class:</strong> {placement.class?.name || 'Unknown Class'}</p>
                         <p><strong>Dates:</strong> {new Date(placement.startDate).toLocaleDateString()} - {new Date(placement.endDate).toLocaleDateString()}</p>
                       </div>
                       <div>

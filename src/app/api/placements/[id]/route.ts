@@ -51,6 +51,13 @@ export async function GET(
             facultyProfile: true,
           },
         },
+        class: {
+          select: {
+            id: true,
+            name: true,
+            hours: true,
+          },
+        },
         pendingSupervisor: true,
       },
     })

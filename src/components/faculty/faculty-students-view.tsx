@@ -1,19 +1,30 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { 
-  UserGroupIcon
+  UserGroupIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon
 } from '@heroicons/react/24/outline'
 
 const ITEMS_PER_PAGE = 25
 
 export function FacultyStudentsView() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { data: session } = useSession()
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterStatus, setFilterStatus] = useState(() => {
+    const urlFilter = searchParams.get('filter')
+    if (urlFilter === 'pending-placements' || urlFilter === 'with-placements' || urlFilter === 'without-placements') {
+      return urlFilter
+    }
+    return 'all'
+  })
 
   // Fetch assigned students data
   const { data: dashboardData, isLoading, error } = useQuery({
@@ -25,6 +36,48 @@ export function FacultyStudentsView() {
     },
     enabled: !!session?.user?.id,
   })
+
+  const assignedStudents = dashboardData?.assignedStudents || []
+
+  // Filter and search logic
+  const filteredStudents = useMemo(() => {
+    let filtered = assignedStudents
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter((student: any) =>
+        `${student.firstName} ${student.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Apply status filter
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter((student: any) => {
+        switch (filterStatus) {
+          case 'with-placements':
+            return student.activePlacement && student.activePlacement.status !== 'PENDING'
+          case 'without-placements':
+            return !student.activePlacement || student.activePlacement.status === 'PENDING'
+          case 'pending-placements':
+            return student.activePlacement && student.activePlacement.status === 'PENDING'
+          default:
+            return true
+        }
+      })
+    }
+
+    return filtered
+  }, [assignedStudents, searchTerm, filterStatus])
+
+  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const currentStudents = filteredStudents.slice(startIndex, endIndex)
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
 
   if (isLoading) {
     return (
@@ -48,16 +101,6 @@ export function FacultyStudentsView() {
     )
   }
 
-  const assignedStudents = dashboardData?.assignedStudents || []
-  const totalPages = Math.ceil(assignedStudents.length / ITEMS_PER_PAGE)
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-  const endIndex = startIndex + ITEMS_PER_PAGE
-  const currentStudents = assignedStudents.slice(startIndex, endIndex)
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -66,7 +109,7 @@ export function FacultyStudentsView() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">My Students</h1>
             <p className="text-gray-600 mt-1">
-              View and manage your assigned students ({assignedStudents.length} total)
+              View and manage your assigned students ({filteredStudents.length} of {assignedStudents.length} total)
             </p>
           </div>
           {totalPages > 1 && (
@@ -76,6 +119,50 @@ export function FacultyStudentsView() {
               </span>
             </div>
           )}
+        </div>
+
+        {/* Search and Filter */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          {/* Search Box */}
+          <div className="flex-1">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search students by name or email..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  setCurrentPage(1) // Reset to first page when searching
+                }}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Filter Dropdown */}
+          <div className="sm:w-64">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FunnelIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <select
+                value={filterStatus}
+                onChange={(e) => {
+                  setFilterStatus(e.target.value)
+                  setCurrentPage(1) // Reset to first page when filtering
+                }}
+                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="all">All Students</option>
+                <option value="with-placements">With Placements</option>
+                <option value="without-placements">Without Placements</option>
+                <option value="pending-placements">Pending Placements</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Top Pagination */}
@@ -103,9 +190,9 @@ export function FacultyStudentsView() {
                   Showing{' '}
                   <span className="font-medium">{startIndex + 1}</span>
                   {' '}to{' '}
-                  <span className="font-medium">{Math.min(endIndex, assignedStudents.length)}</span>
+                  <span className="font-medium">{Math.min(endIndex, filteredStudents.length)}</span>
                   {' '}of{' '}
-                  <span className="font-medium">{assignedStudents.length}</span>
+                  <span className="font-medium">{filteredStudents.length}</span>
                   {' '}results
                 </p>
               </div>
@@ -269,9 +356,9 @@ export function FacultyStudentsView() {
                     Showing{' '}
                     <span className="font-medium">{startIndex + 1}</span>
                     {' '}to{' '}
-                    <span className="font-medium">{Math.min(endIndex, assignedStudents.length)}</span>
+                    <span className="font-medium">{Math.min(endIndex, filteredStudents.length)}</span>
                     {' '}of{' '}
-                    <span className="font-medium">{assignedStudents.length}</span>
+                    <span className="font-medium">{filteredStudents.length}</span>
                     {' '}results
                   </p>
                 </div>

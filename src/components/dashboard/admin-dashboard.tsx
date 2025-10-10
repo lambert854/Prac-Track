@@ -7,6 +7,7 @@ import {
   ClipboardDocumentListIcon, 
   ChartBarIcon, 
   CogIcon,
+  AcademicCapIcon,
   ExclamationTriangleIcon,
   ClockIcon,
   InformationCircleIcon
@@ -62,12 +63,12 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
   }
   return (
     <div className="space-y-6">
-      <div className="card">
+      <div className="card rounded-lg p-6 shadow-sm border">
         <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-1">Welcome, {user.name}!</p>
+        <p className="mt-1 text-gray-600">Welcome, {user.name}!</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <div className="card card-hover flex flex-col h-full">
           <div className="flex items-center flex-grow">
             <UserGroupIcon className="h-8 w-8 text-primary mr-3" />
@@ -115,6 +116,21 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
 
         <div className="card card-hover flex flex-col h-full">
           <div className="flex items-center flex-grow">
+            <AcademicCapIcon className="h-8 w-8 text-primary mr-3" />
+            <div>
+              <h3 className="font-medium text-gray-900">Class Management</h3>
+              <p className="text-sm text-gray-600">Manage classes & terms</p>
+            </div>
+          </div>
+          <div className="mt-4">
+            <a href="/admin/classes" className="btn-primary w-full text-center block whitespace-nowrap">
+              Manage
+            </a>
+          </div>
+        </div>
+
+        <div className="card card-hover flex flex-col h-full">
+          <div className="flex items-center flex-grow">
             <ChartBarIcon className="h-8 w-8 text-primary mr-3" />
             <div>
               <h3 className="font-medium text-gray-900">Reports</h3>
@@ -132,8 +148,8 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
           <div className="flex items-center flex-grow">
             <CogIcon className="h-8 w-8 text-primary mr-3" />
             <div>
-              <h3 className="font-medium text-gray-900">Settings</h3>
-              <p className="text-sm text-gray-600">System settings</p>
+              <h3 className="font-medium text-gray-900">User Management</h3>
+              <p className="text-sm text-gray-600">Manage user accounts</p>
             </div>
           </div>
           <div className="mt-4">

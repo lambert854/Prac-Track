@@ -110,9 +110,7 @@ async function createDemoStudents() {
             create: {
               aNumber: studentData.aNumber,
               program: 'MSW',
-              cohort: studentData.cohort,
-              requiredHours: 400,
-              term: studentData.term
+              cohort: studentData.cohort
             }
           }
         },

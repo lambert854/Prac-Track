@@ -11,6 +11,7 @@ interface TimesheetEntry {
   hours: number
   category: string
   notes?: string
+  status: string
   approvedAt?: string
   approvedBy?: {
     firstName: string
@@ -32,6 +33,13 @@ export function MyHoursReport() {
     startDate: '',
     endDate: ''
   })
+
+  // Helper function to format date without timezone conversion
+  const formatDate = (dateString: string) => {
+    const datePart = dateString.split('T')[0] // Get YYYY-MM-DD part
+    const [year, month, day] = datePart.split('-')
+    return `${month}/${day}/${year}`
+  }
 
   const { data: placements, isLoading: placementsLoading } = useQuery({
     queryKey: ['placements'],
@@ -67,11 +75,11 @@ export function MyHoursReport() {
     const csvContent = [
       ['Date', 'Hours', 'Category', 'Notes', 'Status', 'Approved By'].join(','),
       ...timesheetEntries.map((entry: TimesheetEntry) => [
-        new Date(entry.date).toLocaleDateString(),
+        formatDate(entry.date),
         entry.hours,
         entry.category,
         entry.notes || '',
-        entry.approvedAt ? 'Approved' : 'Pending',
+        entry.status === 'APPROVED' ? 'Approved' : 'Pending',
         entry.approvedBy ? `${entry.approvedBy.firstName} ${entry.approvedBy.lastName}` : ''
       ].map(field => `"${field}"`).join(','))
     ].join('\n')
@@ -97,7 +105,7 @@ export function MyHoursReport() {
 
   const approvedHours = Array.isArray(timesheetEntries)
     ? timesheetEntries
-        .filter((entry: TimesheetEntry) => entry.approvedAt)
+        .filter((entry: TimesheetEntry) => entry.status === 'APPROVED')
         .reduce((sum: number, entry: TimesheetEntry) => {
           const hours = typeof entry.hours === 'number' ? entry.hours : parseFloat(entry.hours) || 0
           return sum + hours
@@ -256,7 +264,7 @@ export function MyHoursReport() {
               {timesheetEntries?.map((entry: TimesheetEntry) => (
                 <tr key={entry.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(entry.date).toLocaleDateString()}
+                    {formatDate(entry.date)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {entry.hours}
@@ -269,11 +277,11 @@ export function MyHoursReport() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      entry.approvedAt 
+                      entry.status === 'APPROVED' 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {entry.approvedAt ? 'Approved' : 'Pending'}
+                      {entry.status === 'APPROVED' ? 'Approved' : 'Pending'}
                     </span>
                   </td>
                 </tr>

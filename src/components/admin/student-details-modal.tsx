@@ -334,8 +334,8 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
                             )}
                             
                             <div>
-                              <span className="text-gray-500">Term:</span>
-                              <p className="text-gray-900">{placement.term}</p>
+                              <span className="text-gray-500">Class:</span>
+                              <p className="text-gray-900">{placement.class?.name || 'Unknown Class'}</p>
                             </div>
                             
                             <div>

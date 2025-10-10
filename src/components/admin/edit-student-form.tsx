@@ -178,27 +178,37 @@ export function EditStudentForm({ student, onClose }: EditStudentFormProps) {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Program *
               </label>
-              <input
-                type="text"
+              <select
                 name="program"
                 value={formData.program}
                 onChange={handleChange}
                 required
                 className="form-input w-full"
-              />
+              >
+                <option value="BSW">BSW</option>
+                <option value="MSW">MSW</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Cohort *
               </label>
-              <input
-                type="text"
+              <select
                 name="cohort"
                 value={formData.cohort}
                 onChange={handleChange}
                 required
                 className="form-input w-full"
-              />
+              >
+                {Array.from({ length: 7 }, (_, i) => {
+                  const year = new Date().getFullYear() + i;
+                  return (
+                    <option key={year} value={year.toString()}>
+                      {year}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
           </div>
           

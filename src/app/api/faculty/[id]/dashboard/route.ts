@@ -64,6 +64,7 @@ export async function GET(
           }
         },
         site: true,
+        class: true,
         pendingSupervisor: true
       },
       orderBy: {

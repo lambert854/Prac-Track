@@ -391,7 +391,7 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
           </div>
 
           {/* Start Date */}
-          {site.agreementStartMonth && site.agreementStartYear && (
+          {site.agreementStartMonth && site.agreementStartYear && !isNaN(new Date(site.agreementStartYear, site.agreementStartMonth - 1, 1).getTime()) && (
             <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-lg">
               <CalendarIcon className="h-8 w-8 text-gray-400 mb-2" />
               <p className="text-sm font-medium text-gray-900">
@@ -405,7 +405,7 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
           )}
 
           {/* Expiration Date */}
-          {site.agreementExpirationDate && (
+          {site.agreementExpirationDate && !isNaN(new Date(site.agreementExpirationDate).getTime()) && (
             <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-lg">
               <CalendarIcon className="h-8 w-8 text-gray-400 mb-2" />
               <p className="text-sm font-medium text-gray-900">

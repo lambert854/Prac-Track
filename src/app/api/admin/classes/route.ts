@@ -2,16 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { UserRole } from '@prisma/client'
+import { requireAdmin } from '@/lib/auth-helpers'
+import { z } from 'zod'
+
+const createClassSchema = z.object({
+  name: z.string().min(1, 'Class name is required'),
+  hours: z.number().min(1, 'Hours must be at least 1'),
+  facultyId: z.string().optional(),
+  active: z.boolean().optional().default(true),
+})
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    await requireAdmin()
     
-    if (!session || session.user.role !== UserRole.ADMIN) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const classes = await prisma.class.findMany({
       include: {
         faculty: {
@@ -46,59 +50,21 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    await requireAdmin()
     
-    if (!session || session.user.role !== UserRole.ADMIN) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const body = await request.json()
-    const { name, hours, facultyId, active } = body
+    const validatedData = createClassSchema.parse(body)
 
-    // Validate required fields
-    if (!name || !hours) {
-      return NextResponse.json(
-        { error: 'Name and hours are required' },
-        { status: 400 }
-      )
+    // Handle empty facultyId by setting it to null
+    const createData = {
+      ...validatedData,
+      facultyId: validatedData.facultyId && validatedData.facultyId.trim() !== '' 
+        ? validatedData.facultyId 
+        : null
     }
 
-    // Check if class name already exists
-    const existingClass = await prisma.class.findUnique({
-      where: { name }
-    })
-
-    if (existingClass) {
-      return NextResponse.json(
-        { error: 'A class with this name already exists' },
-        { status: 400 }
-      )
-    }
-
-    // Validate faculty if provided
-    if (facultyId) {
-      const faculty = await prisma.user.findUnique({
-        where: { 
-          id: facultyId,
-          role: UserRole.FACULTY
-        }
-      })
-
-      if (!faculty) {
-        return NextResponse.json(
-          { error: 'Invalid faculty member' },
-          { status: 400 }
-        )
-      }
-    }
-
-    const newClass = await prisma.class.create({
-      data: {
-        name,
-        hours: parseInt(hours),
-        facultyId: facultyId || null,
-        active: active !== false
-      },
+    const classData = await prisma.class.create({
+      data: createData,
       include: {
         faculty: {
           include: {
@@ -117,8 +83,15 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(newClass, { status: 201 })
+    return NextResponse.json(classData, { status: 201 })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation error', details: error.errors },
+        { status: 400 }
+      )
+    }
+
     console.error('Admin classes POST error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },

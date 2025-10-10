@@ -76,6 +76,13 @@ export async function GET(request: NextRequest) {
             facultyProfile: true,
           },
         },
+        class: {
+          select: {
+            id: true,
+            name: true,
+            hours: true,
+          },
+        },
       },
       orderBy: { startDate: 'desc' },
     })

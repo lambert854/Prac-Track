@@ -2,83 +2,42 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { UserRole } from '@prisma/client'
+import { requireAdmin } from '@/lib/auth-helpers'
+import { z } from 'zod'
+
+const updateClassSchema = z.object({
+  name: z.string().min(1, 'Class name is required'),
+  hours: z.number().min(1, 'Hours must be at least 1'),
+  facultyId: z.string().optional(),
+  active: z.boolean().optional(),
+})
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    await requireAdmin()
     
-    if (!session || session.user.role !== UserRole.ADMIN) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { id } = await params
     const body = await request.json()
-    const { name, hours, facultyId, active } = body
+    const validatedData = updateClassSchema.parse(body)
 
-    // Validate required fields
-    if (!name || !hours) {
-      return NextResponse.json(
-        { error: 'Name and hours are required' },
-        { status: 400 }
-      )
+    console.log('Class update request:', { id, body, validatedData })
+
+    // Handle empty facultyId by setting it to null
+    const updateData = {
+      ...validatedData,
+      facultyId: validatedData.facultyId && validatedData.facultyId.trim() !== '' 
+        ? validatedData.facultyId 
+        : null
     }
 
-    // Check if class exists
-    const existingClass = await prisma.class.findUnique({
-      where: { id }
-    })
-
-    if (!existingClass) {
-      return NextResponse.json(
-        { error: 'Class not found' },
-        { status: 404 }
-      )
-    }
-
-    // Check if class name already exists (excluding current class)
-    const duplicateClass = await prisma.class.findFirst({
-      where: { 
-        name,
-        id: { not: id }
-      }
-    })
-
-    if (duplicateClass) {
-      return NextResponse.json(
-        { error: 'A class with this name already exists' },
-        { status: 400 }
-      )
-    }
-
-    // Validate faculty if provided
-    if (facultyId) {
-      const faculty = await prisma.user.findUnique({
-        where: { 
-          id: facultyId,
-          role: UserRole.FACULTY
-        }
-      })
-
-      if (!faculty) {
-        return NextResponse.json(
-          { error: 'Invalid faculty member' },
-          { status: 400 }
-        )
-      }
-    }
+    console.log('Class update data:', updateData)
 
     const updatedClass = await prisma.class.update({
       where: { id },
-      data: {
-        name,
-        hours: parseInt(hours),
-        facultyId: facultyId || null,
-        active: active !== false
-      },
+      data: updateData,
       include: {
         faculty: {
           include: {
@@ -99,6 +58,13 @@ export async function PUT(
 
     return NextResponse.json(updatedClass)
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation error', details: error.errors },
+        { status: 400 }
+      )
+    }
+
     console.error('Admin class PUT error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -112,16 +78,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    await requireAdmin()
     
-    if (!session || session.user.role !== UserRole.ADMIN) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { id } = await params
 
-    // Check if class exists
-    const existingClass = await prisma.class.findUnique({
+    // Check if class has any placements
+    const classWithPlacements = await prisma.class.findUnique({
       where: { id },
       include: {
         _count: {
@@ -132,15 +94,14 @@ export async function DELETE(
       }
     })
 
-    if (!existingClass) {
+    if (!classWithPlacements) {
       return NextResponse.json(
         { error: 'Class not found' },
         { status: 404 }
       )
     }
 
-    // Check if class has active placements
-    if (existingClass._count.placements > 0) {
+    if (classWithPlacements._count.placements > 0) {
       return NextResponse.json(
         { error: 'Cannot delete class with active placements' },
         { status: 400 }
@@ -151,7 +112,7 @@ export async function DELETE(
       where: { id }
     })
 
-    return NextResponse.json({ message: 'Class deleted successfully' })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Admin class DELETE error:', error)
     return NextResponse.json(

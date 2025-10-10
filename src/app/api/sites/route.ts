@@ -48,22 +48,45 @@ export async function GET(request: NextRequest) {
 
     if (query) {
       where.OR = [
-        { name: { contains: query, mode: 'insensitive' } },
-        { contactName: { contains: query, mode: 'insensitive' } },
-        { contactEmail: { contains: query, mode: 'insensitive' } },
+        { name: { contains: query } },
+        { contactName: { contains: query } },
+        { contactEmail: { contains: query } },
       ]
     }
 
     if (city) {
-      where.city = { contains: city, mode: 'insensitive' }
+      where.city = { contains: city }
     }
 
     if (practice) {
-      where.practiceAreas = { contains: practice, mode: 'insensitive' }
+      where.practiceAreas = { contains: practice }
     }
 
     const sites = await prisma.site.findMany({
       where,
+      include: {
+        supervisors: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            }
+          }
+        },
+        pendingSupervisors: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            status: true
+          }
+        }
+      },
       orderBy: { name: 'asc' },
     })
 

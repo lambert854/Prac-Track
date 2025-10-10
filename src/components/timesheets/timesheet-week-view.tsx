@@ -48,8 +48,8 @@ export function TimesheetWeekView({
     const currentWeekStart = new Date(today)
     currentWeekStart.setDate(today.getDate() - today.getDay()) // Go to Sunday
     
-    // Generate 12 weeks: 6 weeks before current, current week, 5 weeks after
-    for (let i = -6; i <= 5; i++) {
+    // Generate 11 weeks: 8 weeks before current, current week, 2 weeks after
+    for (let i = -8; i <= 2; i++) {
       const weekStart = new Date(currentWeekStart)
       weekStart.setDate(currentWeekStart.getDate() + (i * 7))
       
@@ -97,9 +97,8 @@ export function TimesheetWeekView({
   const weekDates = getWeekDates(selectedWeek)
   
   const weekEntries = entries.filter(entry => {
-    // Use UTC methods to avoid timezone conversion issues
-    const entryDateObj = new Date(entry.date)
-    const entryDate = `${entryDateObj.getUTCFullYear()}-${String(entryDateObj.getUTCMonth() + 1).padStart(2, '0')}-${String(entryDateObj.getUTCDate()).padStart(2, '0')}`
+    // Parse the date string and extract just the date part (YYYY-MM-DD)
+    const entryDate = entry.date.split('T')[0]
     const isIncluded = weekDates.includes(entryDate)
     console.log(`Entry date: ${entry.date} -> ${entryDate}, Week dates includes: ${isIncluded}`)
     return isIncluded
@@ -116,9 +115,8 @@ export function TimesheetWeekView({
 
   const getEntriesForDate = (date: string) => {
     return weekEntries.filter(entry => {
-      // Use UTC methods to avoid timezone conversion issues
-      const entryDateObj = new Date(entry.date)
-      const entryDate = `${entryDateObj.getUTCFullYear()}-${String(entryDateObj.getUTCMonth() + 1).padStart(2, '0')}-${String(entryDateObj.getUTCDate()).padStart(2, '0')}`
+      // Parse the date string and extract just the date part (YYYY-MM-DD)
+      const entryDate = entry.date.split('T')[0]
       return entryDate === date
     })
   }

@@ -69,7 +69,11 @@ export async function POST(
         supervisorProfile: {
           create: {
             siteId: pendingSupervisor.siteId,
-            title: pendingSupervisor.title || null
+            title: pendingSupervisor.title || null,
+            licensedSW: pendingSupervisor.licensedSW || null,
+            licenseNumber: pendingSupervisor.licenseNumber || null,
+            highestDegree: pendingSupervisor.highestDegree || null,
+            otherDegree: pendingSupervisor.otherDegree || null
           }
         }
       }

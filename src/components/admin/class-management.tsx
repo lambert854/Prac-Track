@@ -62,7 +62,9 @@ export default function ClassManagement() {
     queryFn: async () => {
       const response = await fetch('/api/admin/faculty')
       if (!response.ok) throw new Error('Failed to fetch faculty')
-      return response.json()
+      const data = await response.json()
+      console.log('Faculty data loaded:', data)
+      return data
     }
   })
 
@@ -78,7 +80,10 @@ export default function ClassManagement() {
         body: JSON.stringify(data)
       })
       
-      if (!response.ok) throw new Error('Failed to save class')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save class')
+      }
       return response.json()
     },
     onSuccess: () => {
@@ -86,6 +91,10 @@ export default function ClassManagement() {
       setShowForm(false)
       setEditingClass(null)
       resetForm()
+    },
+    onError: (error: Error) => {
+      console.error('Class mutation error:', error)
+      alert(`Error: ${error.message}`)
     }
   })
 
@@ -126,6 +135,7 @@ export default function ClassManagement() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('Submitting form data:', formData)
     classMutation.mutate(formData)
   }
 

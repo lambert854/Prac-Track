@@ -26,6 +26,10 @@ interface Supervisor {
   supervisorProfile?: {
     id: string
     title?: string
+    licensedSW?: string
+    licenseNumber?: string
+    highestDegree?: string
+    otherDegree?: string
     site: {
       id: string
       name: string
@@ -52,6 +56,10 @@ interface PendingSupervisor {
   email: string
   phone?: string
   title?: string
+  licensedSW?: string
+  licenseNumber?: string
+  highestDegree?: string
+  otherDegree?: string
   status: string
   createdAt: string
   site: {
@@ -315,6 +323,22 @@ export function AdminSupervisorsManagement() {
                           <span className="font-medium">Title:</span> {pendingSupervisor.title}
                         </p>
                       )}
+                      {pendingSupervisor.licensedSW && (
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium">Licensed SW:</span> {pendingSupervisor.licensedSW}
+                          {pendingSupervisor.licensedSW === 'YES' && pendingSupervisor.licenseNumber && (
+                            <span className="ml-1">({pendingSupervisor.licenseNumber})</span>
+                          )}
+                        </p>
+                      )}
+                      {pendingSupervisor.highestDegree && (
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium">Degree:</span> {pendingSupervisor.highestDegree}
+                          {pendingSupervisor.highestDegree === 'OTHER' && pendingSupervisor.otherDegree && (
+                            <span className="ml-1">({pendingSupervisor.otherDegree})</span>
+                          )}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-700">
                         <span className="font-medium">Requested by:</span> {pendingSupervisor.placement.student.firstName} {pendingSupervisor.placement.student.lastName}
                       </p>
@@ -397,6 +421,22 @@ export function AdminSupervisorsManagement() {
                     {supervisor.supervisorProfile.title && (
                       <p className="text-sm text-gray-700">
                         <span className="font-medium">Title:</span> {supervisor.supervisorProfile.title}
+                      </p>
+                    )}
+                    {supervisor.supervisorProfile.licensedSW && (
+                      <p className="text-sm text-gray-700">
+                        <span className="font-medium">Licensed SW:</span> {supervisor.supervisorProfile.licensedSW}
+                        {supervisor.supervisorProfile.licensedSW === 'YES' && supervisor.supervisorProfile.licenseNumber && (
+                          <span className="ml-1">({supervisor.supervisorProfile.licenseNumber})</span>
+                        )}
+                      </p>
+                    )}
+                    {supervisor.supervisorProfile.highestDegree && (
+                      <p className="text-sm text-gray-700">
+                        <span className="font-medium">Degree:</span> {supervisor.supervisorProfile.highestDegree}
+                        {supervisor.supervisorProfile.highestDegree === 'OTHER' && supervisor.supervisorProfile.otherDegree && (
+                          <span className="ml-1">({supervisor.supervisorProfile.otherDegree})</span>
+                        )}
                       </p>
                     )}
                   </div>

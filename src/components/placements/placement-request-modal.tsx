@@ -31,6 +31,23 @@ const placementRequestSchema = z.object({
   supervisorEmail: z.string().email().optional(),
   supervisorPhone: z.string().optional(),
   supervisorTitle: z.string().optional(),
+  // New supervisor fields
+  supervisorLicensedSW: z.enum(['YES', 'NO']).optional(),
+  supervisorLicenseNumber: z.string().optional(),
+  supervisorHighestDegree: z.enum(['BSW', 'MSW', 'OTHER']).optional(),
+  supervisorOtherDegree: z.string().optional(),
+}).refine((data) => {
+  // If supervisor option is 'new', validate required fields
+  if (data.supervisorOption === 'new') {
+    if (!data.supervisorLicensedSW) return false
+    if (data.supervisorLicensedSW === 'YES' && !data.supervisorLicenseNumber) return false
+    if (!data.supervisorHighestDegree) return false
+    if (data.supervisorHighestDegree === 'OTHER' && !data.supervisorOtherDegree) return false
+  }
+  return true
+}, {
+  message: "Please fill in all required supervisor fields",
+  path: ["supervisorLicensedSW"]
 })
 
 type PlacementRequestData = z.infer<typeof placementRequestSchema>
@@ -225,7 +242,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            {site ? `Request Placement at ${site.name}` : 'Submit New Site for Approval'}
+            {site ? `Request Placement at ${site.name}` : 'Submit New Agency for Approval'}
           </h2>
           <button
             onClick={onClose}
@@ -250,20 +267,19 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
             </div>
           ) : (
             <div className="bg-blue-50 rounded-lg p-4 mb-6">
-              <h3 className="font-medium text-gray-900 mb-2">New Site Information</h3>
+              <h3 className="font-medium text-gray-900 mb-2">New Agency Information</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Please provide the following information about the placement site you'd like to add. 
-                This site will be reviewed by faculty or admin before being added to the available sites.
+                Complete the following information about your selected field agency. Please note that the field instructor is the same as your field supervisor. Your supervisor serves as a field instructor.
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">Site Name *</label>
+                  <label className="form-label">Agency Name *</label>
                   <input
                     {...register('siteName')}
                     type="text"
                     className="form-input"
-                    placeholder="Organization name"
+                    placeholder="Agency name"
                   />
                   {errors.siteName && <p className="text-red-500 text-sm mt-1">{errors.siteName.message}</p>}
                 </div>
@@ -324,18 +340,18 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
                 </div>
                 
                 <div>
-                  <label className="form-label">Contact Email *</label>
+                  <label className="form-label">Agency Email *</label>
                   <input
                     {...register('siteContactEmail')}
                     type="email"
                     className="form-input"
-                    placeholder="contact@organization.com"
+                    placeholder="contact@agency.com"
                   />
                   {errors.siteContactEmail && <p className="text-red-500 text-sm mt-1">{errors.siteContactEmail.message}</p>}
                 </div>
                 
                 <div>
-                  <label className="form-label">Contact Phone *</label>
+                  <label className="form-label">Agency Phone *</label>
                   <input
                     {...register('siteContactPhone')}
                     type="tel"
@@ -440,7 +456,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
                   <option value="">Select a class</option>
                   {classes.map((classItem: any) => (
                     <option key={classItem.id} value={classItem.id}>
-                      {classItem.name} ({classItem.hours} hours)
+                      {classItem.name}
                     </option>
                   ))}
                 </select>
@@ -452,7 +468,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
 
             {/* Supervisor Selection */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Supervisor Information</h3>
+              <h3 className="text-lg font-medium text-gray-900">Field Supervisor Information</h3>
               
               <div className="space-y-3">
                 <div className="flex space-x-4">
@@ -503,7 +519,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
                     )}
                     {supervisors.length === 0 && !loadingSupervisors && (
                       <p className="text-sm text-gray-500 mt-1">
-                        No supervisors available for this site. Please select "Create new supervisor" instead.
+                        No supervisors available for this agency. Please select "Create new supervisor" instead.
                       </p>
                     )}
                     {errors.supervisorId && (
@@ -590,10 +606,85 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
                       )}
                     </div>
 
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="supervisorLicensedSW" className="form-label">
+                          Licensed SW? *
+                        </label>
+                        <select
+                          {...register('supervisorLicensedSW')}
+                          className="form-select"
+                          required={supervisorOption === 'new'}
+                        >
+                          <option value="">Select...</option>
+                          <option value="NO">No</option>
+                          <option value="YES">Yes</option>
+                        </select>
+                        {errors.supervisorLicensedSW && (
+                          <p className="form-error">{errors.supervisorLicensedSW.message}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="supervisorHighestDegree" className="form-label">
+                          Highest Degree? *
+                        </label>
+                        <select
+                          {...register('supervisorHighestDegree')}
+                          className="form-select"
+                          required={supervisorOption === 'new'}
+                        >
+                          <option value="">Select...</option>
+                          <option value="BSW">BSW</option>
+                          <option value="MSW">MSW</option>
+                          <option value="OTHER">Other</option>
+                        </select>
+                        {errors.supervisorHighestDegree && (
+                          <p className="form-error">{errors.supervisorHighestDegree.message}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {watch('supervisorLicensedSW') === 'YES' && (
+                      <div>
+                        <label htmlFor="supervisorLicenseNumber" className="form-label">
+                          License Number *
+                        </label>
+                        <input
+                          {...register('supervisorLicenseNumber')}
+                          type="text"
+                          className="form-input"
+                          placeholder="Enter license number"
+                          required={watch('supervisorLicensedSW') === 'YES'}
+                        />
+                        {errors.supervisorLicenseNumber && (
+                          <p className="form-error">{errors.supervisorLicenseNumber.message}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {watch('supervisorHighestDegree') === 'OTHER' && (
+                      <div>
+                        <label htmlFor="supervisorOtherDegree" className="form-label">
+                          Degree *
+                        </label>
+                        <input
+                          {...register('supervisorOtherDegree')}
+                          type="text"
+                          className="form-input"
+                          placeholder="Enter degree name"
+                          required={watch('supervisorHighestDegree') === 'OTHER'}
+                        />
+                        {errors.supervisorOtherDegree && (
+                          <p className="form-error">{errors.supervisorOtherDegree.message}</p>
+                        )}
+                      </div>
+                    )}
+
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-sm text-yellow-800">
-                <strong>Note:</strong> New supervisor requests require approval by faculty or admin. 
-                The supervisor will be associated with this placement but cannot log in until approved.
+                <strong>Note:</strong> New Site and Supervisor requests require approval by faculty. 
+                The supervisor will be associated with this placement, but cannot log in until approved.
               </p>
             </div>
                   </div>
