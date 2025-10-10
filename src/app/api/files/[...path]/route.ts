@@ -57,7 +57,7 @@ export async function GET(
         contentType = 'application/octet-stream'
     }
     
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(new Uint8Array(fileBuffer), {
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `inline; filename="${filePath.split('/').pop()}"`,
