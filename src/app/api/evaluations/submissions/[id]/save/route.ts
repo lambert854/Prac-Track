@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 const saveSubmissionSchema = z.object({
-  answers: z.record(z.union([z.number(), z.string()])),
+  answers: z.record(z.string(), z.union([z.number(), z.string()])),
   pageId: z.string().optional(),
 })
 
