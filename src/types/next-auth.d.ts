@@ -19,6 +19,8 @@ declare module 'next-auth' {
         id: string
         title?: string
         officePhone?: string
+        honorific?: string
+        roomNumber?: string
       }
       supervisorProfile?: {
         id: string
