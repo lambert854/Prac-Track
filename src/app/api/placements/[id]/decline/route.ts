@@ -90,12 +90,14 @@ export async function POST(
         type: 'PLACEMENT_REJECTED',
         title: 'Placement Declined',
         message: `Your placement request at ${placement.site.name} has been declined by ${placement.faculty?.firstName} ${placement.faculty?.lastName}.`,
-        data: {
+        relatedEntityId: placementId,
+        relatedEntityType: 'PLACEMENT',
+        metadata: JSON.stringify({
           placementId: placementId,
           siteName: placement.site.name,
           facultyName: `${placement.faculty?.firstName} ${placement.faculty?.lastName}`,
           notes: notes || null
-        }
+        })
       }
     })
 
