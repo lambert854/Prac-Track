@@ -180,7 +180,7 @@ export function JournalViewer({ placementId, startDate, endDate, isOpen, onClose
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-gray-700 whitespace-pre-wrap">{journalEntry.reaction}</p>
                   <p className="text-sm text-gray-500 mt-2">
-                    Word count: {journalEntry.reaction.trim().split(/\s+/).filter(word => word.length > 0).length} words
+                    Word count: {journalEntry.reaction.trim().split(/\s+/).filter((word: string) => word.length > 0).length} words
                   </p>
                 </div>
               </div>
