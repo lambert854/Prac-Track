@@ -16,12 +16,27 @@ const updateSiteSchema = z.object({
   contactPhone: z.string().min(1, 'Contact phone is required').optional(),
   practiceAreas: z.string().min(1, 'Practice areas are required').optional(),
   active: z.boolean().optional(),
-  // Field Placement Agreement fields
-  agreementStartMonth: z.number().min(1).max(12).optional(),
-  agreementStartYear: z.number().min(2020).max(2030).optional(),
-  agreementExpirationDate: z.string().optional(),
-  staffHasActiveLicense: z.enum(['YES', 'NO']).optional(),
-  supervisorTraining: z.enum(['YES', 'NO']).optional(),
+  // Field Placement Agreement fields - handle null values
+  agreementStartMonth: z.preprocess(
+    (val) => val === null || val === '' || val === undefined ? null : Number(val),
+    z.number().min(1).max(12).nullable().optional()
+  ),
+  agreementStartYear: z.preprocess(
+    (val) => val === null || val === '' || val === undefined ? null : Number(val),
+    z.number().min(2020).max(2030).nullable().optional()
+  ),
+  agreementExpirationDate: z.preprocess(
+    (val) => val === null || val === '' || val === undefined ? null : val,
+    z.string().nullable().optional()
+  ),
+  staffHasActiveLicense: z.preprocess(
+    (val) => val === null || val === '' || val === undefined ? null : val,
+    z.enum(['YES', 'NO']).nullable().optional()
+  ),
+  supervisorTraining: z.preprocess(
+    (val) => val === null || val === '' || val === undefined ? null : val,
+    z.enum(['YES', 'NO']).nullable().optional()
+  ),
 })
 
 export async function GET(
@@ -126,9 +141,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await requireFacultyOrAdmin()
     
     // Check if this is a hard delete (admin only) or soft delete
@@ -146,14 +162,14 @@ export async function DELETE(
       // Hard delete for admin cleanup of dummy/test data
       // This will cascade delete related records
       await prisma.site.delete({
-        where: { id: params.id },
+        where: { id },
       })
       
       return NextResponse.json({ message: 'Site permanently deleted successfully' })
     } else {
       // Soft delete by setting active to false
       const site = await prisma.site.update({
-        where: { id: params.id },
+        where: { id },
         data: { active: false },
       })
 
