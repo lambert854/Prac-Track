@@ -22,11 +22,7 @@ export async function GET(
         role: 'SUPERVISOR',
         evaluation: {
           placement: {
-            supervisor: {
-              some: {
-                id: supervisorId
-              }
-            }
+            supervisorId: supervisorId
           }
         }
       },
