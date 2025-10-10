@@ -43,6 +43,7 @@ interface Supervisor {
     id: string
     status: string
     student: {
+      id: string
       firstName: string
       lastName: string
     }
