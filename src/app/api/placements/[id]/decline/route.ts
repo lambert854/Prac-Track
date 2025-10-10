@@ -76,11 +76,11 @@ export async function POST(
         action: 'PLACEMENT_DECLINED',
         resourceType: 'PLACEMENT',
         resourceId: placementId,
-        details: {
+        details: JSON.stringify({
           studentId: placement.studentId,
           siteId: placement.siteId,
           notes: notes || null
-        }
+        })
       }
     })
 
