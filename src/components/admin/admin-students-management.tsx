@@ -35,11 +35,36 @@ interface Student {
   studentPlacements?: {
     id: string
     status: string
-    site: {
-      name: string
-    }
+    requiredHours: number
+    term: string
     startDate: string
     endDate: string
+    site: {
+      id: string
+      name: string
+      address: string
+      city: string
+      state: string
+      zip: string
+    }
+    supervisor?: {
+      id: string
+      firstName: string
+      lastName: string
+      email: string
+    }
+    faculty: {
+      id: string
+      firstName: string
+      lastName: string
+      email: string
+    }
+    timesheetEntries?: {
+      id: string
+      date: string
+      hours: number
+      status: string
+    }[]
   }[]
   studentFacultyAssignments?: {
     faculty: {

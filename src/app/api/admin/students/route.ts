@@ -37,9 +37,29 @@ export async function GET(request: NextRequest) {
         studentProfile: true,
         studentPlacements: {
           include: {
-            site: {
+            site: true,
+            supervisor: {
               select: {
-                name: true
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            },
+            faculty: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            },
+            timesheetEntries: {
+              select: {
+                id: true,
+                date: true,
+                hours: true,
+                status: true
               }
             }
           },
