@@ -87,7 +87,7 @@ export async function POST(
     await prisma.notification.create({
       data: {
         userId: placement.studentId,
-        type: 'PLACEMENT_DECLINED',
+        type: 'PLACEMENT_REJECTED',
         title: 'Placement Declined',
         message: `Your placement request at ${placement.site.name} has been declined by ${placement.faculty?.firstName} ${placement.faculty?.lastName}.`,
         data: {
