@@ -73,9 +73,12 @@ export async function GET(
       })
       console.log('Dashboard API - Fallback placements found:', fallbackPlacements.map(p => `${p.site?.name} (${p.status}) - Student: ${p.student?.firstName} ${p.student?.lastName}`))
       
-      placement = fallbackPlacements.find(p => 
+      const foundPlacement = fallbackPlacements.find(p => 
         ['ACTIVE', 'APPROVED', 'APPROVED_PENDING_CHECKLIST'].includes(p.status)
       )
+      if (foundPlacement) {
+        placement = foundPlacement
+      }
     }
     console.log('Dashboard API - Found placement:', placement ? `${placement.site?.name} (${placement.status})` : 'None')
 
