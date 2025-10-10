@@ -98,7 +98,7 @@ export function SiteForm({ site, onClose }: SiteFormProps) {
     setValue,
     formState: { errors },
   } = useForm<SiteFormData>({
-    resolver: zodResolver(siteSchema),
+    resolver: zodResolver(siteSchema) as any,
     defaultValues: site ? {
       name: site.name,
       address: site.address,
