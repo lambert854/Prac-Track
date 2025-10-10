@@ -11,12 +11,15 @@ import {
   EnvelopeIcon,
   ClockIcon,
   CheckCircleIcon,
-  XMarkIcon
+  XMarkIcon,
+  DocumentCheckIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { EditSupervisorForm } from './edit-supervisor-form'
 import { DeleteSupervisorModal } from './delete-supervisor-modal'
 import { ConfirmationModal } from './confirmation-modal'
+import { SupervisorEvaluationsSection } from './supervisor-evaluations-section'
 
 interface Supervisor {
   id: string
@@ -86,7 +89,7 @@ export function AdminSupervisorsManagement() {
   const queryClient = useQueryClient()
 
   const { data: data, isLoading, error } = useQuery({
-    queryKey: ['admin-supervisors', searchQuery],
+    queryKey: ['admin-supervisors'],
     queryFn: async () => {
       const response = await fetch('/api/admin/supervisors')
       if (!response.ok) throw new Error('Failed to fetch supervisors')
@@ -168,10 +171,20 @@ export function AdminSupervisorsManagement() {
   }
 
   const handleEmailClick = (supervisor: Supervisor) => {
-    setSelectedSupervisorForEmail(supervisor)
-    setShowEmailModal(true)
-    // Future state: This is where the email sending logic would be implemented.
-    // For now, it just opens a modal indicating the feature is coming in production.
+    const subject = encodeURIComponent('Field Placement Communication')
+    const body = encodeURIComponent(`Dear ${supervisor.firstName},
+
+I hope this message finds you well. I wanted to reach out regarding our field placement program and the students under your supervision.
+
+Thank you for your continued dedication to mentoring our social work students. Your guidance and expertise are invaluable to their professional development.
+
+Please let me know if you have any questions or need any assistance.
+
+Best regards,
+[Your Name]`)
+    
+    const mailtoLink = `mailto:${supervisor.email}?subject=${subject}&body=${body}`
+    window.open(mailtoLink, '_blank')
   }
 
   const cancelEmailModal = () => {
@@ -199,7 +212,7 @@ export function AdminSupervisorsManagement() {
       supervisor.firstName.toLowerCase().includes(searchLower) ||
       supervisor.lastName.toLowerCase().includes(searchLower) ||
       supervisor.email.toLowerCase().includes(searchLower) ||
-      supervisor.supervisorProfile?.organizationName?.toLowerCase().includes(searchLower) ||
+      supervisor.supervisorProfile?.site?.name?.toLowerCase().includes(searchLower) ||
       supervisor.supervisorProfile?.title?.toLowerCase().includes(searchLower)
     )
   }) || []
@@ -226,7 +239,7 @@ export function AdminSupervisorsManagement() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Supervisor Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Field Supervisor Management</h1>
         <p className="text-gray-600">View and manage field supervisors</p>
       </div>
 
@@ -235,7 +248,7 @@ export function AdminSupervisorsManagement() {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search supervisors by name, email, or organization..."
+            placeholder="Search field supervisors by name, email, or organization..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="form-input"
@@ -249,7 +262,7 @@ export function AdminSupervisorsManagement() {
           <div className="flex items-center">
             <UserGroupIcon className="h-8 w-8 text-blue-600 mr-3" />
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Supervisors</p>
+              <p className="text-sm font-medium text-gray-600">Total Field Supervisors</p>
               <p className="text-2xl font-bold text-gray-900">{supervisors?.length || 0}</p>
             </div>
           </div>
@@ -439,6 +452,19 @@ export function AdminSupervisorsManagement() {
                         )}
                       </p>
                     )}
+                    {supervisor.supervisorProfile.resume && (
+                      <p className="text-sm text-gray-700">
+                        <span className="font-medium">Resume:</span>{' '}
+                        <a 
+                          href={`/api/files/${encodeURIComponent(supervisor.supervisorProfile.resume)}`}
+                          className="text-blue-600 hover:underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View Resume
+                        </a>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -509,9 +535,11 @@ export function AdminSupervisorsManagement() {
                           ? 'bg-green-100 text-green-800'
                           : placement.status === 'PENDING'
                           ? 'bg-yellow-100 text-yellow-800'
+                          : placement.status === 'APPROVED_PENDING_CHECKLIST'
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {placement.status}
+                        {placement.status === 'APPROVED_PENDING_CHECKLIST' ? 'Approved' : placement.status}
                       </span>
                     </div>
                   ))}
@@ -521,6 +549,9 @@ export function AdminSupervisorsManagement() {
                     </p>
                   )}
                 </div>
+                
+                {/* Evaluations Section */}
+                <SupervisorEvaluationsSection supervisorId={supervisor.id} />
               </div>
             )}
           </div>
@@ -532,7 +563,7 @@ export function AdminSupervisorsManagement() {
       {supervisors.length === 0 && pendingSupervisors.length === 0 && (
         <div className="card text-center py-8">
           <UserGroupIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Supervisors Found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Field Supervisors Found</h3>
           <p className="text-gray-600">
             {searchQuery 
               ? 'Try adjusting your search criteria.'
@@ -560,18 +591,6 @@ export function AdminSupervisorsManagement() {
         />
       )}
 
-      {/* Email Modal */}
-      <ConfirmationModal
-        isOpen={showEmailModal}
-        title="Email Supervisor"
-        message="Email functions coming in production. This feature will allow you to send emails to supervisors."
-        confirmText="OK"
-        cancelText=""
-        onConfirm={cancelEmailModal}
-        onCancel={cancelEmailModal}
-        isLoading={false}
-        variant="info"
-      />
     </div>
   )
 }
