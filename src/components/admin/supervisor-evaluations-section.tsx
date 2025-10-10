@@ -49,8 +49,8 @@ export function SupervisorEvaluationsSection({ supervisorId }: SupervisorEvaluat
   }
 
   // Separate pending and completed evaluations
-  const pendingEvaluations = evaluations.filter(e => e.status !== 'LOCKED')
-  const completedEvaluations = evaluations.filter(e => e.status === 'LOCKED')
+  const pendingEvaluations = evaluations.filter((e: any) => e.status !== 'LOCKED')
+  const completedEvaluations = evaluations.filter((e: any) => e.status === 'LOCKED')
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-200">
@@ -73,7 +73,7 @@ export function SupervisorEvaluationsSection({ supervisorId }: SupervisorEvaluat
               </span>
             </div>
             <div className="space-y-2">
-              {pendingEvaluations.map((evaluation) => (
+              {pendingEvaluations.map((evaluation: any) => (
                 <div key={evaluation.id} className="flex items-center justify-between p-2 bg-yellow-50 rounded-lg border border-yellow-200">
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 rounded-full bg-yellow-500" />
@@ -119,7 +119,7 @@ export function SupervisorEvaluationsSection({ supervisorId }: SupervisorEvaluat
               </span>
             </div>
             <div className="space-y-2">
-              {completedEvaluations.map((evaluation) => (
+              {completedEvaluations.map((evaluation: any) => (
                 <div key={evaluation.id} className="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 rounded-full bg-green-500" />
