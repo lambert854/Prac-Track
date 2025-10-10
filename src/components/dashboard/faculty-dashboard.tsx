@@ -14,14 +14,18 @@ import {
 } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { PlacementRequestDetailsModal } from './placement-request-details-modal'
+import { EvaluationSendButtons } from '@/components/faculty/EvaluationSendButtons'
 
 interface FacultyDashboardProps {
   user: {
     id: string
     name: string
     facultyProfile?: {
-      department: string
-      title: string
+      id: string
+      title?: string
+      officePhone?: string
+      honorific?: string
+      roomNumber?: string
     }
   }
 }
@@ -112,15 +116,6 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <ClipboardDocumentListIcon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-600">Pending Checklists</p>
-              <p className="text-2xl font-bold text-gray-900">{summaryStats.checklistPhase || 0}</p>
-            </div>
-          </div>
-        </div>
         
         <div className="card">
           <div className="flex items-center justify-center h-full">
@@ -158,6 +153,9 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* Evaluation Send Buttons */}
+      <EvaluationSendButtons />
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
