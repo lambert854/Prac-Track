@@ -63,6 +63,7 @@ interface Student {
       id: string
       date: string
       hours: number
+      category: string
       status: string
     }[]
   }[]
