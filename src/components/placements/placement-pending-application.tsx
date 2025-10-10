@@ -18,6 +18,10 @@ interface Placement {
   requiredHours: number
   term: string
   status: string
+  class?: {
+    id: string
+    name: string
+  }
   site: {
     id: string
     name: string
