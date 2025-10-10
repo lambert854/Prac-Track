@@ -244,10 +244,6 @@ export async function POST(request: NextRequest) {
             email: validatedData.placementData.supervisorEmail!,
             phone: validatedData.placementData.supervisorPhone || null,
             title: validatedData.placementData.supervisorTitle || null,
-            licensedSW: validatedData.placementData.supervisorLicensedSW || null,
-            licenseNumber: validatedData.placementData.supervisorLicenseNumber || null,
-            highestDegree: validatedData.placementData.supervisorHighestDegree || null,
-            otherDegree: validatedData.placementData.supervisorOtherDegree || null,
             siteId: site.id,
             status: 'PENDING'
           }
