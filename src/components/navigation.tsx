@@ -157,6 +157,8 @@ export function Navigation() {
                   return <hr key={`separator-${index}`} className="border-gray-200 my-2" />
                 }
                 
+                if (!item.href) return null
+                
                 const isActive = pathname === item.href
                 return (
                   <Link
