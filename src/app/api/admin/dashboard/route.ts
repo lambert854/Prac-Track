@@ -105,6 +105,19 @@ export async function GET(request: NextRequest) {
       })
     ])
 
+    // Get class mismatch notifications for admin
+    const classMismatchNotifications = await prisma.notification.findMany({
+      where: {
+        userId: session.user.id,
+        type: 'FACULTY_CLASS_MISMATCH',
+        read: false
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: 5 // Limit to 5 most recent
+    })
+
     const dashboardData = {
       summary: {
         totalStudents,
@@ -123,25 +136,10 @@ export async function GET(request: NextRequest) {
       },
       activity: {
         newUsersThisWeek: recentActivity
+      },
+      notifications: {
+        classMismatches: classMismatchNotifications
       }
-    }
-
-    // Get class mismatch notifications for admin
-    const classMismatchNotifications = await prisma.notification.findMany({
-      where: {
-        userId: session.user.id,
-        type: 'FACULTY_CLASS_MISMATCH',
-        read: false
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      take: 5 // Limit to 5 most recent
-    })
-
-    // Add notifications to dashboard data
-    dashboardData.notifications = {
-      classMismatches: classMismatchNotifications
     }
 
     return NextResponse.json(dashboardData)
