@@ -36,7 +36,7 @@ interface Placement {
     contactPhone: string
     practiceAreas: string
   }
-  supervisor: {
+  supervisor?: {
     id: string
     firstName: string
     lastName: string
