@@ -728,7 +728,7 @@ export function AdminStudentsManagement() {
         isOpen={showConfirmModal}
         title={modalAction === 'deactivate' ? 'Deactivate Student' : 'Reactivate Student'}
         message={modalAction === 'deactivate' 
-          ? <><span className="font-bold text-red-600">Deactivating student will unassign faculty.</span> Are you sure you want to deactivate {studentToDeactivate?.firstName} {studentToDeactivate?.lastName}?</>
+          ? `Deactivating student will unassign faculty. Are you sure you want to deactivate ${studentToDeactivate?.firstName} ${studentToDeactivate?.lastName}?`
           : `Are you sure you want to reactivate ${studentToReactivate?.firstName} ${studentToReactivate?.lastName}? They will be moved back to the active section.`
         }
         confirmText={modalAction === 'deactivate' ? 'Deactivate' : 'Reactivate'}
