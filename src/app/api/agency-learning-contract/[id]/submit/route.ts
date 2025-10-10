@@ -119,7 +119,7 @@ export async function POST(
             lastName: formFields.fieldInstructorLastName,
             role: 'SUPERVISOR',
             active: true,
-            password: hashedPassword,
+            passwordHash: hashedPassword,
           }
         })
 
