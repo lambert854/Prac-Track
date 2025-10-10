@@ -17,7 +17,7 @@ interface SupervisorDashboardProps {
     name: string
     supervisorProfile?: {
       organizationName: string
-      title: string
+      title?: string
     }
   }
 }
@@ -71,7 +71,7 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
           Welcome, {user.name}! 
           {user.supervisorProfile && (
             <span className="ml-2 text-sm">
-              {user.supervisorProfile.title} - {user.supervisorProfile.organizationName}
+              {user.supervisorProfile.title ? `${user.supervisorProfile.title} - ` : ''}{user.supervisorProfile.organizationName}
             </span>
           )}
         </p>
@@ -79,7 +79,10 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card">
+        <button 
+          onClick={() => router.push('/supervisor/students')}
+          className="card card-hover cursor-pointer"
+        >
           <div className="flex items-center">
             <UserGroupIcon className="h-8 w-8 text-blue-600 mr-3" />
             <div>
@@ -87,9 +90,12 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
               <p className="text-2xl font-bold text-gray-900">{summaryStats.assignedStudents || 0}</p>
             </div>
           </div>
-        </div>
+        </button>
         
-        <div className="card">
+        <button 
+          onClick={() => router.push('/supervisor/timesheets')}
+          className="card card-hover cursor-pointer"
+        >
           <div className="flex items-center">
             <ClockIcon className="h-8 w-8 text-yellow-600 mr-3" />
             <div>
@@ -97,27 +103,8 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
               <p className="text-2xl font-bold text-gray-900">{summaryStats.pendingTimesheets || 0}</p>
             </div>
           </div>
-        </div>
+        </button>
         
-        <div className="card">
-          <div className="flex items-center">
-            <DocumentTextIcon className="h-8 w-8 text-green-600 mr-3" />
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Forms</p>
-              <p className="text-2xl font-bold text-gray-900">{summaryStats.pendingForms || 0}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="card">
-          <div className="flex items-center">
-            <CheckCircleIcon className="h-8 w-8 text-purple-600 mr-3" />
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Placements</p>
-              <p className="text-2xl font-bold text-gray-900">{summaryStats.activePlacements || 0}</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Quick Actions */}
@@ -183,7 +170,11 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Students</h2>
           <div className="space-y-3">
             {assignedStudents.slice(0, 5).map((student: any) => (
-              <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <button
+                key={student.id}
+                onClick={() => router.push(`/supervisor/students`)}
+                className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 hover:shadow-sm transition-all duration-200 text-left cursor-pointer"
+              >
                 <div className="flex items-center">
                   <UserGroupIcon className="h-5 w-5 text-gray-400 mr-3" />
                   <div>
@@ -198,19 +189,17 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
                     <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                       Active
                     </span>
+                  ) : student.studentPlacements && student.studentPlacements.length > 0 ? (
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                      Completed
+                    </span>
                   ) : (
                     <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
                       No Placement
                     </span>
                   )}
-                  <button
-                    onClick={() => router.push(`/supervisor/students`)}
-                    className="text-primary hover:text-accent text-sm"
-                  >
-                    View Details
-                  </button>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
           {assignedStudents.length > 5 && (
