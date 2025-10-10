@@ -37,7 +37,21 @@ const siteSchema = z.object({
   ),
 })
 
-type SiteFormData = z.infer<typeof siteSchema>
+type SiteFormData = {
+  name: string
+  address: string
+  city: string
+  state: string
+  zip: string
+  contactName: string
+  contactEmail: string
+  contactPhone: string
+  practiceAreas: string
+  agreementStartMonth?: number
+  agreementStartYear?: number
+  staffHasActiveLicense?: 'YES' | 'NO'
+  supervisorTraining?: 'YES' | 'NO'
+}
 
 interface Site {
   id: string
