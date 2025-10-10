@@ -58,6 +58,10 @@ interface Student {
     cellPolicy?: string
     learningContract?: string
     checklist?: string
+    class?: {
+      id: string
+      name: string
+    }
     site: {
       id: string
       name: string

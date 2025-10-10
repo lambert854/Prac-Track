@@ -38,6 +38,12 @@ export async function GET(request: NextRequest) {
         studentPlacements: {
           include: {
             site: true,
+            class: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
             supervisor: {
               select: {
                 id: true,
