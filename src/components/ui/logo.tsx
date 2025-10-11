@@ -20,7 +20,7 @@ export function Logo({ className = '', size = 'md', showText = true }: LogoProps
     <div className={`flex flex-col items-center justify-center ${className}`}>
       <div className={`${sizeClasses[size]} relative flex items-center justify-center`}>
         <Image
-          src={`/logo.svg?v=${Date.now()}`}
+          src="/logo.svg"
           alt="PRAC-TRACK Logo"
           width={200}
           height={120}
@@ -45,7 +45,7 @@ export function LogoCompact({ className = '', size = 'md' }: Omit<LogoProps, 'sh
   return (
     <div className={`${sizeClasses[size]} relative ${className}`}>
       <Image
-        src={`/logo.svg?v=${Date.now()}`}
+        src="/logo.svg"
         alt="PRAC-TRACK Logo"
         width={200}
         height={120}

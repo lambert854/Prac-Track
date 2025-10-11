@@ -7,8 +7,7 @@
     "dev": "next dev",
     "dev:mobile": "next dev --turbopack --hostname 0.0.0.0 --port 3000",
     "dev:https": "node server.js",
-    "build": "next build",
-    "build:vercel": "prisma generate --schema=prisma/schema.production.prisma && next build",
+    "build": "prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "start:mobile": "next start --hostname 0.0.0.0 --port 3000",
@@ -20,12 +19,9 @@
     "db:studio": "prisma studio",
     "setup:mobile": "npm run db:generate && npm run db:push && npm run db:seed",
     "setup:mobile:auto": "node setup-mobile.js",
-    "prisma:migrate": "prisma migrate deploy --schema prisma/schema.prisma",
-    "prisma:migrate:prod": "prisma migrate deploy --schema prisma/schema.production.prisma",
+    "prisma:migrate": "prisma migrate deploy",
     "prisma:seed": "tsx prisma/seed.ts",
-    "db:init": "npm run prisma:migrate && npm run prisma:seed",
-    "db:init:prod": "npm run prisma:migrate:prod && npm run prisma:seed",
-    "db:init:direct": "cross-env-shell \"DATABASE_URL=$DIRECT_DATABASE_URL npm run prisma:migrate && npm run prisma:seed\""
+    "db:init": "npm run prisma:migrate && npm run prisma:seed"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
