@@ -212,8 +212,8 @@ export function Navigation() {
       <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0">
         <div className="sidebar">
           {/* Logo Section - Fixed at top */}
-          <div className="flex justify-center px-6 pt-6 pb-4 border-b border-gray-200">
-            <Logo size="md" />
+          <div className="flex justify-center px-6 pt-4 pb-2 border-b border-gray-200">
+            <Logo size="lg" />
           </div>
           
           {/* Navigation Section - Separated from logo */}
