@@ -205,7 +205,7 @@ export function AdminUserManagement() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Admins</p>
               <p className="text-2xl font-bold text-gray-900">
-                {users.filter(u => u.role === 'ADMIN').length}
+                {users.filter((u: User) => u.role === 'ADMIN').length}
               </p>
             </div>
           </div>
@@ -219,7 +219,7 @@ export function AdminUserManagement() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Faculty</p>
               <p className="text-2xl font-bold text-gray-900">
-                {users.filter(u => u.role === 'FACULTY').length}
+                {users.filter((u: User) => u.role === 'FACULTY').length}
               </p>
             </div>
           </div>
@@ -233,7 +233,7 @@ export function AdminUserManagement() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Students</p>
               <p className="text-2xl font-bold text-gray-900">
-                {users.filter(u => u.role === 'STUDENT').length}
+                {users.filter((u: User) => u.role === 'STUDENT').length}
               </p>
             </div>
           </div>
