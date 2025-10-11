@@ -8,13 +8,13 @@ $processes = netstat -ano | Select-String ":3000.*LISTENING" | ForEach-Object {
 }
 
 # Kill each process
-foreach ($pid in $processes) {
-    if ($pid -and $pid -ne "0") {
-        Write-Host "Killing process $pid" -ForegroundColor Red
+foreach ($processId in $processes) {
+    if ($processId -and $processId -ne "0") {
+        Write-Host "Killing process $processId" -ForegroundColor Red
         try {
-            Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+            Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
         } catch {
-            Write-Host "Could not kill process $pid" -ForegroundColor Yellow
+            Write-Host "Could not kill process $processId" -ForegroundColor Yellow
         }
     }
 }
