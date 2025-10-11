@@ -129,24 +129,30 @@ export function SendLearningContractModal({ site, isOpen, onClose }: SendLearnin
   // Add supervisors
   if (site.supervisors) {
     site.supervisors.forEach(supervisor => {
-      allContacts.push({
-        id: supervisor.id,
-        name: `${supervisor.firstName} ${supervisor.lastName} (Supervisor)`,
-        email: supervisor.email,
-        type: 'supervisor'
-      })
+      // Only add supervisors with valid names
+      if (supervisor.firstName && supervisor.lastName && supervisor.email) {
+        allContacts.push({
+          id: supervisor.id,
+          name: `${supervisor.firstName} ${supervisor.lastName} (Supervisor)`,
+          email: supervisor.email,
+          type: 'supervisor'
+        })
+      }
     })
   }
 
   // Add pending supervisors
   if (site.pendingSupervisors) {
     site.pendingSupervisors.forEach(supervisor => {
-      allContacts.push({
-        id: supervisor.id,
-        name: `${supervisor.firstName} ${supervisor.lastName} (Pending Supervisor)`,
-        email: supervisor.email,
-        type: 'pending-supervisor'
-      })
+      // Only add pending supervisors with valid names
+      if (supervisor.firstName && supervisor.lastName && supervisor.email) {
+        allContacts.push({
+          id: supervisor.id,
+          name: `${supervisor.firstName} ${supervisor.lastName} (Pending Supervisor)`,
+          email: supervisor.email,
+          type: 'pending-supervisor'
+        })
+      }
     })
   }
 
