@@ -118,16 +118,16 @@ export function Navigation() {
       ]
     } else if (userRole === UserRole.SUPERVISOR) {
       return [
-        { name: 'Dashboard', href: '/supervisor', icon: HomeIcon },
+        { name: 'Supervisor Dashboard', href: '/supervisor', icon: HomeIcon },
         { type: 'separator' },
         { name: 'Students', href: '/supervisor/students', icon: UserGroupIcon },
         { name: 'Timesheets', href: '/supervisor/timesheets', icon: ClipboardDocumentListIcon },
         { name: 'Forms', href: '/supervisor/forms', icon: DocumentTextIcon },
       ]
     } else {
-      // For students, use the original filtered navigation
+      // For students, use the original filtered navigation but update dashboard name
       return filteredNavigation.map(item => ({
-        name: item.name,
+        name: item.name === 'Dashboard' ? 'Student Dashboard' : item.name,
         href: item.href,
         icon: item.icon
       }))
@@ -159,7 +159,19 @@ export function Navigation() {
                 
                 if (!item.href) return null
                 
-                const isActive = pathname === item.href
+                // Check if this is the dashboard item and if we're on the dashboard page
+                const isDashboardItem = item.href === '/dashboard' || 
+                                      item.href === '/faculty' || 
+                                      item.href === '/supervisor' || 
+                                      item.href === '/admin'
+                
+                const isActive = pathname === item.href || 
+                                (pathname === '/dashboard' && isDashboardItem && (
+                                  (userRole === UserRole.STUDENT && item.href === '/dashboard') ||
+                                  (userRole === UserRole.FACULTY && item.href === '/faculty') ||
+                                  (userRole === UserRole.SUPERVISOR && item.href === '/supervisor') ||
+                                  (userRole === UserRole.ADMIN && item.href === '/admin')
+                                ))
                 return (
                   <Link
                     key={item.name}
@@ -213,7 +225,19 @@ export function Navigation() {
               
               if (!item.href) return null
               
-              const isActive = pathname === item.href
+              // Check if this is the dashboard item and if we're on the dashboard page
+              const isDashboardItem = item.href === '/dashboard' || 
+                                    item.href === '/faculty' || 
+                                    item.href === '/supervisor' || 
+                                    item.href === '/admin'
+              
+              const isActive = pathname === item.href || 
+                              (pathname === '/dashboard' && isDashboardItem && (
+                                (userRole === UserRole.STUDENT && item.href === '/dashboard') ||
+                                (userRole === UserRole.FACULTY && item.href === '/faculty') ||
+                                (userRole === UserRole.SUPERVISOR && item.href === '/supervisor') ||
+                                (userRole === UserRole.ADMIN && item.href === '/admin')
+                              ))
               return (
                 <Link
                   key={item.name}
