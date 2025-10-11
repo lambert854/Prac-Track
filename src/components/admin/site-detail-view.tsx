@@ -21,6 +21,7 @@ import { SiteForm } from './site-form'
 import { AddSupervisorForm } from './add-supervisor-form'
 import { EditSupervisorForm } from './edit-supervisor-form'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ConfirmationModal } from './confirmation-modal'
 
 interface Site {
   id: string
@@ -80,6 +81,8 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
   const [editingSupervisor, setEditingSupervisor] = useState<any>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [supervisorToDelete, setSupervisorToDelete] = useState<{id: string, name: string} | null>(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [modalAction, setModalAction] = useState<'deactivate' | 'reactivate' | null>(null)
   const router = useRouter()
   const queryClient = useQueryClient()
   const { data: session } = useSession()
@@ -174,15 +177,30 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
   }
 
   const handleDeactivate = () => {
-    if (confirm('Are you sure you want to deactivate this site? It will be moved to the inactive section.')) {
-      deactivateSiteMutation.mutate()
-    }
+    setModalAction('deactivate')
+    setShowConfirmModal(true)
   }
 
   const handleReactivate = () => {
-    if (confirm('Are you sure you want to reactivate this site? It will be moved back to the active section.')) {
-      reactivateSiteMutation.mutate()
-    }
+    setModalAction('reactivate')
+    setShowConfirmModal(true)
+  }
+
+  const confirmDeactivate = () => {
+    deactivateSiteMutation.mutate()
+    setShowConfirmModal(false)
+    setModalAction(null)
+  }
+
+  const confirmReactivate = () => {
+    reactivateSiteMutation.mutate()
+    setShowConfirmModal(false)
+    setModalAction(null)
+  }
+
+  const cancelModal = () => {
+    setShowConfirmModal(false)
+    setModalAction(null)
   }
 
   const handleFormClose = () => {
@@ -759,6 +777,24 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {modalAction && (
+        <ConfirmationModal
+          isOpen={showConfirmModal}
+          title={modalAction === 'deactivate' ? 'Deactivate Field Site' : 'Reactivate Field Site'}
+          message={modalAction === 'deactivate' 
+            ? `Are you sure you want to deactivate "${site?.name}"? It will be moved to the inactive section.`
+            : `Are you sure you want to reactivate "${site?.name}"? It will be moved back to the active section.`
+          }
+          confirmText={modalAction === 'deactivate' ? 'Deactivate' : 'Reactivate'}
+          cancelText="Cancel"
+          onConfirm={modalAction === 'deactivate' ? confirmDeactivate : confirmReactivate}
+          onCancel={cancelModal}
+          isLoading={modalAction === 'deactivate' ? deactivateSiteMutation.isPending : reactivateSiteMutation.isPending}
+          variant={modalAction === 'deactivate' ? 'danger' : 'success'}
+        />
       )}
     </div>
   )
