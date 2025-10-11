@@ -126,20 +126,10 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         )
       }
-      // Use the student profile ID instead of user ID
-      if (student.studentProfile) {
-        studentId = student.studentProfile.id
-      }
-    } else {
-      // For students creating their own placement, get their student profile ID
-      const student = await prisma.user.findUnique({
-        where: { id: session.user.id, role: 'STUDENT' },
-        include: { studentProfile: true }
-      })
-      if (student?.studentProfile) {
-        studentId = student.studentProfile.id
-      }
+      // Keep the user ID for FacultyAssignment lookup
+      studentId = validatedData.studentId
     }
+    // For students creating their own placement, studentId is already set to session.user.id
 
     // Check if student already has an active placement
     const existingActivePlacement = await prisma.placement.findFirst({
