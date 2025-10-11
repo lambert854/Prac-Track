@@ -11,6 +11,7 @@ interface Faculty {
   createdAt: string
   lastLogin?: string | null
   facultyProfile?: {
+    honorific: string | null
     title: string | null
     officePhone: string | null
   }
@@ -89,7 +90,7 @@ export function FacultyDetailsModal({ faculty, onClose }: FacultyDetailsModalPro
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900">
-                  {faculty.firstName} {faculty.lastName}
+                  {faculty.facultyProfile?.honorific ? `${faculty.facultyProfile.honorific} ` : ''}{faculty.firstName} {faculty.lastName}
                 </h3>
                 {faculty.facultyProfile?.title && (
                   <p className="text-gray-600">{faculty.facultyProfile.title}</p>
