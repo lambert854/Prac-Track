@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckIcon, XMarkIcon, EyeIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { CheckIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { PlacementDetailsModal } from './placement-details-modal'
 
@@ -67,17 +67,20 @@ export function PlacementsManagement() {
   const [deletingPlacement, setDeletingPlacement] = useState<Placement | null>(null)
   const queryClient = useQueryClient()
 
-  const { data: placements, isLoading, error } = useQuery({
-    queryKey: ['placements', statusFilter],
+  const { data: allPlacements, isLoading, error } = useQuery({
+    queryKey: ['placements'],
     queryFn: async () => {
-      const params = new URLSearchParams()
-      if (statusFilter) params.append('status', statusFilter)
-      
-      const response = await fetch(`/api/placements?${params}`)
+      const response = await fetch('/api/placements')
       if (!response.ok) throw new Error('Failed to fetch placements')
       return response.json()
     },
   })
+
+  // Client-side filtering
+  const placements = allPlacements?.filter((placement: Placement) => {
+    if (!statusFilter) return true
+    return placement.status === statusFilter
+  }) || []
 
 
   const approvePlacementMutation = useMutation({
@@ -125,9 +128,9 @@ export function PlacementsManagement() {
     const statusText = {
       DRAFT: 'Draft',
       PENDING: 'Pending Review',
-      APPROVED: 'Approved',
-      APPROVED_PENDING_CHECKLIST: 'Approved',
-      ACTIVE: 'Approved',
+      APPROVED: 'Active Placement',
+      APPROVED_PENDING_CHECKLIST: 'Active Placement',
+      ACTIVE: 'Active Placement',
       COMPLETE: 'Complete',
     }
     
@@ -197,7 +200,7 @@ export function PlacementsManagement() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Site
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Supervisor
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -213,7 +216,11 @@ export function PlacementsManagement() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {placements?.map((placement: Placement) => (
-                <tr key={placement.id} className="hover:bg-gray-50">
+                <tr 
+                  key={placement.id} 
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => setViewingPlacement(placement)}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {placement.student.firstName} {placement.student.lastName}
@@ -231,7 +238,7 @@ export function PlacementsManagement() {
                       {placement.site.city}, {placement.site.state}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                     {placement.supervisor ? (
                       <>
                         <div className="text-sm text-gray-900">
@@ -260,16 +267,12 @@ export function PlacementsManagement() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => setViewingPlacement(placement)}
-                        className="text-gray-600 hover:text-gray-900"
-                        title="View Details"
-                      >
-                        <EyeIcon className="h-4 w-4" />
-                      </button>
                       {placement.status === 'PENDING' && (
                         <button
-                          onClick={() => approvePlacementMutation.mutate(placement.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            approvePlacementMutation.mutate(placement.id)
+                          }}
                           className="text-green-600 hover:text-green-900"
                           disabled={approvePlacementMutation.isPending}
                           title="Approve Placement"
@@ -278,7 +281,10 @@ export function PlacementsManagement() {
                         </button>
                       )}
                       <button
-                        onClick={() => setDeletingPlacement(placement)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeletingPlacement(placement)
+                        }}
                         className="text-red-600 hover:text-red-900"
                         title="Delete Placement"
                       >

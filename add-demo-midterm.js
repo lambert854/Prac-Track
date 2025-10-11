@@ -21,7 +21,7 @@ async function addDemoMidterm() {
 
     const placement = await prisma.placement.findFirst({
       where: {
-        studentId: student.id,
+        studentId: student.studentProfile.id,
         status: 'ACTIVE'
       }
     })

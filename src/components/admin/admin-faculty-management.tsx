@@ -66,8 +66,8 @@ export function AdminFacultyManagement() {
   const [deletingFaculty, setDeletingFaculty] = useState<Faculty | null>(null)
   const [viewingFaculty, setViewingFaculty] = useState<Faculty | null>(null)
 
-  const { data: faculty, isLoading, error } = useQuery({
-    queryKey: ['admin-faculty', searchQuery],
+  const { data: allFaculty, isLoading, error } = useQuery({
+    queryKey: ['admin-faculty'],
     queryFn: async () => {
       const response = await fetch('/api/admin/faculty', {
         credentials: 'include'
@@ -77,7 +77,8 @@ export function AdminFacultyManagement() {
     },
   })
 
-  const filteredFaculty = faculty?.filter((facultyMember: Faculty) => {
+  // Client-side filtering
+  const filteredFaculty = allFaculty?.filter((facultyMember: Faculty) => {
     const searchLower = searchQuery.toLowerCase()
     return (
       facultyMember.firstName.toLowerCase().includes(searchLower) ||
@@ -142,7 +143,7 @@ export function AdminFacultyManagement() {
             <AcademicCapIcon className="h-8 w-8 text-blue-600 mr-3" />
             <div>
               <p className="text-sm font-medium text-gray-600">Total Faculty</p>
-              <p className="text-2xl font-bold text-gray-900">{faculty?.length || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">{allFaculty?.length || 0}</p>
             </div>
           </div>
         </div>
@@ -153,7 +154,7 @@ export function AdminFacultyManagement() {
             <div>
               <p className="text-sm font-medium text-gray-600">With Students</p>
               <p className="text-2xl font-bold text-gray-900">
-                {faculty?.filter((f: Faculty) => f.facultyStudentAssignments && f.facultyStudentAssignments.length > 0).length || 0}
+                {allFaculty?.filter((f: Faculty) => f.facultyStudentAssignments && f.facultyStudentAssignments.length > 0).length || 0}
               </p>
             </div>
           </div>

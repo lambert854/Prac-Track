@@ -38,6 +38,8 @@ export function SendLearningContractModal({ site, isOpen, onClose }: SendLearnin
   const [customEmail, setCustomEmail] = useState('')
   const [customName, setCustomName] = useState('')
   const [showCustomInput, setShowCustomInput] = useState(false)
+  const [sentLink, setSentLink] = useState<string>('')
+  const [isContractSent, setIsContractSent] = useState(false)
   const queryClient = useQueryClient()
 
   const sendLearningContractMutation = useMutation({
@@ -50,18 +52,18 @@ export function SendLearningContractModal({ site, isOpen, onClose }: SendLearnin
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to send learning contract')
+        throw new Error(error.error || 'Failed to send agency application')
       }
 
       return response.json()
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
-      onClose()
-      setSelectedContact('')
-      setCustomEmail('')
-      setCustomName('')
-      setShowCustomInput(false)
+      // Don't close modal, show the link instead
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://www.prac-track.com'
+      const link = `${baseUrl}/agency-learning-contract/${data.token}`
+      setSentLink(link)
+      setIsContractSent(true)
     },
   })
 
@@ -98,6 +100,17 @@ export function SendLearningContractModal({ site, isOpen, onClose }: SendLearnin
       email,
       name,
     })
+  }
+
+  const handleClose = () => {
+    onClose()
+    // Reset state when closing
+    setSelectedContact('')
+    setCustomEmail('')
+    setCustomName('')
+    setShowCustomInput(false)
+    setSentLink('')
+    setIsContractSent(false)
   }
 
   if (!isOpen) return null
@@ -144,10 +157,10 @@ export function SendLearningContractModal({ site, isOpen, onClose }: SendLearnin
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">
-              Send Learning Contract
+              {isContractSent ? 'Agency Application Sent' : 'Send Agency Application'}
             </h3>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="text-gray-400 hover:text-gray-600"
               disabled={sendLearningContractMutation.isPending}
             >
@@ -162,11 +175,44 @@ export function SendLearningContractModal({ site, isOpen, onClose }: SendLearnin
             </p>
           </div>
 
-          {/* Contact Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Contact to Send Learning Contract To
-            </label>
+          {/* Show link if contract was sent */}
+          {isContractSent && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <EnvelopeIcon className="h-5 w-5 text-green-600" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-green-800 mb-2">
+                    Agency Application Sent Successfully!
+                  </h4>
+                  <p className="text-sm text-green-700 mb-3">
+                    The agency application has been sent to the agency. Share this link with them:
+                  </p>
+                  <div className="bg-white border border-green-200 rounded-md p-3">
+                    <p className="text-sm font-mono text-gray-900 break-all">
+                      {sentLink}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(sentLink)}
+                    className="mt-2 text-sm text-green-600 hover:text-green-700 underline"
+                  >
+                    Copy Link
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Contact Selection - only show if not sent yet */}
+          {!isContractSent && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Contact to Send Agency Application To
+              </label>
             
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {allContacts.map((contact) => (
@@ -237,31 +283,43 @@ export function SendLearningContractModal({ site, isOpen, onClose }: SendLearnin
                 </div>
               </div>
             )}
-          </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end space-x-3">
-            <button
-              onClick={onClose}
-              disabled={sendLearningContractMutation.isPending}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={sendLearningContractMutation.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {sendLearningContractMutation.isPending ? (
-                <div className="flex items-center space-x-2">
-                  <LoadingSpinner size="sm" />
-                  <span>Sending...</span>
-                </div>
-              ) : (
-                'Send Learning Contract'
-              )}
-            </button>
+            {isContractSent ? (
+              <button
+                onClick={handleClose}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Close
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleClose}
+                  disabled={sendLearningContractMutation.isPending}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={sendLearningContractMutation.isPending}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sendLearningContractMutation.isPending ? (
+                    <div className="flex items-center space-x-2">
+                      <LoadingSpinner size="sm" />
+                      <span>Sending...</span>
+                    </div>
+                  ) : (
+                    'Send Agency Application'
+                  )}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

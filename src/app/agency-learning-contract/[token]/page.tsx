@@ -34,10 +34,10 @@ export default async function AgencyLearningContractPage({ params }: PageProps) 
               </svg>
             </div>
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              Learning Contract {learningContract.status === 'APPROVED' ? 'Approved' : 'Submitted'}
+              Agency Application {learningContract.status === 'APPROVED' ? 'Approved' : 'Submitted'}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Thank you for submitting the learning contract for {learningContract.site.name}.
+              Thank you for submitting the agency application for {learningContract.site.name}.
               {learningContract.status === 'SUBMITTED' && ' It is currently under review.'}
               {learningContract.status === 'APPROVED' && ' It has been approved and the agency is now active.'}
             </p>
@@ -57,7 +57,7 @@ export default async function AgencyLearningContractPage({ params }: PageProps) 
                 WVSU Department of Social Work
               </h1>
               <h2 className="text-xl font-semibold text-gray-700 mt-2">
-                Field Placement Site Learning Contract
+                Agency Application
               </h2>
               <p className="text-gray-600 mt-4">
                 Upon completion of the application and acceptance as a Field Placement Site for a WVSU Department of Social Work Field Student

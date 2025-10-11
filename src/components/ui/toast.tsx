@@ -44,12 +44,12 @@ export function Toast({ id, title, description, type, onRemove }: ToastProps) {
   const Icon = icons[type]
 
   return (
-    <div className={`max-w-sm w-full border rounded-lg shadow-lg p-4 ${colors[type]}`}>
+    <div className={`w-full border rounded-lg shadow-lg p-4 ${colors[type]}`}>
       <div className="flex items-start">
         <div className="flex-shrink-0">
           <Icon className={`h-5 w-5 ${iconColors[type]}`} />
         </div>
-        <div className="ml-3 w-0 flex-1">
+        <div className="ml-3 flex-1 min-w-0">
           <p className="text-sm font-medium">{title}</p>
           <p className="mt-1 text-sm opacity-90">{description}</p>
         </div>
@@ -93,14 +93,17 @@ export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
       </div>
 
       {/* Visual toasts */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
-        {toasts.map(toast => (
-          <Toast
-            key={toast.id}
-            {...toast}
-            onRemove={onRemove}
-          />
-        ))}
+      <div className="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
+        <div className="w-80 max-w-[calc(100vw-2rem)]">
+          {toasts.map(toast => (
+            <div key={toast.id} className="pointer-events-auto">
+              <Toast
+                {...toast}
+                onRemove={onRemove}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </>
   )

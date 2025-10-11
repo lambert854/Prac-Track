@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { PencilIcon, CheckIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { TimesheetJournalForm } from './timesheet-journal-form'
 
 interface TimesheetEntry {
   id: string
@@ -29,8 +30,9 @@ interface TimesheetWeekViewProps {
   entries: TimesheetEntry[]
   onEditEntry: (entry: TimesheetEntry) => void
   onAddEntry: (date: string) => void
-  onSubmitWeek: (data: { startDate: string; endDate: string }) => void
+  onSubmitWeek: (data: { startDate: string; endDate: string; journalData?: any }) => void
   isSubmittingWeek: boolean
+  studentName: string
 }
 
 export function TimesheetWeekView({
@@ -40,7 +42,10 @@ export function TimesheetWeekView({
   onAddEntry,
   onSubmitWeek,
   isSubmittingWeek,
+  studentName,
 }: TimesheetWeekViewProps) {
+  const [showJournalForm, setShowJournalForm] = useState(false)
+  const [pendingSubmission, setPendingSubmission] = useState<{ startDate: string; endDate: string } | null>(null)
   // Generate work weeks for the dropdown
   const generateWorkWeeks = () => {
     const weeks = []
@@ -178,7 +183,26 @@ export function TimesheetWeekView({
   const handleSubmitWeek = () => {
     const startDate = weekDates[0]
     const endDate = weekDates[6]
-    onSubmitWeek({ startDate, endDate })
+    
+    setPendingSubmission({ startDate, endDate })
+    setShowJournalForm(true)
+  }
+
+  const handleJournalSubmit = (journalData: any) => {
+    if (pendingSubmission) {
+      onSubmitWeek({
+        startDate: pendingSubmission.startDate,
+        endDate: pendingSubmission.endDate,
+        journalData
+      })
+      setShowJournalForm(false)
+      setPendingSubmission(null)
+    }
+  }
+
+  const handleJournalCancel = () => {
+    setShowJournalForm(false)
+    setPendingSubmission(null)
   }
 
   const totalHours = weekEntries.reduce((sum, entry) => {
@@ -347,6 +371,16 @@ export function TimesheetWeekView({
         <div className="text-center py-8 text-gray-500">
           No hours logged for this week
         </div>
+      )}
+
+      {/* Journal Form */}
+      {showJournalForm && (
+        <TimesheetJournalForm
+          studentName={studentName}
+          onSubmit={handleJournalSubmit}
+          onCancel={handleJournalCancel}
+          isSubmitting={isSubmittingWeek}
+        />
       )}
     </div>
   )

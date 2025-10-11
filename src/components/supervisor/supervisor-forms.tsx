@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { DocumentTextIcon, CheckCircleIcon, ClockIcon, XCircleIcon } from '@heroicons/react/24/outline'
+import { DocumentTextIcon, CheckCircleIcon, ClockIcon, XCircleIcon, UserGroupIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 
 interface SupervisorFormsProps {
   supervisorId: string
@@ -102,7 +102,7 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
       case 'LEARNING_CONTRACT':
         return 'Student Learning Contract'
       case 'CELL_PHONE_POLICY':
-        return 'Cell Phone Usage Policy'
+        return 'Fair Use Policies'
       case 'PLACEMENT_CHECKLIST':
         return 'Placement Checklist'
       case 'EVALUATION':
@@ -130,20 +130,25 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
     )
   }
 
-  const forms: FormSubmission[] = formsData?.forms || []
-  const totalForms = formsData?.totalForms || 0
+  const pendingForms = formsData?.pendingForms || []
+  const allDocuments = formsData?.allDocuments || []
+  const summary = formsData?.summary || { totalForms: 0, pendingForms: 0, uploadedDocuments: 0, totalDocuments: 0 }
+
+  // Separate form submissions from uploaded documents
+  const formSubmissions = allDocuments.filter(doc => !doc.type || doc.type === 'FORM_SUBMISSION')
+  const uploadedDocuments = allDocuments.filter(doc => doc.type === 'UPLOADED_DOCUMENT' && doc.title === 'Placement Checklist')
 
   // Group forms by status for better organization
-  const formsByStatus = forms.reduce((acc, form) => {
-    const status = form.displayStatus
+  const formsByStatus = formSubmissions.reduce((acc, form) => {
+    const status = form.displayStatus || form.status
     if (!acc[status]) {
       acc[status] = []
     }
     acc[status].push(form)
     return acc
-  }, {} as Record<string, FormSubmission[]>)
+  }, {} as Record<string, any[]>)
 
-  const statusOrder = ['Pending Signature', 'Supervisor Signed', 'Faculty Signed', 'Completed', 'Rejected']
+  const statusOrder = ['SUBMITTED', 'APPROVED', 'REJECTED', 'DRAFT']
 
   return (
     <div className="space-y-6">
@@ -151,23 +156,117 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
       <div className="bg-white shadow rounded-lg p-6">
         <h1 className="text-2xl font-bold text-gray-900">My Forms</h1>
         <p className="text-gray-600 mt-2">
-          Forms that have been sent to you or signed by you
+          Forms and documents from your assigned students
         </p>
         <div className="mt-4 flex items-center space-x-4">
           <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-            {totalForms} Total Forms
+            {uploadedDocuments.length} Student Document{uploadedDocuments.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+      </div>
+
+      {/* Student Information Table - Checklist Documents */}
+      {uploadedDocuments.length > 0 && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <DocumentTextIcon className="h-5 w-5 text-blue-600 mr-2" />
+              Student Documents
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Documents uploaded by your assigned students
+            </p>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Student
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Document Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Site
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Uploaded
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {uploadedDocuments.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <UserGroupIcon className="h-5 w-5 text-gray-400 mr-3" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {doc.student?.firstName} {doc.student?.lastName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {doc.student?.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {doc.title}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {doc.siteName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(doc.uploadedAt)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => window.open(`/api/uploads/${doc.documentPath}`, '_blank')}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                      >
+                        View Document
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Supervisor Application Section - Placeholder */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900 flex items-center">
+            <ClipboardDocumentListIcon className="h-5 w-5 text-green-600 mr-2" />
+            Supervisor Application
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Application form sent to you for supervisor approval
+          </p>
+        </div>
+        
+        <div className="px-6 py-8">
+          <div className="text-center">
+            <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-4 text-lg font-medium text-gray-900">No Application Found</h3>
+            <p className="mt-2 text-gray-600">
+              Supervisor applications will appear here when they are sent to you.
+            </p>
           </div>
         </div>
       </div>
 
       {/* Forms by Status */}
-      {forms.length === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <p className="text-gray-500 text-lg mt-4">No forms found</p>
-          <p className="text-gray-400 mt-2">Forms sent to you or signed by you will appear here</p>
-        </div>
-      ) : (
+      {formSubmissions.length > 0 && (
         <div className="space-y-6">
           {statusOrder.map(status => {
             const statusForms = formsByStatus[status]

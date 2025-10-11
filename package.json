@@ -20,8 +20,10 @@
     "setup:mobile": "npm run db:generate && npm run db:push && npm run db:seed",
     "setup:mobile:auto": "node setup-mobile.js",
     "prisma:migrate": "prisma migrate deploy --schema prisma/schema.prisma",
+    "prisma:migrate:prod": "prisma migrate deploy --schema prisma/schema.production.prisma",
     "prisma:seed": "tsx prisma/seed.ts",
     "db:init": "npm run prisma:migrate && npm run prisma:seed",
+    "db:init:prod": "npm run prisma:migrate:prod && npm run prisma:seed",
     "db:init:direct": "cross-env-shell \"DATABASE_URL=$DIRECT_DATABASE_URL npm run prisma:migrate && npm run prisma:seed\""
   },
   "prisma": {

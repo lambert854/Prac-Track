@@ -143,6 +143,8 @@ export function FacultyAssignmentsManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['faculty-assignments'] })
+      queryClient.invalidateQueries({ queryKey: ['faculty-dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['placements'] })
       setEditingAssignment(null)
     },
   })

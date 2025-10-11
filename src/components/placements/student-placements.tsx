@@ -58,13 +58,26 @@ export function StudentPlacements() {
       DRAFT: 'bg-gray-100 text-gray-800',
       PENDING: 'bg-yellow-100 text-yellow-800',
       APPROVED: 'bg-blue-100 text-blue-800',
+      APPROVED_PENDING_CHECKLIST: 'bg-blue-100 text-blue-800',
       ACTIVE: 'bg-green-100 text-green-800',
       COMPLETE: 'bg-purple-100 text-purple-800',
+      ARCHIVED: 'bg-gray-100 text-gray-800 border border-gray-200',
+    }
+    
+    const statusLabels = {
+      DRAFT: 'Draft',
+      PENDING: 'Pending',
+      APPROVED: 'Approved',
+      APPROVED_PENDING_CHECKLIST: 'Approved',
+      ACTIVE: 'Active',
+      COMPLETE: 'Complete',
+      DECLINED: 'Declined',
+      ARCHIVED: 'Archived'
     }
     
     return (
       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusClasses[status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800'}`}>
-        {status}
+        {statusLabels[status as keyof typeof statusLabels] || status}
       </span>
     )
   }

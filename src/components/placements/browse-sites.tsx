@@ -27,19 +27,35 @@ export function BrowseSites() {
   const [selectedSite, setSelectedSite] = useState<Site | null>(null)
   const [showRequestModal, setShowRequestModal] = useState(false)
 
-  const { data: sites, isLoading, error } = useQuery({
-    queryKey: ['sites', searchQuery, cityFilter, practiceFilter],
+  const { data: allSites, isLoading, error } = useQuery({
+    queryKey: ['sites'],
     queryFn: async () => {
-      const params = new URLSearchParams()
-      if (searchQuery) params.append('query', searchQuery)
-      if (cityFilter) params.append('city', cityFilter)
-      if (practiceFilter) params.append('practice', practiceFilter)
-      
-      const response = await fetch(`/api/sites?${params}`)
+      const response = await fetch('/api/sites')
       if (!response.ok) throw new Error('Failed to fetch sites')
       return response.json()
     },
   })
+
+  // Client-side filtering
+  const sites = allSites?.filter((site: Site) => {
+    const searchLower = searchQuery.toLowerCase()
+    const cityLower = cityFilter.toLowerCase()
+    const practiceLower = practiceFilter.toLowerCase()
+
+    const matchesSearch = !searchQuery || 
+      site.name.toLowerCase().includes(searchLower) ||
+      site.contactName.toLowerCase().includes(searchLower) ||
+      site.contactEmail.toLowerCase().includes(searchLower) ||
+      site.practiceAreas.toLowerCase().includes(searchLower)
+
+    const matchesCity = !cityFilter || 
+      site.city.toLowerCase().includes(cityLower)
+
+    const matchesPractice = !practiceFilter || 
+      site.practiceAreas.toLowerCase().includes(practiceLower)
+
+    return matchesSearch && matchesCity && matchesPractice
+  }) || []
 
   if (isLoading) {
     return (

@@ -62,7 +62,7 @@ async function createStudentAndPending() {
     // Create a pending placement request
     const placement = await prisma.placement.create({
       data: {
-        studentId: student.id,
+        studentId: student.studentProfile.id,
         siteId: site.id,
         supervisorId: supervisor.id,
         facultyId: faculty.id,

@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")         // pooled (runtime)
-  directUrl = env("DIRECT_DATABASE_URL")  // direct (migrate/seed)
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {

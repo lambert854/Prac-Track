@@ -59,19 +59,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="flex justify-center mb-6 -mt-20">
-            <div className="scale-[2]">
-              <Logo size="2xl" />
-            </div>
-          </div>
-          <div className="mt-20">
-            <p className="text-center text-lg text-gray-600">
-              Social Work Practicum Education Management
-            </p>
+        <div className="text-center">
+          <div className="mb-24 transform scale-150" style={{transform: 'scale(1.7, 1.5)'}}>
+            <Logo size="2xl" className="mx-auto" />
           </div>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="mt-12 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">

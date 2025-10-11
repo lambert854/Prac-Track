@@ -42,6 +42,16 @@ export function StudentTimesheets() {
   const [editingEntry, setEditingEntry] = useState<TimesheetEntry | null>(null)
   const queryClient = useQueryClient()
 
+  // Get current user information
+  const { data: user } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/session')
+      if (!response.ok) throw new Error('Failed to fetch user data')
+      return response.json()
+    },
+  })
+
   // Get user's active placements
   const { data: placements, isLoading: placementsLoading } = useQuery({
     queryKey: ['placements'],
@@ -52,7 +62,9 @@ export function StudentTimesheets() {
     },
   })
 
-  const activePlacement = placements?.find((p: Placement) => p.status === 'ACTIVE')
+  const activePlacement = placements?.find((p: Placement) => 
+    p.status === 'ACTIVE' || p.status === 'APPROVED' || p.status === 'APPROVED_PENDING_CHECKLIST'
+  )
 
   // Get timesheet entries for active placement
   const { data: timesheetEntries, isLoading: entriesLoading } = useQuery({
@@ -77,13 +89,13 @@ export function StudentTimesheets() {
   })
 
   const submitWeekMutation = useMutation({
-    mutationFn: async ({ startDate, endDate }: { startDate: string; endDate: string }) => {
+    mutationFn: async ({ startDate, endDate, journalData }: { startDate: string; endDate: string; journalData?: any }) => {
       if (!activePlacement?.id) throw new Error('No active placement')
       
       const response = await fetch(`/api/placements/${activePlacement.id}/timesheets/submit-week`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startDate, endDate }),
+        body: JSON.stringify({ startDate, endDate, journalData }),
       })
       if (!response.ok) throw new Error('Failed to submit week')
       return response.json()
@@ -93,6 +105,11 @@ export function StudentTimesheets() {
       queryClient.invalidateQueries({ queryKey: ['timesheet-entries', activePlacement?.id] })
       // Also invalidate student dashboard data
       queryClient.invalidateQueries({ queryKey: ['student-dashboard'] })
+      
+      // Refresh the page to update the UI
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
     },
   })
 
@@ -172,6 +189,7 @@ export function StudentTimesheets() {
           }}
           onSubmitWeek={submitWeekMutation.mutate}
           isSubmittingWeek={submitWeekMutation.isPending}
+          studentName={user?.user?.name || 'Student'}
         />
       )}
 

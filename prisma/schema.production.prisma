@@ -1,0 +1,544 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")         // pooled (runtime)
+  directUrl = env("DIRECT_DATABASE_URL")  // direct (migrations)
+}
+
+model User {
+  id                           String                   @id @default(cuid())
+  email                        String                   @unique
+  passwordHash                 String
+  firstName                    String
+  lastName                     String
+  phone                        String?
+  role                         UserRole
+  active                       Boolean                  @default(true)
+  lastLogin                    DateTime?
+  resetToken                   String?
+  resetTokenExpiry             DateTime?
+  createdAt                    DateTime                 @default(now())
+  updatedAt                    DateTime                 @updatedAt
+  approvedLearningContracts    AgencyLearningContract[] @relation("ApprovedLearningContracts")
+  auditLogs                    AuditLog[]
+  taughtClasses                Class[]                  @relation("ClassFaculty")
+  facultyStudentAssignments    FacultyAssignment[]      @relation("FacultyStudentAssignments")
+  studentFacultyAssignments    FacultyAssignment[]      @relation("StudentFacultyAssignments")
+  facultyProfile               FacultyProfile?
+  approvedForms                FormSubmission[]         @relation("ApprovedForms")
+  submittedForms               FormSubmission[]         @relation("SubmittedForms")
+  notifications                Notification[]
+  approvedPendingSupervisors   PendingSupervisor[]      @relation("ApprovedPendingSupervisors")
+  studentPlacements            Placement[]              @relation("StudentPlacements")
+  supervisorPlacements         Placement[]              @relation("SupervisorPlacements")
+  facultyPlacements            Placement[]              @relation("FacultyPlacements")
+  studentProfile               StudentProfile?
+  supervisorProfile            SupervisorProfile?
+  rejectedTimesheets           TimesheetEntry[]         @relation("RejectedTimesheets")
+  facultyApprovedTimesheets    TimesheetEntry[]         @relation("FacultyApprovedTimesheets")
+  supervisorApprovedTimesheets TimesheetEntry[]         @relation("SupervisorApprovedTimesheets")
+
+  @@map("users")
+}
+
+model Class {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  hours      Int
+  facultyId  String?
+  active     Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  faculty    User?       @relation("ClassFaculty", fields: [facultyId], references: [id])
+  placements Placement[]
+
+  @@map("classes")
+}
+
+model StudentProfile {
+  id      String  @id @default(cuid())
+  userId  String  @unique
+  aNumber String  @unique
+  program String
+  cohort  String
+  notes   String?
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("student_profiles")
+}
+
+model FacultyProfile {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  title       String?
+  officePhone String?
+  honorific   String?
+  roomNumber  String?
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("faculty_profiles")
+}
+
+model SupervisorProfile {
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  siteId        String
+  title         String?
+  highestDegree String?
+  licenseNumber String?
+  licensedSW    String?
+  otherDegree   String?
+  site          Site    @relation(fields: [siteId], references: [id])
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("supervisor_profiles")
+}
+
+model PendingSupervisor {
+  id            String                  @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  title         String?
+  siteId        String
+  placementId   String                  @unique
+  status        PendingSupervisorStatus @default(PENDING)
+  approvedBy    String?
+  approvedAt    DateTime?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  highestDegree String?
+  licenseNumber String?
+  licensedSW    String?
+  otherDegree   String?
+  approver      User?                   @relation("ApprovedPendingSupervisors", fields: [approvedBy], references: [id])
+  placement     Placement               @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  site          Site                    @relation(fields: [siteId], references: [id])
+
+  @@map("pending_supervisors")
+}
+
+model Notification {
+  id                String               @id @default(cuid())
+  userId            String
+  type              NotificationType
+  title             String
+  message           String
+  relatedEntityId   String?
+  relatedEntityType RelatedEntityType?
+  priority          NotificationPriority @default(MEDIUM)
+  metadata          String?
+  read              Boolean              @default(false)
+  readAt            DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model EmailLog {
+  id           String      @id @default(cuid())
+  to           String
+  from         String
+  subject      String
+  body         String
+  status       EmailStatus @default(PENDING)
+  sentAt       DateTime?
+  errorDetails String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("email_logs")
+}
+
+model Site {
+  id                      String                  @id @default(cuid())
+  name                    String
+  address                 String
+  city                    String
+  state                   String
+  zip                     String
+  contactName             String
+  contactEmail            String
+  contactPhone            String
+  practiceAreas           String
+  active                  Boolean                 @default(true)
+  status                  SiteStatus              @default(ACTIVE)
+  createdAt               DateTime                @default(now())
+  agreementExpirationDate DateTime?
+  agreementStartMonth     Int?
+  agreementStartYear      Int?
+  staffHasActiveLicense   String?
+  supervisorTraining      String?
+  learningContractStatus  LearningContractStatus?
+  learningContract        AgencyLearningContract?
+  pendingSupervisors      PendingSupervisor[]
+  placements              Placement[]
+  supervisors             SupervisorProfile[]
+
+  @@map("sites")
+}
+
+model AgencyLearningContract {
+  id                            String                 @id @default(cuid())
+  siteId                        String                 @unique
+  token                         String                 @unique
+  tokenExpiry                   DateTime
+  sentToEmail                   String
+  sentToName                    String?
+  submittedAt                   DateTime?
+  approvedAt                    DateTime?
+  approvedBy                    String?
+  status                        LearningContractStatus @default(PENDING)
+  agencyEmail                   String
+  agencyName                    String
+  agencyAddress                 String
+  agencyCity                    String
+  agencyState                   String
+  agencyZip                     String
+  agencyTelephone               String
+  agencyDirector                String
+  fieldInstructorName           String?
+  fieldInstructorFirstName      String?
+  fieldInstructorLastName       String?
+  fieldInstructorDegree         String?
+  fieldInstructorLicense        String?
+  fieldInstructorLicenseType    String?
+  fieldInstructorResume         String?
+  resourcesAvailable            String?
+  servicesProvided              String?
+  learningPlan                  String?
+  learningOpportunities         String?
+  supervisionArrangement        String?
+  instructionMethods            String?
+  orientationArrangements       String?
+  specialRequirements           String?
+  handicapAccommodations        String?
+  handicapAccommodationsDetails String?
+  promotionalMaterials          String?
+  comments                      String?
+  completedByName               String?
+  completedByTitle              String?
+  createdAt                     DateTime               @default(now())
+  updatedAt                     DateTime               @updatedAt
+  approver                      User?                  @relation("ApprovedLearningContracts", fields: [approvedBy], references: [id])
+  site                          Site                   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@map("agency_learning_contracts")
+}
+
+model Placement {
+  id                   String             @id @default(cuid())
+  studentId            String
+  siteId               String
+  supervisorId         String?
+  facultyId            String
+  classId              String
+  startDate            DateTime
+  endDate              DateTime
+  status               PlacementStatus    @default(DRAFT)
+  requiredHours        Int
+  complianceChecklist  String?
+  cellPolicy           String?
+  learningContract     String?
+  checklist            String?
+  approvedAt           DateTime?
+  approvedBy           String?
+  declinedAt           DateTime?
+  declinedBy           String?
+  facultyNotes         String?
+  archivedAt           DateTime?
+  finalEvaluationDue   DateTime?
+  midtermEvaluationDue DateTime?
+  evaluations          Evaluation[]
+  formSubmissions      FormSubmission[]
+  pendingSupervisor    PendingSupervisor?
+  class                Class              @relation(fields: [classId], references: [id])
+  student              User               @relation("StudentPlacements", fields: [studentId], references: [id])
+  site                 Site               @relation(fields: [siteId], references: [id])
+  supervisor           User?              @relation("SupervisorPlacements", fields: [supervisorId], references: [id])
+  faculty              User               @relation("FacultyPlacements", fields: [facultyId], references: [id])
+  timesheetEntries     TimesheetEntry[]
+  timesheetJournals    TimesheetJournal[]
+
+  @@index([facultyId])
+  @@index([supervisorId])
+  @@index([siteId])
+  @@index([classId])
+  @@index([studentId])
+  @@index([studentId, status])
+  @@index([supervisorId, status])
+  @@map("placements")
+}
+
+model TimesheetEntry {
+  id                   String            @id @default(cuid())
+  placementId          String
+  date                 DateTime
+  hours                Decimal
+  category             TimesheetCategory
+  notes                String?
+  status               TimesheetStatus   @default(DRAFT)
+  submittedAt          DateTime?
+  supervisorApprovedAt DateTime?
+  supervisorApprovedBy String?
+  facultyApprovedAt    DateTime?
+  facultyApprovedBy    String?
+  rejectedAt           DateTime?
+  rejectedBy           String?
+  rejectionReason      String?
+  locked               Boolean           @default(false)
+  rejector             User?             @relation("RejectedTimesheets", fields: [rejectedBy], references: [id])
+  facultyApprover      User?             @relation("FacultyApprovedTimesheets", fields: [facultyApprovedBy], references: [id])
+  supervisorApprover   User?             @relation("SupervisorApprovedTimesheets", fields: [supervisorApprovedBy], references: [id])
+  placement            Placement         @relation(fields: [placementId], references: [id], onDelete: Cascade)
+
+  @@map("timesheet_entries")
+}
+
+model TimesheetJournal {
+  id                String    @id @default(cuid())
+  placementId       String
+  startDate         DateTime
+  endDate           DateTime
+  tasksSummary      String
+  highLowPoints     String?
+  competencies      String
+  practiceBehaviors String
+  reaction          String
+  otherComments     String?
+  submittedAt       DateTime  @default(now())
+  placement         Placement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+
+  @@map("timesheet_journals")
+}
+
+model FacultyAssignment {
+  id        String   @id @default(cuid())
+  studentId String
+  facultyId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  faculty   User     @relation("FacultyStudentAssignments", fields: [facultyId], references: [id], onDelete: Cascade)
+  student   User     @relation("StudentFacultyAssignments", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, facultyId])
+  @@map("faculty_assignments")
+}
+
+model FormTemplate {
+  id          String           @id @default(cuid())
+  key         FormTemplateKey  @unique
+  title       String
+  jsonSchema  String
+  uiSchema    String
+  version     Int              @default(1)
+  active      Boolean          @default(true)
+  submissions FormSubmission[]
+
+  @@map("form_templates")
+}
+
+model FormSubmission {
+  id          String               @id @default(cuid())
+  templateId  String
+  placementId String
+  submittedBy String
+  role        FormSubmissionRole
+  data        String
+  status      FormSubmissionStatus @default(DRAFT)
+  locked      Boolean              @default(false)
+  approvedBy  String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  approver    User?                @relation("ApprovedForms", fields: [approvedBy], references: [id])
+  submitter   User                 @relation("SubmittedForms", fields: [submittedBy], references: [id])
+  placement   Placement            @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  template    FormTemplate         @relation(fields: [templateId], references: [id])
+
+  @@map("form_submissions")
+}
+
+model Evaluation {
+  id            String                 @id @default(cuid())
+  placementId   String
+  type          EvaluationType
+  createdById   String
+  studentMsg    String?
+  supervisorMsg String?
+  createdAt     DateTime               @default(now())
+  submissions   EvaluationSubmission[]
+  placement     Placement              @relation(fields: [placementId], references: [id], onDelete: Cascade)
+
+  @@unique([placementId, type], name: "placementId_type")
+  @@index([placementId, type])
+  @@map("evaluations")
+}
+
+model EvaluationSubmission {
+  id            String           @id @default(cuid())
+  evaluationId  String
+  role          EvaluationRole
+  submittedById String?
+  status        EvaluationStatus @default(PENDING)
+  answers       String?
+  lastSavedAt   DateTime?
+  lockedAt      DateTime?
+  createdAt     DateTime         @default(now())
+  evaluation    Evaluation       @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  @@unique([evaluationId, role])
+  @@index([evaluationId, role])
+  @@map("evaluation_submissions")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+enum UserRole {
+  STUDENT
+  SUPERVISOR
+  FACULTY
+  ADMIN
+}
+
+enum PlacementStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  APPROVED_PENDING_CHECKLIST
+  ACTIVE
+  COMPLETE
+  DECLINED
+  ARCHIVED
+}
+
+enum PendingSupervisorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TimesheetCategory {
+  DIRECT
+  INDIRECT
+  TRAINING
+  ADMIN
+}
+
+enum TimesheetStatus {
+  DRAFT
+  PENDING_SUPERVISOR
+  PENDING_FACULTY
+  APPROVED
+  REJECTED
+}
+
+enum FormTemplateKey {
+  LEARNING_CONTRACT
+  MIDTERM_EVAL
+  FINAL_EVAL
+}
+
+enum FormSubmissionRole {
+  STUDENT
+  SUPERVISOR
+  FACULTY
+}
+
+enum FormSubmissionStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REVISIONS
+}
+
+enum SiteStatus {
+  ACTIVE
+  PENDING_APPROVAL
+  PENDING_LEARNING_CONTRACT
+  REJECTED
+}
+
+enum LearningContractStatus {
+  PENDING
+  SENT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  PLACEMENT_APPROVED
+  PLACEMENT_REJECTED
+  SUPERVISOR_APPROVED
+  SUPERVISOR_REJECTED
+  SITE_APPROVED
+  SITE_REJECTED
+  DOCUMENT_UPLOADED
+  TIMESHEET_APPROVED
+  TIMESHEET_REJECTED
+  AGREEMENT_EXPIRING
+  AGREEMENT_EXPIRED
+  LEARNING_CONTRACT_SENT
+  LEARNING_CONTRACT_SUBMITTED
+  LEARNING_CONTRACT_APPROVED
+  FACULTY_CLASS_MISMATCH
+  EVALUATION_SENT
+  EVALUATION_SUBMITTED
+  EVALUATION_STUDENT_REVIEWED
+  EVALUATION_FACULTY_APPROVED
+  EVALUATION_OVERDUE
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum RelatedEntityType {
+  PLACEMENT
+  SITE
+  SUPERVISOR
+  TIMESHEET
+  DOCUMENT
+  EVALUATION
+}
+
+enum EvaluationType {
+  MIDTERM
+  FINAL
+}
+
+enum EvaluationRole {
+  STUDENT
+  SUPERVISOR
+}
+
+enum EvaluationStatus {
+  PENDING
+  IN_PROGRESS
+  LOCKED
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}

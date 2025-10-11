@@ -41,6 +41,15 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        // Debug logging
+        console.log('Auth - User found:', {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          hasStudentProfile: !!user.studentProfile,
+          studentProfile: user.studentProfile
+        })
+
         return {
           id: user.id,
           email: user.email,
@@ -73,6 +82,14 @@ export const authOptions: NextAuthOptions = {
         session.user.studentProfile = token.studentProfile
         session.user.facultyProfile = token.facultyProfile
         session.user.supervisorProfile = token.supervisorProfile
+        
+        // Debug logging
+        console.log('Session - Token data:', {
+          userId: token.sub,
+          role: token.role,
+          hasStudentProfile: !!token.studentProfile,
+          studentProfile: token.studentProfile
+        })
       }
       return session
     }

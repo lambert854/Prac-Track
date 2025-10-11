@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon, EnvelopeIcon, EyeIcon, LinkIcon } from '@heroicons/react/24/outline'
 import { SiteForm } from './site-form'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ConfirmationModal } from './confirmation-modal'
 import { SendLearningContractModal } from './send-learning-contract-modal'
+import { LearningContractDetailsModal } from './learning-contract-details-modal'
+import { LearningContractReviewModal } from './learning-contract-review-modal'
 
 interface Site {
   id: string
@@ -88,6 +90,8 @@ export function SitesManagement() {
   const [selectedSiteForEmail, setSelectedSiteForEmail] = useState<Site | null>(null)
   const [showLearningContractModal, setShowLearningContractModal] = useState(false)
   const [selectedSiteForLearningContract, setSelectedSiteForLearningContract] = useState<Site | null>(null)
+  const [selectedLearningContract, setSelectedLearningContract] = useState<any>(null)
+  const [selectedContractForReview, setSelectedContractForReview] = useState<any>(null)
   const queryClient = useQueryClient()
   const router = useRouter()
 
@@ -272,6 +276,65 @@ export function SitesManagement() {
     router.push(`/admin/sites/${siteId}`)
   }
 
+  const handleViewLearningContract = async (e: React.MouseEvent, site: Site) => {
+    e.stopPropagation() // Prevent row click
+    
+    try {
+      const response = await fetch(`/api/admin/learning-contracts?siteId=${site.id}`)
+      if (!response.ok) throw new Error('Failed to fetch learning contract')
+      const contracts = await response.json()
+      
+      if (contracts && contracts.length > 0) {
+        setSelectedLearningContract(contracts[0])
+      }
+    } catch (error) {
+      console.error('Error fetching learning contract:', error)
+    }
+  }
+
+  const handleSupervisorLink = async (e: React.MouseEvent, site: Site) => {
+    e.stopPropagation() // Prevent row click
+    
+    try {
+      const response = await fetch(`/api/admin/learning-contracts?siteId=${site.id}`)
+      if (!response.ok) throw new Error('Failed to fetch learning contract')
+      const contracts = await response.json()
+      
+      if (contracts && contracts.length > 0) {
+        const contract = contracts[0]
+        const supervisorLink = `http://www.prac-track.com/agency-learning-contract/${contract.token}`
+        
+        // Open in new window
+        window.open(supervisorLink, '_blank', 'noopener,noreferrer')
+      }
+    } catch (error) {
+      console.error('Error fetching supervisor link:', error)
+    }
+  }
+
+  const handleReviewAndApprove = async (e: React.MouseEvent, site: Site) => {
+    e.stopPropagation() // Prevent row click
+    
+    console.log('handleReviewAndApprove called for site:', site.id)
+    
+    try {
+      const response = await fetch(`/api/admin/learning-contracts?siteId=${site.id}`)
+      if (!response.ok) throw new Error('Failed to fetch learning contract')
+      const contracts = await response.json()
+      
+      console.log('Fetched contracts:', contracts)
+      
+      if (contracts && contracts.length > 0) {
+        console.log('Setting selected contract for review:', contracts[0])
+        setSelectedContractForReview(contracts[0])
+      } else {
+        console.log('No contracts found for site')
+      }
+    } catch (error) {
+      console.error('Error fetching learning contract:', error)
+    }
+  }
+
   const handleEditClick = (e: React.MouseEvent, site: Site) => {
     e.stopPropagation() // Prevent row click
     handleEdit(site)
@@ -347,15 +410,15 @@ export function SitesManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Agency Management</h1>
-          <p className="text-gray-600">Manage practicum placement agencies</p>
+          <h1 className="text-2xl font-bold text-gray-900">Field Site Management</h1>
+          <p className="text-gray-600">Manage practicum placement field sites</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
           className="btn-primary flex items-center"
         >
           <PlusIcon className="h-5 w-5 mr-2" />
-          Add Agency
+          Add Field Site
         </button>
       </div>
 
@@ -367,7 +430,7 @@ export function SitesManagement() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search agencies by name, contact, email, or practice areas..."
+                placeholder="Search field sites by name, contact, email, or practice areas..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="form-input"
@@ -394,7 +457,7 @@ export function SitesManagement() {
       {pendingSites.length > 0 && (
         <div className="card border-orange-200 bg-orange-50">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Pending Agency Approvals ({pendingSites.length})</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Pending Field Site Approvals ({pendingSites.length})</h2>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
               Awaiting Review
             </span>
@@ -424,7 +487,7 @@ export function SitesManagement() {
                       onClick={() => handleApprove(site)}
                       className="bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
                     >
-                      Send Learning Contract
+                      Send Field Site Application
                     </button>
                     <button
                       onClick={() => handleReject(site)}
@@ -444,11 +507,8 @@ export function SitesManagement() {
       {/* Pending Learning Contract Review */}
       {pendingLearningContractSites.length > 0 && (
         <div className="card border-blue-200 bg-blue-50">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Pending Agreement Review ({pendingLearningContractSites.length})</h2>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              Ready for Final Approval
-            </span>
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Pending Field Site Application ({pendingLearningContractSites.length})</h2>
           </div>
 
           <div className="space-y-4">
@@ -467,24 +527,32 @@ export function SitesManagement() {
                       <strong>Practice Areas:</strong> {site.practiceAreas}
                     </p>
                     <p className="text-xs text-gray-500 mt-2">
-                      Learning Contract Submitted: {site.learningContractStatus === 'SUBMITTED' ? 'Ready for Review' : 'Under Review'}
+                      Field Site Application Status: {site.learningContractStatus} - {site.learningContractStatus === 'SUBMITTED' ? 'Ready for Review' : 'Under Review'}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2 ml-4">
                     <button
-                      onClick={() => handleFinalApprove(site)}
-                      disabled={finalApproveSiteMutation.isPending}
-                      className="bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={(e) => handleSupervisorLink(e, site)}
+                      className="text-blue-600 hover:text-blue-900 transition-colors p-1"
+                      title="Open supervisor link in new window"
                     >
-                      {finalApproveSiteMutation.isPending ? 'Approving...' : 'Final Approve'}
+                      <LinkIcon className="h-5 w-5" />
                     </button>
-                    <button
-                      onClick={() => handleReject(site)}
-                      disabled={rejectSiteMutation.isPending}
-                      className="bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {rejectSiteMutation.isPending ? 'Rejecting...' : 'Reject'}
-                    </button>
+                    {site.learningContractStatus === 'SUBMITTED' ? (
+                      <button
+                        onClick={(e) => handleReviewAndApprove(e, site)}
+                        className="bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        Review and Approve
+                      </button>
+                    ) : (
+                      <button
+                        disabled={true}
+                        className="bg-gray-400 text-white px-3 py-1 rounded-lg text-sm font-medium cursor-not-allowed opacity-50"
+                      >
+                        Pending Field Site
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -496,7 +564,7 @@ export function SitesManagement() {
       {/* Active Sites */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">{showInactive ? 'Inactive' : 'Active'} Agencies ({currentSites.length})</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{showInactive ? 'Inactive' : 'Active'} Sites ({currentSites.length})</h2>
           {totalPages > 1 && (
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-700">
@@ -622,19 +690,16 @@ export function SitesManagement() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '35%' }}>
-                  Agency Name
+                  Field Site Name
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '25%' }}>
                   Contact
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
+                <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '30%' }}>
                   Practice Areas
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
-                  Agreement Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '15%' }}>
-                  Agency Application
+                  Field Site Application
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider" style={{ width: '10%' }}>
                   Actions
@@ -660,60 +725,45 @@ export function SitesManagement() {
                     <div className="text-sm text-gray-500">{site.contactEmail}</div>
                     <div className="text-sm text-gray-500">{site.contactPhone}</div>
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="hidden md:table-cell px-4 py-4">
                     <div className="text-sm text-gray-900 whitespace-normal break-words">
                       {site.practiceAreas}
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        getAgreementStatus(site).color === 'green' 
-                          ? 'bg-green-100 text-green-800'
-                          : getAgreementStatus(site).color === 'red'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {getAgreementStatus(site).label}
-                      </span>
-                      {(getAgreementStatus(site).status === 'expired' || 
-                        (site.agreementExpirationDate && isExpiringSoon(new Date(site.agreementExpirationDate)))) && (
-                        <button
-                          onClick={(e) => handleEmailClick(e, site)}
-                          className="text-blue-600 hover:text-blue-900 transition-colors"
-                          title="Send agreement email"
-                        >
-                          <EnvelopeIcon className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                    {site.agreementExpirationDate && !isNaN(new Date(site.agreementExpirationDate).getTime()) && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {getAgreementStatus(site).status === 'expired' ? 'Expired:' : 'Expires:'} {new Date(site.agreementExpirationDate).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'short' 
-                        })}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
                       {site.learningContractStatus ? (
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          site.learningContractStatus === 'APPROVED' 
-                            ? 'bg-green-100 text-green-800'
-                            : site.learningContractStatus === 'SUBMITTED'
-                            ? 'bg-blue-100 text-blue-800'
-                            : site.learningContractStatus === 'SENT'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {site.learningContractStatus === 'APPROVED' ? 'Approved' :
-                           site.learningContractStatus === 'SUBMITTED' ? 'Submitted' :
-                           site.learningContractStatus === 'SENT' ? 'Sent' :
-                           site.learningContractStatus === 'REJECTED' ? 'Rejected' :
-                           'Pending'}
-                        </span>
+                        <>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            site.learningContractStatus === 'APPROVED' 
+                              ? 'bg-green-100 text-green-800'
+                              : site.learningContractStatus === 'SUBMITTED'
+                              ? 'bg-blue-100 text-blue-800'
+                              : site.learningContractStatus === 'SENT'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {site.learningContractStatus === 'APPROVED' ? 'Approved' :
+                             site.learningContractStatus === 'SUBMITTED' ? 'Review' :
+                             site.learningContractStatus === 'SENT' ? 'Sent' :
+                             site.learningContractStatus === 'REJECTED' ? 'Rejected' :
+                             'Pending'}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (site.learningContractStatus === 'SUBMITTED') {
+                                handleReviewAndApprove(e, site)
+                              } else {
+                                handleViewLearningContract(e, site)
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-900 transition-colors"
+                            title={site.learningContractStatus === 'SUBMITTED' ? 'Review and approve agency application' : 'View agency application details'}
+                          >
+                            <EyeIcon className="h-4 w-4" />
+                          </button>
+                        </>
                       ) : (
                         <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
                           None
@@ -721,6 +771,7 @@ export function SitesManagement() {
                       )}
                       {site.status === 'ACTIVE' && (!site.learningContractStatus || site.learningContractStatus === 'REJECTED') && 
                        (getAgreementStatus(site).status === 'expired' || 
+                        getAgreementStatus(site).status === 'unknown' ||
                         (site.agreementExpirationDate && isExpiringSoon(new Date(site.agreementExpirationDate)))) && (
                         <button
                           onClick={(e) => {
@@ -735,6 +786,14 @@ export function SitesManagement() {
                         </button>
                       )}
                     </div>
+                    {site.agreementExpirationDate && !isNaN(new Date(site.agreementExpirationDate).getTime()) && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {getAgreementStatus(site).status === 'expired' ? 'Expired:' : 'Expires:'} {new Date(site.agreementExpirationDate).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short' 
+                        })}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
@@ -886,7 +945,7 @@ export function SitesManagement() {
       {modalAction && (
         <ConfirmationModal
           isOpen={showConfirmModal}
-          title={modalAction === 'deactivate' ? 'Deactivate Agency' : 'Reactivate Agency'}
+          title={modalAction === 'deactivate' ? 'Deactivate Field Site' : 'Reactivate Field Site'}
           message={modalAction === 'deactivate' 
             ? `Are you sure you want to deactivate "${siteToDeactivate?.name}"? It will be moved to the inactive section.`
             : `Are you sure you want to reactivate "${siteToReactivate?.name}"? It will be moved to the active section.`
@@ -922,6 +981,22 @@ export function SitesManagement() {
             setShowLearningContractModal(false)
             setSelectedSiteForLearningContract(null)
           }}
+        />
+      )}
+
+      {/* Learning Contract Details Modal */}
+      {selectedLearningContract && (
+        <LearningContractDetailsModal
+          contract={selectedLearningContract}
+          onClose={() => setSelectedLearningContract(null)}
+        />
+      )}
+
+      {/* Learning Contract Review Modal */}
+      {selectedContractForReview && (
+        <LearningContractReviewModal
+          contract={selectedContractForReview}
+          onClose={() => setSelectedContractForReview(null)}
         />
       )}
     </div>

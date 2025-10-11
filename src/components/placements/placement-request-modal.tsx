@@ -37,20 +37,34 @@ const placementRequestSchema = z.object({
   supervisorHighestDegree: z.enum(['BSW', 'MSW', 'OTHER']).optional(),
   supervisorOtherDegree: z.string().optional(),
 }).refine((data) => {
-  // If supervisor option is 'new', validate required fields
-  if (data.supervisorOption === 'new') {
-    if (!data.supervisorLicensedSW) return false
+  // Validate supervisor fields based on option
+  if (data.supervisorOption === 'existing') {
+    if (!data.supervisorId) return false
+  } else if (data.supervisorOption === 'new' || !data.supervisorOption) {
+    if (!data.supervisorFirstName || !data.supervisorLastName || !data.supervisorEmail) return false
+    if (!data.supervisorLicensedSW || !['YES', 'NO'].includes(data.supervisorLicensedSW)) return false
+    if (!data.supervisorHighestDegree || !['BSW', 'MSW', 'OTHER'].includes(data.supervisorHighestDegree)) return false
     if (data.supervisorLicensedSW === 'YES' && !data.supervisorLicenseNumber) return false
-    if (!data.supervisorHighestDegree) return false
     if (data.supervisorHighestDegree === 'OTHER' && !data.supervisorOtherDegree) return false
   }
   return true
 }, {
-  message: "Please fill in all required supervisor fields",
-  path: ["supervisorLicensedSW"]
+  message: "Please complete all required supervisor fields",
+  path: ["supervisorFirstName"]
 })
 
 type PlacementRequestData = z.infer<typeof placementRequestSchema>
+
+interface Supervisor {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string | null
+  supervisorProfile: {
+    title: string | null
+  }
+}
 
 interface Site {
   id: string
@@ -66,16 +80,6 @@ interface Site {
   active: boolean
 }
 
-interface Supervisor {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string | null
-  supervisorProfile: {
-    title: string | null
-  }
-}
 
 interface PlacementRequestModalProps {
   site: Site | null // null indicates new site submission
@@ -99,17 +103,6 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
     enabled: !!session?.user?.id
   })
 
-  // Fetch supervisors for this site (only if site exists)
-  const { data: supervisors = [], isLoading: loadingSupervisors } = useQuery({
-    queryKey: ['site-supervisors', site?.id],
-    queryFn: async () => {
-      if (!site?.id) return []
-      const response = await fetch(`/api/sites/${site.id}/supervisors`)
-      if (!response.ok) throw new Error('Failed to fetch supervisors')
-      return response.json()
-    },
-    enabled: !!site?.id
-  })
 
   // Fetch classes for dropdown
   const { data: classes = [] } = useQuery({
@@ -119,6 +112,18 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
       if (!response.ok) throw new Error('Failed to fetch classes')
       return response.json()
     }
+  })
+
+  // Fetch supervisors for existing site
+  const { data: supervisors = [], isLoading: loadingSupervisors } = useQuery<Supervisor[]>({
+    queryKey: ['supervisors', site?.id],
+    queryFn: async () => {
+      if (!site?.id) return []
+      const response = await fetch(`/api/sites/${site.id}/supervisors`)
+      if (!response.ok) throw new Error('Failed to fetch supervisors')
+      return response.json()
+    },
+    enabled: !!site?.id
   })
 
   const {
@@ -141,15 +146,34 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
     mutationFn: async (data: PlacementRequestData) => {
       if (site) {
         // Existing site - create placement request
+        const payload: any = {
+          siteId: site.id,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          classId: data.classId,
+          requiredHours: requiredHours,
+          supervisorOption: data.supervisorOption,
+        }
+
+        if (data.supervisorOption === 'existing') {
+          payload.supervisorId = data.supervisorId
+        } else {
+          payload.supervisorFirstName = data.supervisorFirstName
+          payload.supervisorLastName = data.supervisorLastName
+          payload.supervisorEmail = data.supervisorEmail
+          payload.supervisorPhone = data.supervisorPhone
+          payload.supervisorTitle = data.supervisorTitle
+          payload.supervisorLicensedSW = data.supervisorLicensedSW
+          payload.supervisorLicenseNumber = data.supervisorLicenseNumber
+          payload.supervisorHighestDegree = data.supervisorHighestDegree
+          payload.supervisorOtherDegree = data.supervisorOtherDegree
+        }
+
         const response = await fetch('/api/placements', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            siteId: site.id,
-            ...data,
-            requiredHours: requiredHours,
-          }),
+          body: JSON.stringify(payload),
         })
         if (!response.ok) {
           const error = await response.json()
@@ -466,70 +490,71 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
               </div>
             </div>
 
-            {/* Supervisor Selection */}
+            {/* Supervisor Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-900">Field Supervisor Information</h3>
+              <p className="text-sm text-gray-600">
+                {site 
+                  ? "Select an existing supervisor or add a new one for this agency."
+                  : "Since this is a new agency, please provide information about the field supervisor who will oversee your placement."
+                }
+              </p>
               
-              <div className="space-y-3">
-                <div className="flex space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      {...register('supervisorOption')}
-                      type="radio"
-                      value="existing"
-                      className="form-radio"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Select existing supervisor</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      {...register('supervisorOption')}
-                      type="radio"
-                      value="new"
-                      className="form-radio"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Create new supervisor</span>
-                  </label>
-                </div>
-
-                {supervisorOption === 'existing' && (
+              {site && (
+                <div className="space-y-4">
                   <div>
-                    <label htmlFor="supervisorId" className="form-label">
-                      Select Supervisor *
-                    </label>
-                    {loadingSupervisors ? (
-                      <div className="form-input bg-gray-50 flex items-center">
-                        <LoadingSpinner size="sm" className="mr-2" />
-                        Loading supervisors...
-                      </div>
-                    ) : (
+                    <label className="form-label">Supervisor Option *</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          {...register('supervisorOption')}
+                          type="radio"
+                          value="existing"
+                          className="mr-2"
+                        />
+                        <span className="text-sm">Select existing supervisor</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          {...register('supervisorOption')}
+                          type="radio"
+                          value="new"
+                          className="mr-2"
+                        />
+                        <span className="text-sm">Create new supervisor</span>
+                      </label>
+                    </div>
+                    {errors.supervisorOption && (
+                      <p className="form-error">{errors.supervisorOption.message}</p>
+                    )}
+                  </div>
+
+                  {supervisorOption === 'existing' && (
+                    <div>
+                      <label htmlFor="supervisorId" className="form-label">Select Supervisor *</label>
                       <select
                         {...register('supervisorId')}
                         className="form-select"
-                        required={supervisorOption === 'existing'}
+                        disabled={loadingSupervisors}
                       >
-                        <option value="">Select a supervisor...</option>
-                        {supervisors.map((supervisor: Supervisor) => (
+                        <option value="">Select a supervisor</option>
+                        {supervisors.map((supervisor) => (
                           <option key={supervisor.id} value={supervisor.id}>
-                            {supervisor.firstName} {supervisor.lastName}
-                            {supervisor.supervisorProfile.title && ` - ${supervisor.supervisorProfile.title}`}
+                            {supervisor.firstName} {supervisor.lastName} ({supervisor.email})
+                            {supervisor.supervisorProfile?.title && ` - ${supervisor.supervisorProfile.title}`}
                           </option>
                         ))}
                       </select>
-                    )}
-                    {supervisors.length === 0 && !loadingSupervisors && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        No supervisors available for this agency. Please select "Create new supervisor" instead.
-                      </p>
-                    )}
-                    {errors.supervisorId && (
-                      <p className="form-error">{errors.supervisorId.message}</p>
-                    )}
-                  </div>
-                )}
+                      {errors.supervisorId && (
+                        <p className="form-error">{errors.supervisorId.message}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
-                {supervisorOption === 'new' && (
-                  <div className="space-y-4">
+              {(supervisorOption === 'new' || !site) && (
+                <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="supervisorFirstName" className="form-label">
@@ -539,7 +564,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
                           {...register('supervisorFirstName')}
                           type="text"
                           className="form-input"
-                          required={supervisorOption === 'new'}
+                          required
                         />
                         {errors.supervisorFirstName && (
                           <p className="form-error">{errors.supervisorFirstName.message}</p>
@@ -553,7 +578,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
                           {...register('supervisorLastName')}
                           type="text"
                           className="form-input"
-                          required={supervisorOption === 'new'}
+                          required
                         />
                         {errors.supervisorLastName && (
                           <p className="form-error">{errors.supervisorLastName.message}</p>
@@ -570,7 +595,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
                           {...register('supervisorEmail')}
                           type="email"
                           className="form-input"
-                          required={supervisorOption === 'new'}
+                          required
                         />
                         {errors.supervisorEmail && (
                           <p className="form-error">{errors.supervisorEmail.message}</p>
@@ -614,7 +639,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
                         <select
                           {...register('supervisorLicensedSW')}
                           className="form-select"
-                          required={supervisorOption === 'new'}
+                          required
                         >
                           <option value="">Select...</option>
                           <option value="NO">No</option>
@@ -632,7 +657,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
                         <select
                           {...register('supervisorHighestDegree')}
                           className="form-select"
-                          required={supervisorOption === 'new'}
+                          required
                         >
                           <option value="">Select...</option>
                           <option value="BSW">BSW</option>
@@ -681,15 +706,14 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
                       </div>
                     )}
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <p className="text-sm text-yellow-800">
-                <strong>Note:</strong> New Site and Supervisor requests require approval by faculty. 
-                The supervisor will be associated with this placement, but cannot log in until approved.
-              </p>
-            </div>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Note:</strong> New Supervisor requests require account approval by faculty. 
+                      The supervisor will be associated with this placement, but cannot approve hours until account approval.
+                    </p>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {createPlacementMutation.error && (

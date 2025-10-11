@@ -15,6 +15,7 @@ import {
   ClockIcon
 } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { PlacementRejectionModal } from './placement-rejection-modal'
 
 interface Placement {
   id: string
@@ -56,6 +57,7 @@ interface PlacementRequestDetailsModalProps {
 export function PlacementRequestDetailsModal({ placement, onClose }: PlacementRequestDetailsModalProps) {
   const [notes, setNotes] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showRejectionModal, setShowRejectionModal] = useState(false)
   const queryClient = useQueryClient()
 
   const approveMutation = useMutation({
@@ -78,25 +80,6 @@ export function PlacementRequestDetailsModal({ placement, onClose }: PlacementRe
     },
   })
 
-  const declineMutation = useMutation({
-    mutationFn: async (data: { notes: string }) => {
-      const response = await fetch(`/api/placements/${placement.id}/decline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to decline placement')
-      }
-      return response.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['faculty-dashboard'] })
-      queryClient.invalidateQueries({ queryKey: ['placements'] })
-      onClose()
-    },
-  })
 
   const handleApprove = async () => {
     setIsSubmitting(true)
@@ -109,16 +92,6 @@ export function PlacementRequestDetailsModal({ placement, onClose }: PlacementRe
     }
   }
 
-  const handleDecline = async () => {
-    setIsSubmitting(true)
-    try {
-      await declineMutation.mutateAsync({ notes })
-    } catch (error) {
-      console.error('Decline error:', error)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
@@ -242,10 +215,10 @@ export function PlacementRequestDetailsModal({ placement, onClose }: PlacementRe
           </div>
 
           {/* Error Messages */}
-          {(approveMutation.error || declineMutation.error) && (
+          {approveMutation.error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-red-600 text-sm">
-                {approveMutation.error?.message || declineMutation.error?.message}
+                {approveMutation.error?.message}
               </p>
             </div>
           )}
@@ -262,21 +235,12 @@ export function PlacementRequestDetailsModal({ placement, onClose }: PlacementRe
             </button>
             <button
               type="button"
-              onClick={handleDecline}
+              onClick={() => setShowRejectionModal(true)}
               className="btn-outline text-red-600 border-red-300 hover:bg-red-50"
               disabled={isSubmitting}
             >
-              {isSubmitting && declineMutation.isPending ? (
-                <>
-                  <LoadingSpinner size="sm" className="mr-2" />
-                  Declining...
-                </>
-              ) : (
-                <>
-                  <XCircleIcon className="h-4 w-4 mr-2" />
-                  Decline
-                </>
-              )}
+              <XCircleIcon className="h-4 w-4 mr-2" />
+              Reject
             </button>
             <button
               type="button"
@@ -299,6 +263,14 @@ export function PlacementRequestDetailsModal({ placement, onClose }: PlacementRe
           </div>
         </div>
       </div>
+
+      {/* Rejection Modal */}
+      {showRejectionModal && (
+        <PlacementRejectionModal
+          placement={placement}
+          onClose={() => setShowRejectionModal(false)}
+        />
+      )}
     </div>
   )
 }
