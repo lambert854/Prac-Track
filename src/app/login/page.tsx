@@ -61,7 +61,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="mb-8">
-            <Logo size="lg" className="mx-auto" />
+            <Logo size="3xl" className="mx-auto" />
           </div>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>

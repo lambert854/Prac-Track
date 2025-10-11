@@ -3,7 +3,7 @@ import Image from 'next/image'
 
 interface LogoProps {
   className?: string
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
   showText?: boolean
 }
 
@@ -13,7 +13,8 @@ export function Logo({ className = '', size = 'md', showText = true }: LogoProps
     md: { container: 'h-28', width: 112, height: 112 },
     lg: { container: 'h-32', width: 128, height: 128 },
     xl: { container: 'h-36', width: 144, height: 144 },
-    '2xl': { container: 'h-40', width: 160, height: 160 }
+    '2xl': { container: 'h-40', width: 160, height: 160 },
+    '3xl': { container: 'h-48', width: 200, height: 200 }
   }
 
   const currentSize = sizeClasses[size]
@@ -41,7 +42,8 @@ export function LogoCompact({ className = '', size = 'md' }: Omit<LogoProps, 'sh
     md: { container: 'h-16', width: 64, height: 64 },
     lg: { container: 'h-20', width: 80, height: 80 },
     xl: { container: 'h-24', width: 96, height: 96 },
-    '2xl': { container: 'h-28', width: 112, height: 112 }
+    '2xl': { container: 'h-28', width: 112, height: 112 },
+    '3xl': { container: 'h-32', width: 128, height: 128 }
   }
 
   const currentSize = sizeClasses[size]
