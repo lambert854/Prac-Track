@@ -17,7 +17,12 @@ export function AddSupervisorForm({ siteId, siteName, onClose }: AddSupervisorFo
     lastName: '',
     email: '',
     password: '',
-    title: ''
+    phone: '',
+    title: '',
+    licensedSW: '',
+    licenseNumber: '',
+    highestDegree: '',
+    otherDegree: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const queryClient = useQueryClient()
@@ -45,7 +50,7 @@ export function AddSupervisorForm({ siteId, siteName, onClose }: AddSupervisorFo
     },
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -135,6 +140,19 @@ export function AddSupervisorForm({ siteId, siteName, onClose }: AddSupervisorFo
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
+              Phone
+            </label>
+            <input
+              type="text"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="form-input w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Title (Optional)
             </label>
             <input
@@ -146,6 +164,75 @@ export function AddSupervisorForm({ siteId, siteName, onClose }: AddSupervisorFo
               className="form-input w-full"
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Licensed SW?
+              </label>
+              <select
+                name="licensedSW"
+                value={formData.licensedSW}
+                onChange={handleChange}
+                className="form-select w-full"
+              >
+                <option value="">Select...</option>
+                <option value="NO">No</option>
+                <option value="YES">Yes</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Highest Degree?
+              </label>
+              <select
+                name="highestDegree"
+                value={formData.highestDegree}
+                onChange={handleChange}
+                className="form-select w-full"
+              >
+                <option value="">Select...</option>
+                <option value="BSW">BSW</option>
+                <option value="MSW">MSW</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+          </div>
+
+          {formData.licensedSW === 'YES' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                License Number
+              </label>
+              <input
+                type="text"
+                name="licenseNumber"
+                value={formData.licenseNumber}
+                onChange={handleChange}
+                placeholder="Enter license number"
+                required={formData.licensedSW === 'YES'}
+                className="form-input w-full"
+              />
+            </div>
+          )}
+
+          {formData.highestDegree === 'OTHER' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Degree
+              </label>
+              <input
+                type="text"
+                name="otherDegree"
+                value={formData.otherDegree}
+                onChange={handleChange}
+                placeholder="Enter degree name"
+                required={formData.highestDegree === 'OTHER'}
+                className="form-input w-full"
+              />
+            </div>
+          )}
 
           {createSupervisorMutation.error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">

@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     const session = await requireFacultyOrAdmin()
 
     const body = await request.json()
-    const { firstName, lastName, email, password, phone, siteId, title } = body
+    const { firstName, lastName, email, password, phone, siteId, title, licensedSW, licenseNumber, highestDegree, otherDegree } = body
 
     // Validate required fields
     if (!firstName || !lastName || !email || !password || !siteId) {
@@ -137,7 +137,11 @@ export async function POST(request: NextRequest) {
         supervisorProfile: {
           create: {
             siteId: siteId,
-            title: title || null
+            title: title || null,
+            licensedSW: licensedSW || null,
+            licenseNumber: licenseNumber || null,
+            highestDegree: highestDegree || null,
+            otherDegree: otherDegree || null
           }
         }
       },

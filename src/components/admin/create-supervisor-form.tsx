@@ -15,6 +15,19 @@ const createSupervisorSchema = z.object({
   phone: z.string().optional(),
   siteId: z.string().min(1, 'Site is required'),
   title: z.string().optional(),
+  licensedSW: z.enum(['YES', 'NO']).optional(),
+  licenseNumber: z.string().optional(),
+  highestDegree: z.enum(['BSW', 'MSW', 'OTHER']).optional(),
+  otherDegree: z.string().optional(),
+}).refine((data) => {
+  // If licensedSW is YES, licenseNumber is required
+  if (data.licensedSW === 'YES' && !data.licenseNumber) return false
+  // If highestDegree is OTHER, otherDegree is required
+  if (data.highestDegree === 'OTHER' && !data.otherDegree) return false
+  return true
+}, {
+  message: "Please fill in all required fields",
+  path: ["licensedSW"]
 })
 
 type CreateSupervisorFormInputs = z.infer<typeof createSupervisorSchema>
@@ -30,6 +43,7 @@ export function CreateSupervisorForm({ onClose }: CreateSupervisorFormProps) {
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<CreateSupervisorFormInputs>({
     resolver: zodResolver(createSupervisorSchema),
   })
@@ -172,6 +186,71 @@ export function CreateSupervisorForm({ onClose }: CreateSupervisorFormProps) {
             />
             {errors.title && <p className="form-error">{errors.title.message}</p>}
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="licensedSW" className="form-label">
+                Licensed SW?
+              </label>
+              <select
+                {...register('licensedSW')}
+                className="form-select"
+              >
+                <option value="">Select...</option>
+                <option value="NO">No</option>
+                <option value="YES">Yes</option>
+              </select>
+              {errors.licensedSW && <p className="form-error">{errors.licensedSW.message}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="highestDegree" className="form-label">
+                Highest Degree?
+              </label>
+              <select
+                {...register('highestDegree')}
+                className="form-select"
+              >
+                <option value="">Select...</option>
+                <option value="BSW">BSW</option>
+                <option value="MSW">MSW</option>
+                <option value="OTHER">Other</option>
+              </select>
+              {errors.highestDegree && <p className="form-error">{errors.highestDegree.message}</p>}
+            </div>
+          </div>
+
+          {watch('licensedSW') === 'YES' && (
+            <div>
+              <label htmlFor="licenseNumber" className="form-label">
+                License Number
+              </label>
+              <input
+                {...register('licenseNumber')}
+                type="text"
+                className="form-input"
+                placeholder="Enter license number"
+                required={watch('licensedSW') === 'YES'}
+              />
+              {errors.licenseNumber && <p className="form-error">{errors.licenseNumber.message}</p>}
+            </div>
+          )}
+
+          {watch('highestDegree') === 'OTHER' && (
+            <div>
+              <label htmlFor="otherDegree" className="form-label">
+                Degree
+              </label>
+              <input
+                {...register('otherDegree')}
+                type="text"
+                className="form-input"
+                placeholder="Enter degree name"
+                required={watch('highestDegree') === 'OTHER'}
+              />
+              {errors.otherDegree && <p className="form-error">{errors.otherDegree.message}</p>}
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
