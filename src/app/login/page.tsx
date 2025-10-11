@@ -60,13 +60,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="mb-8 sm:mb-12 md:mb-16 lg:mb-24">
-            <Logo size="lg" className="mx-auto sm:hidden" />
-            <Logo size="xl" className="mx-auto hidden sm:block md:hidden" />
-            <Logo size="2xl" className="mx-auto hidden md:block transform scale-110 lg:scale-125" />
+          <div className="mb-8">
+            <Logo size="lg" className="mx-auto" />
           </div>
         </div>
-        <form className="mt-12 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -76,7 +74,7 @@ export default function LoginPage() {
                 {...register('email')}
                 type="email"
                 autoComplete="email"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-sm"
                 placeholder="Enter your email"
               />
               {errors.email && (
@@ -91,7 +89,7 @@ export default function LoginPage() {
                 {...register('password')}
                 type="password"
                 autoComplete="current-password"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-sm"
                 placeholder="Enter your password"
               />
               {errors.password && (
