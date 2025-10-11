@@ -15,6 +15,15 @@ interface EditStudentFormProps {
       program: string
       cohort: string
     }
+    studentFacultyAssignments?: {
+      id: string
+      faculty: {
+        id: string
+        firstName: string
+        lastName: string
+        email: string
+      }
+    }[]
   }
   onClose: () => void
 }
@@ -38,7 +47,8 @@ export function EditStudentForm({ student, onClose }: EditStudentFormProps) {
     aNumber: student.studentProfile?.aNumber || '',
     program: student.studentProfile?.program || '',
     cohort: student.studentProfile?.cohort || '',
-    password: '' // Optional password change
+    password: '', // Optional password change
+    facultyId: student.studentFacultyAssignments?.[0]?.faculty?.id || '' // Current faculty assignment
   })
   const queryClient = useQueryClient()
 
@@ -66,10 +76,40 @@ export function EditStudentForm({ student, onClose }: EditStudentFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-students'] })
-      onClose()
+      // Don't close here - let handleSubmit handle the closing
     },
     onError: (error) => {
       alert(error.message)
+    },
+  })
+
+  const assignFacultyMutation = useMutation({
+    mutationFn: async ({ studentId, facultyId }: { studentId: string, facultyId: string }) => {
+      const response = await fetch('/api/admin/faculty-assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId, facultyId }),
+      })
+      if (!response.ok) throw new Error('Failed to assign faculty')
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-students'] })
+      queryClient.invalidateQueries({ queryKey: ['faculty-assignments'] })
+    },
+  })
+
+  const unassignFacultyMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      const response = await fetch(`/api/admin/faculty-assignments/${assignmentId}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to unassign faculty')
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-students'] })
+      queryClient.invalidateQueries({ queryKey: ['faculty-assignments'] })
     },
   })
 
@@ -81,9 +121,35 @@ export function EditStudentForm({ student, onClose }: EditStudentFormProps) {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    updateStudentMutation.mutate(formData)
+    
+    try {
+      // First update the student data
+      await updateStudentMutation.mutateAsync(formData)
+      
+      // Handle faculty assignment changes
+      const currentFacultyId = student.studentFacultyAssignments?.[0]?.faculty?.id || ''
+      const newFacultyId = formData.facultyId
+      
+      if (currentFacultyId !== newFacultyId) {
+        // If there was a previous assignment, remove it
+        if (currentFacultyId && student.studentFacultyAssignments?.[0]?.id) {
+          await unassignFacultyMutation.mutateAsync(student.studentFacultyAssignments[0].id)
+        }
+        
+        // If there's a new faculty selected, assign them
+        if (newFacultyId) {
+          await assignFacultyMutation.mutateAsync({ studentId: student.id, facultyId: newFacultyId })
+        }
+      }
+      
+      // Close the modal after all operations complete
+      onClose()
+    } catch (error) {
+      console.error('Error updating student:', error)
+      // Error handling is done in individual mutations
+    }
   }
 
   return (
@@ -212,22 +278,43 @@ export function EditStudentForm({ student, onClose }: EditStudentFormProps) {
             </div>
           </div>
           
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Faculty Assignment
+            </label>
+            <select
+              name="facultyId"
+              value={formData.facultyId}
+              onChange={handleChange}
+              className="form-input w-full"
+            >
+              <option value="">No faculty assigned</option>
+              {faculty?.map((facultyMember) => (
+                <option key={facultyMember.id} value={facultyMember.id}>
+                  {facultyMember.facultyProfile?.honorific ? `${facultyMember.facultyProfile.honorific} ` : ''}
+                  {facultyMember.firstName} {facultyMember.lastName}
+                  {facultyMember.facultyProfile?.title ? ` - ${facultyMember.facultyProfile.title}` : ''}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">Select a faculty member to assign to this student</p>
+          </div>
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
               type="button"
               onClick={onClose}
               className="btn-outline"
-              disabled={updateStudentMutation.isPending}
+              disabled={updateStudentMutation.isPending || assignFacultyMutation.isPending || unassignFacultyMutation.isPending}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="btn-primary"
-              disabled={updateStudentMutation.isPending}
+              disabled={updateStudentMutation.isPending || assignFacultyMutation.isPending || unassignFacultyMutation.isPending}
             >
-              {updateStudentMutation.isPending ? 'Updating...' : 'Update Student'}
+              {(updateStudentMutation.isPending || assignFacultyMutation.isPending || unassignFacultyMutation.isPending) ? 'Updating...' : 'Update Student'}
             </button>
           </div>
         </form>
