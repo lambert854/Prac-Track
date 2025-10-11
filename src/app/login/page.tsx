@@ -60,8 +60,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="mb-24 transform scale-150" style={{transform: 'scale(1.7, 1.5)'}}>
-            <Logo size="2xl" className="mx-auto" />
+          <div className="mb-8 sm:mb-12 md:mb-16 lg:mb-24">
+            <Logo size="lg" className="mx-auto sm:hidden" />
+            <Logo size="xl" className="mx-auto hidden sm:block md:hidden" />
+            <Logo size="2xl" className="mx-auto hidden md:block transform scale-110 lg:scale-125" />
           </div>
         </div>
         <form className="mt-12 space-y-6" onSubmit={handleSubmit(onSubmit)}>
