@@ -200,12 +200,12 @@ export function Navigation() {
       <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0">
         <div className="sidebar">
           {/* Logo Section - Fixed at top */}
-          <div className="flex justify-center px-6 pt-8 pb-12 border-b border-gray-200">
+          <div className="flex justify-center px-6 pt-6 pb-4 border-b border-gray-200">
             <Logo size="md" />
           </div>
           
           {/* Navigation Section - Separated from logo */}
-          <nav className="flex-1 px-4 py-10 space-y-2">
+          <nav className="flex-1 px-4 py-4 space-y-2">
             {groupedNavigation.map((item, index) => {
               if ('type' in item && item.type === 'separator') {
                 return <hr key={`separator-${index}`} className="border-gray-200 my-2" />

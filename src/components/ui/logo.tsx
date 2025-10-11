@@ -9,21 +9,20 @@ interface LogoProps {
 
 export function Logo({ className = '', size = 'md', showText = true }: LogoProps) {
   const sizeClasses = {
-    sm: 'h-8 w-auto',
-    md: 'h-12 w-auto', 
-    lg: 'h-16 w-auto',
-    xl: 'h-20 w-auto',
-    '2xl': 'h-24 w-auto'
+    sm: 'h-20',
+    md: 'h-28', 
+    lg: 'h-32',
+    xl: 'h-36',
+    '2xl': 'h-40'
   }
 
   return (
-    <div className={`flex flex-col items-center justify-center ${className}`}>
-      <div className={`${sizeClasses[size]} relative flex items-center justify-center`}>
+    <div className={`flex items-center justify-center w-full ${className}`}>
+      <div className={`${sizeClasses[size]} w-full relative flex items-center justify-center`}>
         <Image
           src="/logo.svg"
           alt="PRAC-TRACK Logo"
-          width={200}
-          height={120}
+          fill
           priority
           className="object-contain"
         />
@@ -35,20 +34,19 @@ export function Logo({ className = '', size = 'md', showText = true }: LogoProps
 // Alternative compact version for smaller spaces
 export function LogoCompact({ className = '', size = 'md' }: Omit<LogoProps, 'showText'>) {
   const sizeClasses = {
-    sm: 'h-8 w-auto',
-    md: 'h-10 w-auto',
-    lg: 'h-12 w-auto', 
-    xl: 'h-16 w-auto',
-    '2xl': 'h-20 w-auto'
+    sm: 'h-12',
+    md: 'h-16',
+    lg: 'h-20', 
+    xl: 'h-24',
+    '2xl': 'h-28'
   }
 
   return (
-    <div className={`${sizeClasses[size]} relative ${className}`}>
+    <div className={`${sizeClasses[size]} relative w-full ${className}`}>
       <Image
         src="/logo.svg"
         alt="PRAC-TRACK Logo"
-        width={200}
-        height={120}
+        fill
         priority
         className="object-contain"
       />
