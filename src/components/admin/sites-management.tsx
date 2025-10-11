@@ -447,7 +447,7 @@ export function SitesManagement() {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {showInactive ? 'Show Active' : 'Show Inactive'} ({inactiveSites.length})
+              {showInactive ? `Show Active (${activeSites.length})` : `Show Inactive (${inactiveSites.length})`}
             </button>
           </div>
         </div>
