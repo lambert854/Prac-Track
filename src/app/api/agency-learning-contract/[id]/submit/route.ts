@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
+import { put } from '@vercel/blob'
 import bcrypt from 'bcryptjs'
 
 export async function POST(
@@ -32,24 +31,21 @@ export async function POST(
     }
 
     // Handle file uploads
-    const filePaths: { [key: string]: string } = {}
+    const fileUrls: { [key: string]: string } = {}
     
     for (const [key, value] of formData.entries()) {
       if (value instanceof File && value.size > 0) {
-        const bytes = await value.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-        
-        // Create directory if it doesn't exist
-        const uploadDir = join(process.cwd(), 'uploads', 'learning-contracts', id)
-        await mkdir(uploadDir, { recursive: true })
-        
-        // Save file
+        // Upload file to Vercel Blob
         const fileName = `${key}_${Date.now()}_${value.name}`
-        const filePath = join(uploadDir, fileName)
-        await writeFile(filePath, buffer)
+        const blobPath = `learning-contracts/${id}/${fileName}`
         
-        // Store relative path
-        filePaths[key] = `uploads/learning-contracts/${id}/${fileName}`
+        const blob = await put(blobPath, value, {
+          access: 'public',
+          contentType: value.type
+        })
+        
+        // Store blob URL
+        fileUrls[key] = blob.url
       }
     }
 
@@ -69,7 +65,7 @@ export async function POST(
       fieldInstructorDegree: formData.get('fieldInstructorDegree') as string,
       fieldInstructorLicense: formData.get('fieldInstructorLicense') as string,
       fieldInstructorLicenseType: formData.get('fieldInstructorLicenseType') as string,
-      fieldInstructorResume: filePaths.fieldInstructorResume || null,
+      fieldInstructorResume: fileUrls.fieldInstructorResume || null,
       resourcesAvailable: formData.get('resourcesAvailable') as string,
       servicesProvided: formData.get('servicesProvided') as string,
       learningPlan: formData.get('learningPlan') as string,
@@ -80,7 +76,7 @@ export async function POST(
       specialRequirements: formData.get('specialRequirements') as string,
       handicapAccommodations: formData.get('handicapAccommodations') as string,
       handicapAccommodationsDetails: formData.get('handicapAccommodationsDetails') as string,
-      promotionalMaterials: filePaths.promotionalMaterials || null,
+      promotionalMaterials: fileUrls.promotionalMaterials || null,
       comments: formData.get('comments') as string,
       completedByName: formData.get('completedByName') as string,
       completedByTitle: formData.get('completedByTitle') as string,

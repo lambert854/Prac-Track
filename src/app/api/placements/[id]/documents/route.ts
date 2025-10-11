@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { writeFile, mkdir, unlink } from 'fs/promises'
-import { join } from 'path'
+import { put, del } from '@vercel/blob'
 
 export async function POST(
   request: NextRequest,
@@ -58,24 +57,20 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid document type' }, { status: 400 })
     }
 
-    // Create upload directory structure
-    const uploadDir = join(process.cwd(), 'uploads', 'placements', placementId)
-    await mkdir(uploadDir, { recursive: true })
-
     // Generate unique filename
     const timestamp = Date.now()
     const filename = `${docType}_${timestamp}.pdf`
-    const filePath = join(uploadDir, filename)
-    const relativePath = `placements/${placementId}/${filename}`
+    const blobPath = `placements/${placementId}/${filename}`
 
-    // Save file
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
+    // Upload file to Vercel Blob
+    const blob = await put(blobPath, file, {
+      access: 'public',
+      contentType: 'application/pdf'
+    })
 
-    // Update placement with document path
+    // Update placement with document URL
     const updateData: any = {}
-    updateData[docType] = relativePath
+    updateData[docType] = blob.url
 
     await prisma.placement.update({
       where: { id: placementId },
@@ -88,7 +83,7 @@ export async function POST(
     return NextResponse.json({ 
       message: 'Document uploaded successfully',
       documentType: docType,
-      documentPath: relativePath
+      documentUrl: blob.url
     })
 
   } catch (error) {
@@ -147,20 +142,19 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid document type' }, { status: 400 })
     }
 
-    // Get the current document path
-    const currentDocPath = placement[docType as keyof typeof placement] as string
+    // Get the current document URL
+    const currentDocUrl = placement[docType as keyof typeof placement] as string
     
-    if (!currentDocPath) {
+    if (!currentDocUrl) {
       return NextResponse.json({ error: 'No document to delete' }, { status: 404 })
     }
 
-    // Delete the physical file
-    const fullPath = join(process.cwd(), 'uploads', currentDocPath)
+    // Delete the file from Vercel Blob
     try {
-      await unlink(fullPath)
+      await del(currentDocUrl)
     } catch (fileError) {
-      console.warn(`Could not delete file ${fullPath}:`, fileError)
-      // Continue with database update even if file deletion fails
+      console.warn(`Could not delete blob ${currentDocUrl}:`, fileError)
+      // Continue with database update even if blob deletion fails
     }
 
     // Update placement to remove document path

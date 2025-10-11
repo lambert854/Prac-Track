@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readFile } from 'fs/promises'
-import { join } from 'path'
 
 export async function GET(
   request: NextRequest,
@@ -10,25 +8,19 @@ export async function GET(
     const { docPath } = await params
     const fullPath = docPath.join('/')
     
-    // Validate fullPath to prevent directory traversal
-    if (!fullPath.match(/^[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+\/[A-Za-z0-9_.-]+\.pdf$/)) {
-      return NextResponse.json({ error: 'Invalid document path' }, { status: 400 })
-    }
-
-    const filePath = join(process.cwd(), 'uploads', fullPath)
+    console.log('📄 Document API called with path array:', docPath, 'fullPath:', fullPath)
     
-    try {
-      const fileBuffer = await readFile(filePath)
-      
-      return new NextResponse(new Uint8Array(fileBuffer), {
-        headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `inline; filename="${fullPath.split('/').pop()}"`,
-        },
-      })
-    } catch (fileError) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+    // Check if this is a Blob URL (starts with https://)
+    if (fullPath.startsWith('https://')) {
+      // Redirect to the Blob URL directly
+      return NextResponse.redirect(fullPath)
     }
+    
+    // Legacy file path handling - redirect to a helpful message
+    return NextResponse.json({ 
+      error: 'Document storage has been migrated to Vercel Blob. Please contact support if you need to access this document.',
+      message: 'This document may be available through the new storage system.'
+    }, { status: 410 }) // 410 Gone - indicates the resource is no longer available
 
   } catch (error) {
     console.error('Document view error:', error)

@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readFile } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
 
 export async function GET(
   request: NextRequest,
@@ -11,58 +8,19 @@ export async function GET(
     const { path } = await params
     const filePath = path.join('/')
     
-    // Security: Only allow access to files in uploads directory
-    if (!filePath.startsWith('uploads/')) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    console.log('📄 Files API called with path:', filePath)
+    
+    // Check if this is a Blob URL (starts with https://)
+    if (filePath.startsWith('https://')) {
+      // Redirect to the Blob URL directly
+      return NextResponse.redirect(filePath)
     }
     
-    const fullPath = join(process.cwd(), filePath)
-    
-    // Check if file exists
-    if (!existsSync(fullPath)) {
-      return NextResponse.json({ error: 'File not found' }, { status: 404 })
-    }
-    
-    // Read file
-    const fileBuffer = await readFile(fullPath)
-    
-    // Determine content type based on file extension
-    const ext = filePath.split('.').pop()?.toLowerCase()
-    let contentType = 'application/octet-stream'
-    
-    switch (ext) {
-      case 'pdf':
-        contentType = 'application/pdf'
-        break
-      case 'jpg':
-      case 'jpeg':
-        contentType = 'image/jpeg'
-        break
-      case 'png':
-        contentType = 'image/png'
-        break
-      case 'gif':
-        contentType = 'image/gif'
-        break
-      case 'doc':
-        contentType = 'application/msword'
-        break
-      case 'docx':
-        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        break
-      case 'txt':
-        contentType = 'text/plain'
-        break
-      default:
-        contentType = 'application/octet-stream'
-    }
-    
-    return new NextResponse(new Uint8Array(fileBuffer), {
-      headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': `inline; filename="${filePath.split('/').pop()}"`,
-      },
-    })
+    // Legacy file path handling - redirect to a helpful message
+    return NextResponse.json({ 
+      error: 'File storage has been migrated to Vercel Blob. Please contact support if you need to access this file.',
+      message: 'This file may be available through the new storage system.'
+    }, { status: 410 }) // 410 Gone - indicates the resource is no longer available
     
   } catch (error) {
     console.error('Error serving file:', error)
