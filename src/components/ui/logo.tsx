@@ -9,20 +9,23 @@ interface LogoProps {
 
 export function Logo({ className = '', size = 'md', showText = true }: LogoProps) {
   const sizeClasses = {
-    sm: 'h-20',
-    md: 'h-28', 
-    lg: 'h-32',
-    xl: 'h-36',
-    '2xl': 'h-40'
+    sm: { container: 'h-20', width: 80, height: 80 },
+    md: { container: 'h-28', width: 112, height: 112 },
+    lg: { container: 'h-32', width: 128, height: 128 },
+    xl: { container: 'h-36', width: 144, height: 144 },
+    '2xl': { container: 'h-40', width: 160, height: 160 }
   }
+
+  const currentSize = sizeClasses[size]
 
   return (
     <div className={`flex items-center justify-center w-full ${className}`}>
-      <div className={`${sizeClasses[size]} w-full relative flex items-center justify-center`}>
+      <div className={`${currentSize.container} w-full flex items-center justify-center`}>
         <Image
           src="/logo.svg"
           alt="PRAC-TRACK Logo"
-          fill
+          width={currentSize.width}
+          height={currentSize.height}
           priority
           className="object-contain"
         />
@@ -34,19 +37,22 @@ export function Logo({ className = '', size = 'md', showText = true }: LogoProps
 // Alternative compact version for smaller spaces
 export function LogoCompact({ className = '', size = 'md' }: Omit<LogoProps, 'showText'>) {
   const sizeClasses = {
-    sm: 'h-12',
-    md: 'h-16',
-    lg: 'h-20', 
-    xl: 'h-24',
-    '2xl': 'h-28'
+    sm: { container: 'h-12', width: 48, height: 48 },
+    md: { container: 'h-16', width: 64, height: 64 },
+    lg: { container: 'h-20', width: 80, height: 80 },
+    xl: { container: 'h-24', width: 96, height: 96 },
+    '2xl': { container: 'h-28', width: 112, height: 112 }
   }
 
+  const currentSize = sizeClasses[size]
+
   return (
-    <div className={`${sizeClasses[size]} relative w-full ${className}`}>
+    <div className={`${currentSize.container} w-full flex items-center justify-center ${className}`}>
       <Image
         src="/logo.svg"
         alt="PRAC-TRACK Logo"
-        fill
+        width={currentSize.width}
+        height={currentSize.height}
         priority
         className="object-contain"
       />
