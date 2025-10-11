@@ -45,11 +45,16 @@ interface Site {
   supervisors?: {
     id: string
     title?: string
+    licensedSW?: string | null
+    licenseNumber?: string | null
+    highestDegree?: string | null
+    otherDegree?: string | null
     user: {
       id: string
       firstName: string
       lastName: string
       email: string
+      phone?: string | null
     }
   }[]
   placements?: {
@@ -478,6 +483,10 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
                       supervisorProfile: {
                         id: supervisor.id,
                         title: supervisor.title,
+                        licensedSW: supervisor.licensedSW,
+                        licenseNumber: supervisor.licenseNumber,
+                        highestDegree: supervisor.highestDegree,
+                        otherDegree: supervisor.otherDegree,
                         site: {
                           id: site.id,
                           name: site.name,
