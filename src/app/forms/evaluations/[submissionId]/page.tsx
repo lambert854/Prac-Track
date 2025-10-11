@@ -7,6 +7,33 @@ import { SchemaForm } from '@/components/forms/SchemaForm'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import evaluationSchema from '@/config/evaluations.schema.json'
 import { EvaluationConfig } from '@/config/evaluation.config'
+
+// Type the evaluation schema to match SchemaForm expectations
+interface Field {
+  id: string
+  type: 'single-select' | 'textarea'
+  label: string
+  required: boolean
+  options?: Array<{ value: number; label: string }>
+  maxLength?: number
+  placeholder?: string
+}
+
+interface Page {
+  id: string
+  title: string
+  description?: string
+  fields: Field[]
+}
+
+interface EvaluationSchema {
+  version: number
+  titleStudent: Record<string, string>
+  titleSupervisor: Record<string, string>
+  pages: Page[]
+}
+
+const typedEvaluationSchema = evaluationSchema as EvaluationSchema
 import { PrinterIcon } from '@heroicons/react/24/outline'
 
 interface PageProps {
@@ -164,7 +191,7 @@ export default function EvaluationFormPage({ params }: PageProps) {
 
       {/* Form */}
       <SchemaForm
-        pages={evaluationSchema.pages}
+        pages={typedEvaluationSchema.pages}
         initialAnswers={data?.answers || {}}
         onSave={handleSave}
         isLocked={isLocked}
