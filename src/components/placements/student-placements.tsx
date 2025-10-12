@@ -220,7 +220,7 @@ export function StudentPlacements() {
           <div className="text-center py-8">
             <BuildingOfficeIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No Placements Yet</h3>
-            <p className="text-gray-600 mb-4">You haven't requested any practicum placements yet.</p>
+            <p className="text-gray-600 mb-4">You haven&apos;t requested any practicum placements yet.</p>
             <a href="/placements/browse" className="btn-primary">
               Browse Available Sites
             </a>

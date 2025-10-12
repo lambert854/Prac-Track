@@ -245,16 +245,30 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
 
   const deleteStudentMutation = useMutation({
     mutationFn: async (studentId: string) => {
+      console.log('🗑️ Frontend: Starting delete for student ID:', studentId)
       const response = await fetch(`/api/admin/students/${studentId}`, {
         method: 'DELETE',
       })
-      if (!response.ok) throw new Error('Failed to delete student')
-      return response.json()
+      console.log('🗑️ Frontend: Response status:', response.status)
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.log('🗑️ Frontend: Error response:', errorData)
+        throw new Error(errorData.error || 'Failed to delete student')
+      }
+      const result = await response.json()
+      console.log('🗑️ Frontend: Success response:', result)
+      return result
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-students'] })
-      onClose() // Close the modal
+      setShowDeleteModal(false) // Close the delete modal
+      onClose() // Close the main modal
       router.push('/admin/students') // Navigate back to students list
+    },
+    onError: (error) => {
+      console.error('Delete student error:', error)
+      setShowDeleteModal(false) // Close the delete modal to show error
+      // You could add a toast notification here if you have one
     },
   })
 
@@ -310,7 +324,7 @@ export function StudentDetailsModal({ student, onClose, userRole }: StudentDetai
 
   const confirmDelete = () => {
     deleteStudentMutation.mutate(student.id)
-    setShowDeleteModal(false)
+    // Don't close modal here - let the mutation&apos;s onSuccess/onError handle it
   }
 
   const cancelDelete = () => {

@@ -40,7 +40,7 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // Checklist is no longer required for activation - it's due Week 2
+    // Checklist is no longer required for activation - it&apos;s due Week 2
 
     // Update placement status to ACTIVE
     await prisma.placement.update({

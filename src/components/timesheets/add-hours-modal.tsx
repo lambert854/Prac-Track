@@ -78,7 +78,7 @@ export function AddHoursModal({ isOpen, onClose, placementId }: AddHoursModalPro
     }
   }
 
-  // Get today's date in YYYY-MM-DD format
+  // Get today&apos;s date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0]
 
   const categoryOptions = [

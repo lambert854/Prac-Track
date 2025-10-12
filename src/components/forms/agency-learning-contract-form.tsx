@@ -431,7 +431,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
 
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Describe the plan for facilitating the learning of the student. (Relative to your agency, what might the student's responsibilities entail? For example: carry a small caseload, assess community needs, facilitate small groups, participate in the intake process, and follow up on clients who have been served previously) *
+            Describe the plan for facilitating the learning of the student. (Relative to your agency, what might the student&apos;s responsibilities entail? For example: carry a small caseload, assess community needs, facilitate small groups, participate in the intake process, and follow up on clients who have been served previously) *
           </label>
           <textarea
             name="learningPlan"
@@ -473,7 +473,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
 
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            What techniques and methods will be used in the instruction of the student? (For example, use of student process recording, role-playing, small group activities, observation of the student's activity, and discussion.) *
+            What techniques and methods will be used in the instruction of the student? (For example, use of student process recording, role-playing, small group activities, observation of the student&apos;s activity, and discussion.) *
           </label>
           <textarea
             name="instructionMethods"
@@ -487,7 +487,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
 
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Describe briefly the arrangements for the student's orientation to the agency. *
+            Describe briefly the arrangements for the student&apos;s orientation to the agency. *
           </label>
           <textarea
             name="orientationArrangements"

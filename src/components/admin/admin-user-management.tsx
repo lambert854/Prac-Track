@@ -149,7 +149,7 @@ export function AdminUserManagement() {
   }
 
   const handleResetPassword = (userId: string) => {
-    if (confirm('Are you sure you want to reset this user\'s password? They will need to set a new password on next login.')) {
+    if (confirm('Are you sure you want to reset this user\&apos;s password? They will need to set a new password on next login.')) {
       resetPasswordMutation.mutate(userId)
     }
   }

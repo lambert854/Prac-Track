@@ -326,7 +326,7 @@ class EmailService {
   }
 
   /**
-   * Get user's notifications
+   * Get user&apos;s notifications
    */
   async getUserNotifications(userId: string, limit = 50) {
     return await prisma.notification.findMany({

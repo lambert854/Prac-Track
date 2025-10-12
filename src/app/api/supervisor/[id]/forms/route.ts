@@ -74,7 +74,7 @@ export async function GET(
       }
     })
 
-    // Get all form submissions for the supervisor's students (including approved/rejected)
+    // Get all form submissions for the supervisor&apos;s students (including approved/rejected)
     const allForms = await prisma.formSubmission.findMany({
       where: {
         placement: {
@@ -154,7 +154,7 @@ export async function GET(
         uploadedDocuments.push({
           id: `cell-policy-${placement.id}`,
           type: 'UPLOADED_DOCUMENT',
-          title: 'Fair Use Policies',
+          title: 'Cell Phone Usage, Confidentiality, Alcohol/Drug Use, and Safety Policy',
           siteName: placement.site.name,
           documentPath: placement.cellPolicy,
           uploadedAt: placement.approvedAt || placement.startDate,

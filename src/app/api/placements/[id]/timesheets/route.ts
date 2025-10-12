@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireStudent, canAccessPlacement } from '@/lib/auth-helpers'
@@ -41,7 +40,7 @@ export async function GET(
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    let where: any = {
+    const where: any = {
       placementId: id,
     }
 
@@ -112,7 +111,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Timesheet entry not found' }, { status: 404 })
     }
 
-    // Check if the entry belongs to the student's placement
+    // Check if the entry belongs to the student&apos;s placement
     if (timesheetEntry.placement.studentId !== session.user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

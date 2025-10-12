@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireStudent } from '@/lib/auth-helpers'
@@ -102,7 +101,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Handle supervisor assignment based on student's choice
+    // Handle supervisor assignment based on student&apos;s choice
     let supervisorId: string | null = null
     
     if (validatedData.placementData.supervisorOption === 'new') {

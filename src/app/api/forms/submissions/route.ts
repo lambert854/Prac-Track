@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    let where: any = {}
+    const where: any = {}
 
     // Role-based filtering
     if (session.user.role === 'STUDENT') {
@@ -81,7 +81,7 @@ export async function GET() {
           docs.push({
             id: `cell-policy-${placement.id}`,
             type: 'UPLOADED_DOCUMENT',
-            title: 'Fair Use Policies',
+            title: 'Cell Phone Usage, Confidentiality, Alcohol/Drug Use, and Safety Policy',
             siteName: placement.site.name,
             documentPath: placement.cellPolicy,
             uploadedAt: placement.approvedAt || placement.startDate,

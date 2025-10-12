@@ -38,7 +38,28 @@ export async function PATCH(
     }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: {
+      firstName: string
+      lastName: string
+      email: string
+      facultyProfile: {
+        upsert: {
+          create: {
+            honorific: string | null
+            title: string | null
+            officePhone: string | null
+            roomNumber: string | null
+          }
+          update: {
+            honorific: string | null
+            title: string | null
+            officePhone: string | null
+            roomNumber: string | null
+          }
+        }
+      }
+      password?: string
+    } = {
       firstName,
       lastName,
       email,

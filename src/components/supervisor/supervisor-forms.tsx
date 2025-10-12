@@ -102,7 +102,7 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
       case 'LEARNING_CONTRACT':
         return 'Student Learning Contract'
       case 'CELL_PHONE_POLICY':
-        return 'Fair Use Policies'
+        return 'Cell Phone Usage, Confidentiality, Alcohol/Drug Use, and Safety Policy'
       case 'PLACEMENT_CHECKLIST':
         return 'Placement Checklist'
       case 'EVALUATION':

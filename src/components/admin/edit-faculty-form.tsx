@@ -30,7 +30,8 @@ export function EditFacultyForm({ faculty, onClose }: EditFacultyFormProps) {
     email: '',
     title: '',
     officePhone: '',
-    roomNumber: ''
+    roomNumber: '',
+    password: '' // Password field for admin to change faculty password
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const queryClient = useQueryClient()
@@ -173,6 +174,23 @@ export function EditFacultyForm({ faculty, onClose }: EditFacultyFormProps) {
             />
           </div>
 
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              New Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Leave blank to keep current password"
+              className="form-input w-full"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Only enter a password if you want to change it. Leave blank to keep the current password.
+            </p>
+          </div>
 
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">

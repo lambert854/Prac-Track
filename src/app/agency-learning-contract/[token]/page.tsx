@@ -70,13 +70,13 @@ export default async function AgencyLearningContractPage({ params }: PageProps) 
               </h3>
               <ol className="list-decimal list-inside space-y-2 text-blue-800">
                 <li>Assign as Agency Field Instructor a qualified staff member with sufficient time and expertise for student instruction, permit time for the Field Instructor and student to confer weekly at an agreed-upon time (unless otherwise arranged) to provide instruction and necessary feedback, and allow the Field Instructor time to attend periodic conferences/meetings with the Faculty Field Director.</li>
-                <li>Recognize the student's primary role is that of learner and design the field experiences to ensure learning opportunities. Field learning activities are to be designed in compliance with the objectives of the Field Instruction program and the student's learning contract.</li>
+                <li>Recognize the student&apos;s primary role is that of learner and design the field experiences to ensure learning opportunities. Field learning activities are to be designed in compliance with the objectives of the Field Instruction program and the student&apos;s learning contract.</li>
                 <li>Interview prospective field instruction candidates and consider placement without regard to gender, race, color, age, religious beliefs, national origin, sexual orientation, or disability.</li>
-                <li>Provide necessary resources for the student to perform the student's responsibilities (provision of space, telephone, materials, and access to records and technology available within the agency)</li>
+                <li>Provide necessary resources for the student to perform the student&apos;s responsibilities (provision of space, telephone, materials, and access to records and technology available within the agency)</li>
                 <li>Orient the student to the staff and facilities and designate a staff member available to the student in the absence of the Agency Field Instructor.</li>
                 <li>Develop a contract with the student specifying learning objectives, work assignments, supervision plans, and evaluation procedures.</li>
                 <li>Maintain records to ensure that the student meets the required number of hours in placement.</li>
-                <li>Submit the required written evaluations of the student's performance to the Social Work Program.</li>
+                <li>Submit the required written evaluations of the student&apos;s performance to the Social Work Program.</li>
                 <li>Immediately inform the Faculty Field Director of any changes that affect the student in placement, such as programmatic or staff changes.</li>
               </ol>
             </div>

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 import { HelpFAQ } from './help-faq'
 

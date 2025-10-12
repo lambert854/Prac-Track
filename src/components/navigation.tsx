@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
@@ -159,7 +158,7 @@ export function Navigation() {
                 
                 if (!item.href) return null
                 
-                // Check if this is the dashboard item and if we're on the dashboard page
+                // Check if this is the dashboard item and if we&apos;re on the dashboard page
                 const isDashboardItem = item.href === '/dashboard' || 
                                       item.href === '/faculty' || 
                                       item.href === '/supervisor' || 
@@ -225,7 +224,7 @@ export function Navigation() {
               
               if (!item.href) return null
               
-              // Check if this is the dashboard item and if we're on the dashboard page
+              // Check if this is the dashboard item and if we&apos;re on the dashboard page
               const isDashboardItem = item.href === '/dashboard' || 
                                     item.href === '/faculty' || 
                                     item.href === '/supervisor' || 

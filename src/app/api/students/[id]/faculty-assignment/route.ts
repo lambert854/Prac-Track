@@ -17,7 +17,7 @@ export async function GET(
 
     const { id: studentId } = await params
 
-    // Check if user can access this student's data
+    // Check if user can access this student&apos;s data
     if (!canAccessStudentData(session.user.role, studentId, session.user.id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

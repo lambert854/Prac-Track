@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requireAdmin, requireFacultyOrAdmin } from '@/lib/auth-helpers'
+import { requireFacultyOrAdmin } from '@/lib/auth-helpers'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('Admin students API: Starting request')
     
-    // First, let's try a simpler approach without requireAdmin
+    // First, let&apos;s try a simpler approach without requireAdmin
     const session = await getServerSession(authOptions)
     console.log('Admin students API: Session obtained:', { 
       hasSession: !!session, 

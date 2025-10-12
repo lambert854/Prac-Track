@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireStudent, requireFacultyOrAdmin, requireStudentFacultyOrAdmin } from '@/lib/auth-helpers'
@@ -37,7 +36,7 @@ export async function GET(request: NextRequest) {
     const studentId = searchParams.get('studentId')
     const status = searchParams.get('status')
 
-    let where: any = {}
+    const where: any = {}
 
     // Role-based filtering
     if (session.user.role === 'STUDENT') {
@@ -131,17 +130,30 @@ export async function POST(request: NextRequest) {
     }
     // For students creating their own placement, studentId is already set to session.user.id
 
-    // Check if student already has an active placement
-    const existingActivePlacement = await prisma.placement.findFirst({
+    // Check if student already has a placement for this specific class
+    const existingPlacementForClass = await prisma.placement.findFirst({
       where: {
         studentId: studentId,
-        status: { in: ['APPROVED', 'ACTIVE'] },
+        classId: validatedData.classId,
       },
+      include: {
+        class: {
+          select: {
+            name: true
+          }
+        }
+      }
     })
 
-    if (existingActivePlacement) {
+    if (existingPlacementForClass) {
       return NextResponse.json(
-        { error: 'You already have an active or approved placement' },
+        { 
+          error: `You already have a placement request for ${existingPlacementForClass.class.name}. You cannot request another placement for the same class.`,
+          existingPlacement: {
+            class: existingPlacementForClass.class.name,
+            status: existingPlacementForClass.status
+          }
+        },
         { status: 400 }
       )
     }
@@ -160,7 +172,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Handle supervisor assignment based on student's choice
+    // Handle supervisor assignment based on student&apos;s choice
     let supervisorId: string | null = null
     
     if (validatedData.supervisorOption === 'existing') {
@@ -257,14 +269,14 @@ export async function POST(request: NextRequest) {
     if (selectedClass && selectedClass.facultyId && selectedClass.facultyId !== faculty.id) {
       facultyMismatch = true
       
-      // Create notification for the student's assigned faculty about the mismatch
+      // Create notification for the student&apos;s assigned faculty about the mismatch
       await prisma.notification.createMany({
         data: [
           {
             userId: faculty.id,
             type: 'FACULTY_CLASS_MISMATCH',
             title: 'Pending Application Assigned to Different Faculty',
-            message: `Pending Application is assigned to a different faculty member. Reassign the student's faculty assignment.`,
+            message: `Pending Application is assigned to a different faculty member. Reassign the student&apos;s faculty assignment.`,
             relatedEntityId: studentId,
             relatedEntityType: 'PLACEMENT',
             priority: 'HIGH',

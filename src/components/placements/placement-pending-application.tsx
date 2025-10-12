@@ -222,7 +222,13 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
   }
 
   const viewDocument = (docPath: string) => {
-    window.open(`/api/documents/${docPath}`, '_blank')
+    // If it&apos;s already a blob URL, open it directly
+    if (docPath.startsWith('https://')) {
+      window.open(docPath, '_blank')
+    } else {
+      // For legacy file paths, use the API route
+      window.open(`/api/documents/${docPath}`, '_blank')
+    }
   }
 
   const approvePendingSupervisorMutation = useMutation({

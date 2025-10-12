@@ -265,7 +265,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
           )}
         </div>
 
-        {/* This Week's Activity */}
+        {/* This Week&apos;s Activity */}
         <div className="card">
           <div className="flex items-center mb-4">
             <InformationCircleIcon className="h-6 w-6 text-blue-600 mr-2" />
@@ -281,7 +281,7 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
           ) : (
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-2">This Week's Activity</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">This Week&apos;s Activity</h3>
                 <ul className="space-y-2">
                   <li className="flex items-center text-sm">
                     <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>

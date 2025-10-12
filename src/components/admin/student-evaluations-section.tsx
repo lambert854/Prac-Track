@@ -66,7 +66,7 @@ export function StudentEvaluationsSection({ studentId, placements }: StudentEval
         <DocumentCheckIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">No Evaluations Yet</h3>
         <p className="text-gray-600">
-          No evaluations have been sent for this student's active placements.
+          No evaluations have been sent for this student&apos;s active placements.
         </p>
       </div>
     )

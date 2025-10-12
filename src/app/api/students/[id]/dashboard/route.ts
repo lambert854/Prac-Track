@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { canAccessStudentData } from '@/lib/auth-helpers'
@@ -17,7 +16,7 @@ export async function GET(
 
     const { id: studentId } = await params
 
-    // Check if user can access this student's data
+    // Check if user can access this student&apos;s data
     // For students, we need to check if the studentId matches their student profile ID
     let canAccess = false
     if (session.user.role === 'ADMIN' || session.user.role === 'FACULTY') {
@@ -31,19 +30,12 @@ export async function GET(
     }
 
     // Get active placement (ACTIVE, APPROVED, or APPROVED_PENDING_CHECKLIST)
-    console.log('Dashboard API - Looking for placements for studentId:', studentId)
+    console.log('Dashboard API - Looking for placements for user ID:', session.user.id)
     
-    // First, let's check if the student exists and what placements they have
-    const allPlacements = await prisma.placement.findMany({
-      where: { studentId },
-      include: { site: true }
-    })
-    console.log('Dashboard API - All placements for student:', allPlacements.map(p => `${p.site?.name} (${p.status})`))
-    
-    // If no placements found with studentId, try searching by user ID as fallback
-    let placement = await prisma.placement.findFirst({
+    // Query placements using the user ID (not student profile ID)
+    const placement = await prisma.placement.findFirst({
       where: {
-        studentId,
+        studentId: session.user.id,
         status: {
           in: ['ACTIVE', 'APPROVED', 'APPROVED_PENDING_CHECKLIST']
         }
@@ -55,37 +47,12 @@ export async function GET(
         class: true
       }
     })
-    
-    // Fallback: search by user ID if no placement found with student ID
-    if (!placement) {
-      console.log('Dashboard API - No placement found with studentId, trying user ID fallback')
-      const fallbackPlacements = await prisma.placement.findMany({
-        where: { 
-          studentId: session.user.id
-        },
-        include: { 
-          site: true,
-          supervisor: true,
-          faculty: true,
-          class: true,
-          student: true
-        }
-      })
-      console.log('Dashboard API - Fallback placements found:', fallbackPlacements.map(p => `${p.site?.name} (${p.status}) - Student: ${p.student?.firstName} ${p.student?.lastName}`))
-      
-      const foundPlacement = fallbackPlacements.find(p => 
-        ['ACTIVE', 'APPROVED', 'APPROVED_PENDING_CHECKLIST'].includes(p.status)
-      )
-      if (foundPlacement) {
-        placement = foundPlacement
-      }
-    }
     console.log('Dashboard API - Found placement:', placement ? `${placement.site?.name} (${placement.status})` : 'None')
 
     // Get pending applications (only PENDING status, not approved ones)
     const pendingApplications = await prisma.placement.findMany({
       where: {
-        studentId,
+        studentId: session.user.id,
         status: 'PENDING'
       },
       include: {
@@ -101,7 +68,7 @@ export async function GET(
     // Get rejected placements (DECLINED) - show the most recent one that has a rejection reason
     const rejectedPlacement = await prisma.placement.findFirst({
       where: {
-        studentId,
+        studentId: session.user.id,
         status: 'DECLINED',
         facultyNotes: {
           not: null
@@ -159,7 +126,7 @@ export async function GET(
       // First check for evaluation notifications
       const evaluationNotifications = await prisma.notification.findMany({
         where: {
-          userId: studentId,
+          userId: session.user.id,
           type: 'EVALUATION_SENT',
           read: false
         },

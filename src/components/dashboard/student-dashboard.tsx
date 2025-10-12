@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { ClockIcon, DocumentTextIcon, CheckCircleIcon, ExclamationTriangleIcon, PlusIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline'
@@ -276,7 +275,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           <button 
             key={app.id} 
             onClick={() => router.push(`/placements/pending/${app.id}`)}
-            className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-4 hover:bg-yellow-100 hover:border-yellow-300 transition-all duration-200 text-left"
+            className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-4 hover:bg-yellow-100 hover:border-yellow-300 transition-all duration-200 text-left cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -292,7 +291,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
                     {!app.cellPolicy && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         <ExclamationTriangleIcon className="h-3 w-3 mr-1" />
-                        Fair Use Policies
+                        Cell Phone Usage, Confidentiality, Alcohol/Drug Use, and Safety Policy
                       </span>
                     )}
                     {!app.learningContract && (
@@ -333,7 +332,7 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
           <div className="text-center py-8">
             <ExclamationTriangleIcon className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Placement</h3>
-            <p className="text-gray-600 mb-4">You don't have an active practicum placement yet.</p>
+            <p className="text-gray-600 mb-4">You don&apos;t have an active practicum placement yet.</p>
             <a href="/placements/browse" className="btn-primary">
               Browse Available Sites
             </a>

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { PlusIcon, CalendarIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -52,7 +51,7 @@ export function StudentTimesheets() {
     },
   })
 
-  // Get user's active placements
+  // Get user&apos;s active placements
   const { data: placements, isLoading: placementsLoading } = useQuery({
     queryKey: ['placements'],
     queryFn: async () => {

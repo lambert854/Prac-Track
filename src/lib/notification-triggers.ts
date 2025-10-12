@@ -137,7 +137,7 @@ export class NotificationTriggers {
   static async timesheetSubmitted(placementId: string, supervisorId: string, studentName: string, siteName: string, weekRange: string, totalHours: number, entryCount: number) {
     return await emailService.sendNotification({
       userId: supervisorId,
-      type: 'DOCUMENT_UPLOADED', // Using existing type as TIMESHEET_SUBMITTED doesn't exist
+      type: 'DOCUMENT_UPLOADED', // Using existing type as TIMESHEET_SUBMITTED doesn&apos;t exist
       title: 'Timesheet Submitted for Review',
       message: `${studentName} has submitted a timesheet for ${siteName} (${weekRange}). Total: ${totalHours} hours across ${entryCount} entries. Please review and approve.`,
       relatedEntityId: placementId,
@@ -155,7 +155,7 @@ export class NotificationTriggers {
       userId: facultyId,
       type: 'TIMESHEET_APPROVED', // Reusing existing type
       title: 'Timesheet Approved by Supervisor',
-      message: `${supervisorName} has approved ${studentName}'s timesheet with ${hours} hours. Please review and provide final approval.`,
+      message: `${supervisorName} has approved ${studentName}&apos;s timesheet with ${hours} hours. Please review and provide final approval.`,
       relatedEntityId: timesheetId,
       relatedEntityType: 'TIMESHEET',
       priority: 'MEDIUM',

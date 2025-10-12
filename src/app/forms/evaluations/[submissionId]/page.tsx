@@ -225,7 +225,7 @@ export default function EvaluationFormPage({ params }: PageProps) {
             Print / Save as PDF
           </button>
           <p className="text-sm text-gray-600 mt-2">
-            Use your browser's print dialog to save this evaluation as a PDF.
+            Use your browser&apos;s print dialog to save this evaluation as a PDF.
           </p>
         </div>
       )}

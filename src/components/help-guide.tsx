@@ -590,7 +590,7 @@ export function HelpGuide({ user }: HelpGuideProps) {
             Need Additional Help?
           </h2>
           <p className="text-gray-600 mb-4">
-            If you can't find the information you're looking for in this guide, please contact your system administrator or program coordinator for assistance.
+            If you can&apos;t find the information you&apos;re looking for in this guide, please contact your system administrator or program coordinator for assistance.
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-blue-800 text-sm">

@@ -137,8 +137,13 @@ export function StudentForms() {
   }
 
   const handleViewUploadedDocument = (documentPath: string) => {
-    // Open the document in a new tab
-    window.open(`/api/documents/${documentPath}`, '_blank')
+    // If it&apos;s already a blob URL, open it directly
+    if (documentPath.startsWith('https://')) {
+      window.open(documentPath, '_blank')
+    } else {
+      // For legacy file paths, use the API route
+      window.open(`/api/documents/${documentPath}`, '_blank')
+    }
   }
 
   const handleDownloadPDF = (document: DocumentItem) => {

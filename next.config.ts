@@ -4,13 +4,13 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   // FIXED: Moved from experimental to root level for Next.js 15
   serverExternalPackages: ['@prisma/client'],
-  // Disable ESLint during builds to allow deployment
+  // Enable ESLint during builds for error checking
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,  // ✅ Enable checking
   },
-  // Disable TypeScript checking during builds to prevent strict mode issues
+  // Enable TypeScript checking during builds
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,   // ✅ Enable checking
   },
   // Configure image optimization
   images: {

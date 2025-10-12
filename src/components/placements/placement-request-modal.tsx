@@ -88,6 +88,7 @@ interface PlacementRequestModalProps {
 
 export function PlacementRequestModal({ site, onClose }: PlacementRequestModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const { data: session } = useSession()
 
@@ -226,7 +227,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
       queryClient.invalidateQueries({ queryKey: ['sites'] })
       // Redirect to pending application page
       // For site submissions, the placement ID is in data.placement.id
-      // For regular placement requests, it's in data.id
+      // For regular placement requests, it&apos;s in data.id
       const placementId = data.placement?.id || data.id
       console.log('Extracted placement ID:', placementId)
       if (!placementId) {
@@ -239,10 +240,12 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
 
   const onSubmit = async (data: PlacementRequestData) => {
     setIsSubmitting(true)
+    setError(null) // Clear any previous errors
     try {
       await createPlacementMutation.mutateAsync(data)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Placement request error:', error)
+      setError(error.message || 'An error occurred while submitting your placement request')
     } finally {
       setIsSubmitting(false)
     }
@@ -277,6 +280,19 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
         </div>
 
         <div className="p-6">
+          {/* Error Display */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-start">
+                <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" />
+                <div>
+                  <h3 className="text-sm font-medium text-red-800">Unable to Submit Placement Request</h3>
+                  <p className="mt-1 text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Site Information */}
           {site ? (
             <div className="bg-gray-50 rounded-lg p-4 mb-6">

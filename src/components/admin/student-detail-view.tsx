@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -446,7 +445,7 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
               if (placement.cellPolicy) {
                 documents.push({
                   id: `cell-policy-${placement.id}`,
-                  name: 'Fair Use Policies',
+                  name: 'Cell Phone Usage, Confidentiality, Alcohol/Drug Use, and Safety Policy',
                   type: 'Document Upload',
                   uploadedAt: placement.approvedAt || placement.startDate,
                   documentPath: placement.cellPolicy,
@@ -494,7 +493,15 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
                     
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => window.open(`/api/documents/${doc.documentPath}`, '_blank')}
+                        onClick={() => {
+                          // If it&apos;s already a blob URL, open it directly
+                          if (doc.documentPath.startsWith('https://')) {
+                            window.open(doc.documentPath, '_blank')
+                          } else {
+                            // For legacy file paths, use the API route
+                            window.open(`/api/documents/${doc.documentPath}`, '_blank')
+                          }
+                        }}
                         className="bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center"
                         title="View Document"
                       >

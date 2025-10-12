@@ -138,7 +138,7 @@ export function EditStudentForm({ student, onClose }: EditStudentFormProps) {
           await unassignFacultyMutation.mutateAsync(student.studentFacultyAssignments[0].id)
         }
         
-        // If there's a new faculty selected, assign them
+        // If there&apos;s a new faculty selected, assign them
         if (newFacultyId) {
           await assignFacultyMutation.mutateAsync({ studentId: student.id, facultyId: newFacultyId })
         }

@@ -104,7 +104,7 @@ export async function PATCH(
 
     // Clear faculty mismatch notifications for the OLD faculty member when assignment is corrected
     // This ensures that when a student is reassigned to the correct faculty for their class,
-    // the mismatch notification disappears from the old faculty member's dashboard
+    // the mismatch notification disappears from the old faculty member&apos;s dashboard
     const clearedNotifications = await prisma.notification.deleteMany({
       where: {
         userId: currentAssignment.facultyId, // Clear notifications for the OLD faculty member

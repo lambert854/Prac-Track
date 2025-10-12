@@ -104,7 +104,7 @@ const faqData: FAQItem[] = [
   {
     id: 'add-supervisor',
     question: 'How do I add a new field supervisor?',
-    answer: 'Go to the Supervisors section and click "Add Supervisor". Fill in the supervisor\'s information and assign them to specific sites. You can also set their credentials and contact preferences.',
+    answer: 'Go to the Supervisors section and click "Add Supervisor". Fill in the supervisor\&apos;s information and assign them to specific sites. You can also set their credentials and contact preferences.',
     category: 'Supervisor Management'
   },
   {
@@ -131,7 +131,7 @@ const faqData: FAQItem[] = [
   {
     id: 'faculty-assignments',
     question: 'How do I assign faculty to students?',
-    answer: 'Go to the Faculty Assignments section. Use the "Assign Faculty" button to link faculty members with specific students. This helps track which faculty member is responsible for each student\'s practicum placement.',
+    answer: 'Go to the Faculty Assignments section. Use the "Assign Faculty" button to link faculty members with specific students. This helps track which faculty member is responsible for each student\&apos;s practicum placement.',
     category: 'Faculty Management'
   },
 
@@ -178,7 +178,7 @@ const faqData: FAQItem[] = [
   },
   {
     id: 'data-not-saving',
-    question: 'My data isn\'t saving when I make changes. What\'s wrong?',
+    question: 'My data isn\'t saving when I make changes. What\&apos;s wrong?',
     answer: 'Check your internet connection and try refreshing the page. Make sure all required fields are filled out (marked with asterisks). If the problem persists, contact your system administrator.',
     category: 'Troubleshooting'
   },
