@@ -81,6 +81,8 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
 
   const uploadDocumentMutation = useMutation({
     mutationFn: async ({ docType, file }: { docType: string; file: File }) => {
+      console.log('Starting document upload:', { docType, fileName: file.name, fileType: file.type, fileSize: file.size })
+      
       const formData = new FormData()
       formData.append('file', file)
       formData.append('docType', docType)
@@ -91,19 +93,26 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
         body: formData,
       })
 
+      console.log('Upload response status:', response.status)
+
       if (!response.ok) {
         const error = await response.json()
+        console.error('Upload error:', error)
         throw new Error(error.error || 'Failed to upload document')
       }
 
-      return response.json()
+      const result = await response.json()
+      console.log('Upload success:', result)
+      return result
     },
     onSuccess: () => {
+      console.log('Upload mutation success, invalidating queries')
       queryClient.invalidateQueries({ queryKey: ['placement', placementId] })
-      // TODO: Send notification to faculty when documents are uploaded
+      queryClient.invalidateQueries({ queryKey: ['student-dashboard'] })
       setUploadingDoc(null)
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Upload mutation error:', error)
       setUploadingDoc(null)
     },
   })
@@ -193,7 +202,21 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
 
   const handleFileUpload = (docType: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
+    console.log('File upload triggered:', { docType, file: file ? { name: file.name, type: file.type, size: file.size } : null })
+    
     if (file) {
+      // Validate file type
+      if (file.type !== 'application/pdf') {
+        alert('Please select a PDF file only.')
+        return
+      }
+      
+      // Validate file size (e.g., max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB.')
+        return
+      }
+      
       setUploadingDoc(docType)
       uploadDocumentMutation.mutate({ docType, file })
     }
