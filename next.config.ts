@@ -6,11 +6,10 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@prisma/client'],
   // Enable ESLint during builds for error checking
   eslint: {
-    ignoreDuringBuilds: true,  // Temporarily disable for deployment
+    ignoreDuringBuilds: false,  // ✅ Enable checking
   },
-  // Temporarily disable TypeScript checking for deployment
   typescript: {
-    ignoreBuildErrors: true,   // Temporarily disable for deployment
+    ignoreBuildErrors: false,   // ✅ Enable checking
   },
   // Configure image optimization
   images: {

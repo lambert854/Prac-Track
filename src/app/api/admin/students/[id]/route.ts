@@ -87,7 +87,7 @@ export async function PATCH(
       email?: string
       active?: boolean
       studentProfile?: {
-        upsert: {
+        upsert?: {
           create: {
             aNumber?: string
             program?: string
@@ -101,8 +101,14 @@ export async function PATCH(
             requiredHours?: number
           }
         }
+        update?: {
+          aNumber?: string
+          program?: string
+          cohort?: string
+        }
       }
       password?: string
+      passwordHash?: string
     } = {}
 
     // Add active status if provided

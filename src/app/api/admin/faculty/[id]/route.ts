@@ -59,6 +59,7 @@ export async function PATCH(
         }
       }
       password?: string
+      passwordHash?: string
     } = {
       firstName,
       lastName,
