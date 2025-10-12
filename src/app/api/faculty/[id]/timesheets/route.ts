@@ -158,7 +158,8 @@ export async function GET(
       acc[weekKey].totalHours += Number(entry.hours)
       
       return acc
-    }, {} as Record<string, { entries: any[]; totalHours: number }>)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }, {} as Record<string, any>)
 
     // Group supervisor timesheets by student and week for better organization
     const groupedSupervisorTimesheets = pendingSupervisorTimesheets.reduce((acc, entry) => {
@@ -185,7 +186,8 @@ export async function GET(
       acc[weekKey].totalHours += Number(entry.hours)
       
       return acc
-    }, {} as Record<string, { entries: any[]; totalHours: number }>)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }, {} as Record<string, any>)
 
     // Convert to arrays and sort appropriately
     const facultyTimesheetGroups = Object.values(groupedFacultyTimesheets).sort((a: any, b: any) => 
