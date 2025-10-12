@@ -289,7 +289,7 @@ export function EditStudentForm({ student, onClose }: EditStudentFormProps) {
               className="form-input w-full"
             >
               <option value="">No faculty assigned</option>
-              {faculty?.map((facultyMember) => (
+              {faculty?.map((facultyMember: any) => (
                 <option key={facultyMember.id} value={facultyMember.id}>
                   {facultyMember.facultyProfile?.honorific ? `${facultyMember.facultyProfile.honorific} ` : ''}
                   {facultyMember.firstName} {facultyMember.lastName}
