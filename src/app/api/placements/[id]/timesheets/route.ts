@@ -40,7 +40,13 @@ export async function GET(
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    const where: any = {
+    const where: {
+      placementId: string
+      date?: {
+        gte: string
+        lte: string
+      }
+    } = {
       placementId: id,
     }
 

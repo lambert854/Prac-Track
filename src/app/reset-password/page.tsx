@@ -71,7 +71,7 @@ function ResetPasswordContent() {
       } else {
         setError(result.error || 'An error occurred. Please try again.')
       }
-    } catch (err) {
+        } catch {
       setError('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)

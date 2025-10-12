@@ -36,7 +36,12 @@ export async function GET(request: NextRequest) {
     const studentId = searchParams.get('studentId')
     const status = searchParams.get('status')
 
-    const where: any = {}
+    const where: {
+      studentId?: string
+      supervisorId?: string
+      facultyId?: string
+      status?: string
+    } = {}
 
     // Role-based filtering
     if (session.user.role === 'STUDENT') {

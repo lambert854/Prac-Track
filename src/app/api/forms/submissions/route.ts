@@ -11,7 +11,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const where: any = {}
+    const where: {
+      submittedBy?: string
+      placementId?: string
+      formType?: string
+    } = {}
 
     // Role-based filtering
     if (session.user.role === 'STUDENT') {
