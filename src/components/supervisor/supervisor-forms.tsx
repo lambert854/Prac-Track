@@ -228,7 +228,15 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        onClick={() => window.open(`/api/uploads/${doc.documentPath}`, '_blank')}
+                        onClick={() => {
+                          // If it's already a blob URL, open it directly
+                          if (doc.documentPath.startsWith('https://')) {
+                            window.open(doc.documentPath, '_blank')
+                          } else {
+                            // For legacy file paths, use the API route
+                            window.open(`/api/uploads/${doc.documentPath}`, '_blank')
+                          }
+                        }}
                         className="text-blue-600 hover:text-blue-900 mr-3"
                       >
                         View Document
