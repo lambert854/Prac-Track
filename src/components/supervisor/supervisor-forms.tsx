@@ -200,7 +200,7 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {uploadedDocuments.map((doc) => (
+                {uploadedDocuments.map((doc: any) => (
                   <tr key={doc.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -287,7 +287,7 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
 
                 {/* Forms List */}
                 <div className="divide-y divide-gray-200">
-                  {statusForms.map((form) => (
+                  {statusForms.map((form: any) => (
                     <div key={form.id} className="px-6 py-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
