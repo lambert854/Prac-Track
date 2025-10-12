@@ -81,35 +81,8 @@ export async function PATCH(
     }
 
     // Prepare update data
-    const updateData: {
-      firstName?: string
-      lastName?: string
-      email?: string
-      active?: boolean
-      studentProfile?: {
-        upsert?: {
-          create: {
-            aNumber?: string
-            program?: string
-            cohort?: string
-            requiredHours?: number
-          }
-          update: {
-            aNumber?: string
-            program?: string
-            cohort?: string
-            requiredHours?: number
-          }
-        }
-        update?: {
-          aNumber?: string
-          program?: string
-          cohort?: string
-        }
-      }
-      password?: string
-      passwordHash?: string
-    } = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: any = {}
 
     // Add active status if provided
     if (active !== undefined) {
