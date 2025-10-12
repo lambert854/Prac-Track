@@ -124,12 +124,19 @@ export async function PATCH(
 
       // Add student profile updates if any profile fields are provided
       if (aNumber || program || cohort) {
+        const profileUpdate: {
+          aNumber?: string
+          program?: string
+          cohort?: string
+        } = {}
+        
+        if (aNumber) profileUpdate.aNumber = aNumber
+        if (program) profileUpdate.program = program
+        if (cohort) profileUpdate.cohort = cohort
+        
         updateData.studentProfile = {
-          update: {}
+          update: profileUpdate
         }
-        if (aNumber) updateData.studentProfile.update.aNumber = aNumber
-        if (program) updateData.studentProfile.update.program = program
-        if (cohort) updateData.studentProfile.update.cohort = cohort
       }
     }
 
