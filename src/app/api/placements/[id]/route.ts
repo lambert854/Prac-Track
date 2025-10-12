@@ -94,7 +94,7 @@ export async function PATCH(
     const validatedData = updatePlacementSchema.parse(body)
 
     // Convert date strings to Date objects if provided
-    const updateData: any = { ...validatedData }
+    const updateData: { [key: string]: unknown } = { ...validatedData }
     if (validatedData.startDate) {
       updateData.startDate = new Date(validatedData.startDate)
     }

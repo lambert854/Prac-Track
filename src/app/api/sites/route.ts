@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const practice = searchParams.get('practice') || ''
     const includeInactive = searchParams.get('includeInactive') === 'true'
 
-    const where: any = {}
+    const where: { [key: string]: unknown } = {}
 
     // Only filter by active status if not including inactive sites
     if (!includeInactive) {

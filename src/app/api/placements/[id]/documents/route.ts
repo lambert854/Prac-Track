@@ -69,7 +69,7 @@ export async function POST(
     })
 
     // Update placement with document URL
-    const updateData: any = {}
+    const updateData: { [key: string]: unknown } = {}
     updateData[docType] = blob.url
 
     await prisma.placement.update({
@@ -158,7 +158,7 @@ export async function DELETE(
     }
 
     // Update placement to remove document path
-    const updateData: any = {}
+    const updateData: { [key: string]: unknown } = {}
     updateData[docType] = null
 
     await prisma.placement.update({

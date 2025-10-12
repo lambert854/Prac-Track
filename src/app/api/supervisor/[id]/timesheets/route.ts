@@ -101,7 +101,7 @@ export async function GET(
     }, {} as Record<string, any>)
 
     // Convert to array and sort by week start date
-    const timesheetGroups = Object.values(groupedTimesheets).sort((a: any, b: any) => 
+    const timesheetGroups = Object.values(groupedTimesheets).sort((a: { [key: string]: unknown }, b: { [key: string]: unknown }) => 
       new Date(b.weekStart).getTime() - new Date(a.weekStart).getTime()
     )
 
