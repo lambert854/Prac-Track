@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireStudent, requireFacultyOrAdmin, requireStudentFacultyOrAdmin } from '@/lib/auth-helpers'
 import { z } from 'zod'
+import { getServerSession } from 'next-auth'
 
 const createPlacementRequestSchema = z.object({
   siteId: z.string().min(1, 'Site ID is required'),

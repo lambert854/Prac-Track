@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireStudent, canAccessPlacement } from '@/lib/auth-helpers'
 import { z } from 'zod'
+import { getServerSession } from 'next-auth'
 
 const createTimesheetEntrySchema = z.object({
   date: z.string().min(1, 'Date is required'),

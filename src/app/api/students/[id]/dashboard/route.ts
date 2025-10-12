@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { canAccessStudentData } from '@/lib/auth-helpers'
+import { getServerSession } from 'next-auth'
 
 export async function GET(
   request: NextRequest,
