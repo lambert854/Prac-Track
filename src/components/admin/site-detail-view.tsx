@@ -1,27 +1,25 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
-import { 
-  ArrowLeftIcon, 
-  PencilIcon, 
-  TrashIcon,
-  MapPinIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  BuildingOfficeIcon,
-  CalendarIcon,
-  UserGroupIcon,
-  PlusIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline'
-import { SiteForm } from './site-form'
-import { AddSupervisorForm } from './add-supervisor-form'
-import { EditSupervisorForm } from './edit-supervisor-form'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import {
+    ArrowLeftIcon,
+    BuildingOfficeIcon,
+    CalendarIcon,
+    EnvelopeIcon,
+    PencilIcon,
+    PhoneIcon,
+    PlusIcon,
+    TrashIcon,
+    UserGroupIcon
+} from '@heroicons/react/24/outline'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { AddSupervisorForm } from './add-supervisor-form'
 import { ConfirmationModal } from './confirmation-modal'
+import { EditSupervisorForm } from './edit-supervisor-form'
+import { SiteForm } from './site-form'
 
 interface Site {
   id: string

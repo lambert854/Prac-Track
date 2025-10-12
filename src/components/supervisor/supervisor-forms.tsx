@@ -1,7 +1,7 @@
 'use client'
 
+import { CheckCircleIcon, ClipboardDocumentListIcon, ClockIcon, DocumentTextIcon, UserGroupIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { useQuery } from '@tanstack/react-query'
-import { DocumentTextIcon, CheckCircleIcon, ClockIcon, XCircleIcon, UserGroupIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 
 interface SupervisorFormsProps {
   supervisorId: string

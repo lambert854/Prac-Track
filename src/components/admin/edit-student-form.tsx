@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 interface EditStudentFormProps {
   student: {

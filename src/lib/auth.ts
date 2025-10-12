@@ -1,10 +1,14 @@
+import { UserRole } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
-import { UserRole } from '@prisma/client'
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: '/login',
+  },
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -93,9 +97,6 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     }
-  },
-  pages: {
-    signIn: '/login',
   },
   // Configure for mobile development
   cookies: {

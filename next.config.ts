@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  // Fix workspace detection issue
+  outputFileTracingRoot: __dirname,
   // FIXED: Moved from experimental to root level for Next.js 15
   serverExternalPackages: ['@prisma/client'],
   // Enable ESLint during builds for error checking
