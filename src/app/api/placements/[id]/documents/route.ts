@@ -8,14 +8,15 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: placementId } = await params
+  let formData: FormData | null = null
+  
   try {
     const session = await getServerSession(authOptions)
     
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    const { id: placementId } = await params
 
     // Verify placement exists and user has access
     const placement = await prisma.placement.findUnique({
@@ -38,7 +39,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const formData = await request.formData()
+    formData = await request.formData()
     const file = formData.get('file') as File
     const docType = formData.get('docType') as string
 
@@ -113,7 +114,7 @@ export async function POST(
     console.error('Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      placementId: (await params).id,
+      placementId,
       docType: formData?.get('docType'),
       fileName: formData?.get('file') instanceof File ? (formData.get('file') as File).name : 'unknown'
     })
