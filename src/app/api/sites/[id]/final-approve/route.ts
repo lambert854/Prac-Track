@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth-helpers'
 

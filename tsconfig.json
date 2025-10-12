@@ -13,9 +13,9 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "plugins": [

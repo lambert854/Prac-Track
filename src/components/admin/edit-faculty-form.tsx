@@ -45,7 +45,8 @@ export function EditFacultyForm({ faculty, onClose }: EditFacultyFormProps) {
       email: faculty.email || '',
       title: faculty.facultyProfile?.title || '',
       officePhone: faculty.facultyProfile?.officePhone || '',
-      roomNumber: faculty.facultyProfile?.roomNumber || ''
+      roomNumber: faculty.facultyProfile?.roomNumber || '',
+      password: ''
     })
   }, [faculty])
 

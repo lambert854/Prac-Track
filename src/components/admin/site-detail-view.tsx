@@ -501,10 +501,10 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
                       supervisorProfile: {
                         id: supervisor.id,
                         title: supervisor.title,
-                        licensedSW: supervisor.licensedSW,
-                        licenseNumber: supervisor.licenseNumber,
-                        highestDegree: supervisor.highestDegree,
-                        otherDegree: supervisor.otherDegree,
+                        licensedSW: supervisor?.licensedSW,
+                        licenseNumber: supervisor?.licenseNumber,
+                        highestDegree: supervisor?.highestDegree,
+                        otherDegree: supervisor?.otherDegree,
                         site: {
                           id: site.id,
                           name: site.name,

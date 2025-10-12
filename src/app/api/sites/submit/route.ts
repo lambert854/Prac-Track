@@ -3,7 +3,6 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireStudent } from '@/lib/auth-helpers'
 import { z } from 'zod'
-import bcrypt from 'bcryptjs'
 import { getServerSession } from 'next-auth'
 
 const siteSubmissionSchema = z.object({

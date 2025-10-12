@@ -102,7 +102,7 @@ export async function GET(
 
     // Convert to array and sort by week start date
     const timesheetGroups = Object.values(groupedTimesheets).sort((a: { [key: string]: unknown }, b: { [key: string]: unknown }) => 
-      new Date(b.weekStart).getTime() - new Date(a.weekStart).getTime()
+      new Date(b.weekStart as string).getTime() - new Date(a.weekStart as string).getTime()
     )
 
     console.log('Supervisor timesheets API: Returning', timesheetGroups.length, 'timesheet groups')

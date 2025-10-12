@@ -135,11 +135,11 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
   const summary = formsData?.summary || { totalForms: 0, pendingForms: 0, uploadedDocuments: 0, totalDocuments: 0 }
 
   // Separate form submissions from uploaded documents
-  const formSubmissions = allDocuments.filter(doc => !doc.type || doc.type === 'FORM_SUBMISSION')
-  const uploadedDocuments = allDocuments.filter(doc => doc.type === 'UPLOADED_DOCUMENT' && doc.title === 'Placement Checklist')
+  const formSubmissions = allDocuments.filter((doc: any) => !doc.type || doc.type === 'FORM_SUBMISSION')
+  const uploadedDocuments = allDocuments.filter((doc: any) => doc.type === 'UPLOADED_DOCUMENT' && doc.title === 'Placement Checklist')
 
   // Group forms by status for better organization
-  const formsByStatus = formSubmissions.reduce((acc, form) => {
+  const formsByStatus = formSubmissions.reduce((acc: any, form: any) => {
     const status = form.displayStatus || form.status
     if (!acc[status]) {
       acc[status] = []

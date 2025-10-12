@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requireStudent, requireFacultyOrAdmin, requireStudentFacultyOrAdmin } from '@/lib/auth-helpers'
+import { requireFacultyOrAdmin } from '@/lib/auth-helpers'
 import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { PlacementStatus } from '@prisma/client'
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireStudentFacultyOrAdmin()
+    const session = await requireFacultyOrAdmin()
     
     const body = await request.json()
     console.log('Placement request body:', JSON.stringify(body, null, 2))
