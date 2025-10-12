@@ -53,8 +53,8 @@ export async function GET(
 
     if (startDate && endDate) {
       where.date = {
-        gte: new Date(startDate),
-        lte: new Date(endDate),
+        gte: startDate,
+        lte: endDate,
       }
     }
 
