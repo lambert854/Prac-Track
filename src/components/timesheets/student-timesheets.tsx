@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { PlusIcon, CalendarIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { CalendarIcon, ClockIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { TimesheetEntryForm } from './timesheet-entry-form'
 import { TimesheetWeekView } from './timesheet-week-view'
 
@@ -92,12 +92,33 @@ export function StudentTimesheets() {
     mutationFn: async ({ startDate, endDate, journalData }: { startDate: string; endDate: string; journalData?: any }) => {
       if (!activePlacement?.id) throw new Error('No active placement')
       
+      // If journal data is provided, submit the journal first
+      if (journalData) {
+        const journalResponse = await fetch(`/api/placements/${activePlacement.id}/timesheets/journal`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            startDate,
+            endDate,
+            ...journalData
+          }),
+        })
+        if (!journalResponse.ok) {
+          const errorData = await journalResponse.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Failed to submit journal')
+        }
+      }
+      
+      // Then submit the week
       const response = await fetch(`/api/placements/${activePlacement.id}/timesheets/submit-week`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ startDate, endDate, journalData }),
+        body: JSON.stringify({ startDate, endDate }),
       })
-      if (!response.ok) throw new Error('Failed to submit week')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to submit week')
+      }
       return response.json()
     },
     onSuccess: () => {
@@ -110,6 +131,10 @@ export function StudentTimesheets() {
       setTimeout(() => {
         window.location.reload()
       }, 1000)
+    },
+    onError: (error) => {
+      console.error('Timesheet submission error:', error)
+      // You could add a toast notification here if you have a toast system
     },
   })
 

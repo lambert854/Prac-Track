@@ -189,7 +189,13 @@ export function TimesheetWeekView({
   }
 
   const handleJournalSubmit = (journalData: any) => {
+    console.log('handleJournalSubmit called with:', journalData)
     if (pendingSubmission) {
+      console.log('Submitting week with:', {
+        startDate: pendingSubmission.startDate,
+        endDate: pendingSubmission.endDate,
+        journalData
+      })
       onSubmitWeek({
         startDate: pendingSubmission.startDate,
         endDate: pendingSubmission.endDate,

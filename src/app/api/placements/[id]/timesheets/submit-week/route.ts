@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { requireStudent } from '@/lib/auth-helpers'
-import { z } from 'zod'
 import { NotificationTriggers } from '@/lib/notification-triggers'
+import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 
 const submitWeekSchema = z.object({
   startDate: z.string().min(1, 'Start date is required'),
@@ -37,7 +37,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    if (placement.status !== 'ACTIVE') {
+    if (!['ACTIVE', 'APPROVED', 'APPROVED_PENDING_CHECKLIST'].includes(placement.status)) {
       return NextResponse.json(
         { error: 'Cannot submit timesheets for inactive placement' },
         { status: 400 }

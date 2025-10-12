@@ -116,6 +116,7 @@ export function TimesheetJournalForm({ studentName, onSubmit, onCancel, isSubmit
   }
 
   const onFormSubmit = (data: JournalFormData) => {
+    console.log('Journal form submitted with data:', data)
     onSubmit(data)
   }
 
