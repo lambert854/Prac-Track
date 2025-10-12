@@ -62,15 +62,37 @@ export async function POST(
     const filename = `${docType}_${timestamp}.pdf`
     const blobPath = `placements/${placementId}/${filename}`
 
-    // Upload file to Vercel Blob
-    const blob = await put(blobPath, file, {
-      access: 'public',
-      contentType: 'application/pdf'
-    })
+    let documentUrl: string
+
+    // Try Vercel Blob first, fallback to local storage for development
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      // Upload file to Vercel Blob
+      const blob = await put(blobPath, file, {
+        access: 'public',
+        contentType: 'application/pdf'
+      })
+      documentUrl = blob.url
+    } else {
+      // Fallback to local file system for development
+      const fs = await import('fs/promises')
+      const path = await import('path')
+      
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), 'uploads', 'placements', placementId)
+      await fs.mkdir(uploadsDir, { recursive: true })
+      
+      // Save file locally
+      const filePath = path.join(uploadsDir, filename)
+      const buffer = await file.arrayBuffer()
+      await fs.writeFile(filePath, Buffer.from(buffer))
+      
+      // Create URL for local file access
+      documentUrl = `/api/documents/placements/${placementId}/${filename}`
+    }
 
     // Update placement with document URL
     const updateData: { [key: string]: unknown } = {}
-    updateData[docType] = blob.url
+    updateData[docType] = documentUrl
 
     await prisma.placement.update({
       where: { id: placementId },
@@ -83,13 +105,20 @@ export async function POST(
     return NextResponse.json({ 
       message: 'Document uploaded successfully',
       documentType: docType,
-      documentUrl: blob.url
+      documentUrl: documentUrl
     })
 
   } catch (error) {
     console.error('Document upload error:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      placementId,
+      docType: formData?.get('docType'),
+      fileName: formData?.get('file') instanceof File ? (formData.get('file') as File).name : 'unknown'
+    })
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
