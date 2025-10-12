@@ -11,11 +11,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const where: {
-      submittedBy?: string
-      placementId?: string
-      formType?: string
-    } = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {}
 
     // Role-based filtering
     if (session.user.role === 'STUDENT') {
