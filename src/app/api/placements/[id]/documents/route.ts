@@ -113,7 +113,7 @@ export async function POST(
     console.error('Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      placementId,
+      placementId: (await params).id,
       docType: formData?.get('docType'),
       fileName: formData?.get('file') instanceof File ? (formData.get('file') as File).name : 'unknown'
     })
