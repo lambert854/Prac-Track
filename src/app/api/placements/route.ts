@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireStudent, requireFacultyOrAdmin, requireStudentFacultyOrAdmin } from '@/lib/auth-helpers'
 import { z } from 'zod'
 import { getServerSession } from 'next-auth'
+import { PlacementStatus } from '@prisma/client'
 
 const createPlacementRequestSchema = z.object({
   siteId: z.string().min(1, 'Site ID is required'),
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
       studentId?: string
       supervisorId?: string
       facultyId?: string
-      status?: string
+      status?: PlacementStatus
     } = {}
 
     // Role-based filtering
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) {
-      where.status = status
+      where.status = status as PlacementStatus
     }
 
     const placements = await prisma.placement.findMany({
