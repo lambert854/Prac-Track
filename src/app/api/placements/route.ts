@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
+import { requireStudentFacultyOrAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
-import { requireFacultyOrAdmin } from '@/lib/auth-helpers'
-import { z } from 'zod'
-import { getServerSession } from 'next-auth'
 import { PlacementStatus } from '@prisma/client'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 
 const createPlacementRequestSchema = z.object({
   siteId: z.string().min(1, 'Site ID is required'),
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireFacultyOrAdmin()
+    const session = await requireStudentFacultyOrAdmin()
     
     const body = await request.json()
     console.log('Placement request body:', JSON.stringify(body, null, 2))

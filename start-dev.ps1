@@ -1,26 +1,23 @@
-# PowerShell script to start dev server on port 3000
-Write-Host "Stopping any existing processes on port 3000..." -ForegroundColor Yellow
+# FieldTrack Development Server Startup Script
+# This ensures consistent development environment
 
-# Get processes using port 3000
-$processes = netstat -ano | Select-String ":3000.*LISTENING" | ForEach-Object {
-    $parts = $_ -split '\s+'
-    $parts[-1]
-}
+Write-Host "Starting FieldTrack Development Server..." -ForegroundColor Green
+Write-Host "Database: Neon DB (shared with production)" -ForegroundColor Yellow
+Write-Host "Storage: Vercel Blob" -ForegroundColor Yellow
+Write-Host "Port: 3002" -ForegroundColor Yellow
+Write-Host ""
 
-# Kill each process
-foreach ($processId in $processes) {
-    if ($processId -and $processId -ne "0") {
-        Write-Host "Killing process $processId" -ForegroundColor Red
-        try {
-            Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
-        } catch {
-            Write-Host "Could not kill process $processId" -ForegroundColor Yellow
-        }
-    }
-}
+# Kill any existing Node processes to avoid port conflicts
+Write-Host "Cleaning up existing processes..." -ForegroundColor Blue
+taskkill /f /im node.exe 2>$null
 
-# Wait for port to be released
-Start-Sleep -Seconds 2
+# Remove Next.js cache to ensure clean build
+Write-Host "Clearing Next.js cache..." -ForegroundColor Blue
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
 
-Write-Host "Starting development server on port 3000..." -ForegroundColor Green
-npm run dev
+# Start Vercel dev server
+Write-Host "Starting Vercel dev server on port 3000..." -ForegroundColor Green
+Write-Host "Access your app at: http://localhost:3000" -ForegroundColor Cyan
+Write-Host ""
+
+vercel dev --listen 3000

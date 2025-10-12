@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import { z } from 'zod'
-import { XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 
 const placementRequestSchema = z.object({
   // Site submission fields (when site is null)
@@ -152,7 +152,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
           startDate: data.startDate,
           endDate: data.endDate,
           classId: data.classId,
-          requiredHours: requiredHours,
+          requiredHours: getRequiredHours(data.classId),
           supervisorOption: data.supervisorOption,
         }
 
@@ -203,7 +203,7 @@ export function PlacementRequestModal({ site, onClose }: PlacementRequestModalPr
               startDate: data.startDate,
               endDate: data.endDate,
               classId: data.classId,
-              requiredHours: requiredHours,
+              requiredHours: getRequiredHours(data.classId),
               supervisorOption: data.supervisorOption,
               supervisorId: data.supervisorId,
               supervisorFirstName: data.supervisorFirstName,
