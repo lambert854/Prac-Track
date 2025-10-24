@@ -1,18 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { 
-  UserGroupIcon, 
-  PlusIcon, 
-  TrashIcon,
-  AcademicCapIcon,
-  UserIcon,
-  PencilIcon
-} from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { EditAssignmentModal } from './edit-assignment-modal'
+import {
+    AcademicCapIcon,
+    PencilIcon,
+    PlusIcon,
+    TrashIcon,
+    UserGroupIcon,
+    UserIcon
+} from '@heroicons/react/24/outline'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { ConfirmationModal } from './confirmation-modal'
+import { EditAssignmentModal } from './edit-assignment-modal'
 
 interface FacultyAssignment {
   id: string
@@ -66,6 +66,7 @@ interface Faculty {
   facultyProfile?: {
     title: string
     department: string
+    honorific?: string
   }
 }
 
@@ -581,6 +582,7 @@ export function FacultyAssignmentsManagement() {
                   <option value="">Select a faculty member...</option>
                   {faculty?.map((facultyMember: Faculty) => (
                     <option key={facultyMember.id} value={facultyMember.id}>
+                      {facultyMember.facultyProfile?.honorific && `${facultyMember.facultyProfile.honorific} `}
                       {facultyMember.firstName} {facultyMember.lastName} ({facultyMember.email})
                     </option>
                   ))}

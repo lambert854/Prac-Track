@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { NotificationTriggers } from '@/lib/notification-triggers'
+import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 const approveTimesheetsSchema = z.object({
@@ -113,7 +113,7 @@ export async function POST(
         hoursAdded: totalHours,
       })
     } else {
-      // Reject the entries (reset to supervisor approved state)
+      // Reject the entries and set rejection fields
       const updatedEntries = await prisma.timesheetEntry.updateMany({
         where: {
           id: {
@@ -121,14 +121,30 @@ export async function POST(
           },
         },
         data: {
-          status: 'PENDING_FACULTY',
+          status: 'REJECTED',
+          rejectedAt: new Date(),
+          rejectedBy: session.user.id,
+          rejectionReason: validatedData.notes || 'Rejected by faculty',
           facultyApprovedAt: null,
           facultyApprovedBy: null,
-          notes: validatedData.notes ? 
-            `${timesheetEntries[0]?.notes || ''}\n[Faculty Rejected: ${validatedData.notes}]` : 
-            timesheetEntries[0]?.notes,
         },
       })
+
+      // Send notification to student when faculty rejects
+      try {
+        const totalHours = timesheetEntries.reduce((sum, entry) => sum + Number(entry.hours), 0)
+        const studentId = timesheetEntries[0].placement.studentId
+        
+        await NotificationTriggers.timesheetRejected(
+          timesheetEntries[0].placement.id, // Using placement ID as timesheet ID
+          studentId,
+          `${faculty.firstName} ${faculty.lastName}`,
+          validatedData.notes || 'Rejected by faculty'
+        )
+      } catch (notificationError) {
+        console.error('Failed to send faculty rejection notification:', notificationError)
+        // Don't fail the request if notification fails
+      }
 
       return NextResponse.json({
         message: 'Timesheet entries rejected',

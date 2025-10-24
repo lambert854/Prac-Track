@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { requireFacultyOrAdmin } from '@/lib/auth-helpers'
+import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
@@ -9,6 +9,7 @@ export async function GET() {
     // Get total counts
     const [
       totalStudents,
+      activeStudents,
       totalSupervisors,
       totalSites,
       totalPlacements,
@@ -16,7 +17,8 @@ export async function GET() {
       timesheetEntries,
       formSubmissions
     ] = await Promise.all([
-      prisma.user.count({ where: { role: 'STUDENT' } }),
+      prisma.user.count({ where: { role: 'STUDENT' } }), // All students (active + inactive)
+      prisma.user.count({ where: { role: 'STUDENT', active: true } }), // Only active students
       prisma.user.count({ where: { role: 'SUPERVISOR' } }),
       prisma.site.count(),
       prisma.placement.count(),
@@ -37,10 +39,11 @@ export async function GET() {
       .reduce((sum, entry) => sum + Number(entry.hours), 0)
     const pendingHours = totalHours - approvedHours
 
-    // Count students without placements
+    // Count active students without placements
     const studentsWithoutPlacements = await prisma.user.count({
       where: {
         role: 'STUDENT',
+        active: true, // Only count active students
         studentPlacements: {
           none: {
             status: 'ACTIVE'
@@ -51,6 +54,7 @@ export async function GET() {
 
     const reportData = {
       totalStudents,
+      activeStudents,
       totalSupervisors,
       totalSites,
       totalPlacements,

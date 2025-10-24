@@ -232,9 +232,12 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
                           // If it's already a blob URL, open it directly
                           if (doc.documentPath.startsWith('https://')) {
                             window.open(doc.documentPath, '_blank')
+                          } else if (doc.documentPath.startsWith('/api/documents/')) {
+                            // If it already starts with /api/documents/, use it as-is
+                            window.open(doc.documentPath, '_blank')
                           } else {
                             // For legacy file paths, use the API route
-                            window.open(`/api/uploads/${doc.documentPath}`, '_blank')
+                            window.open(`/api/documents/${doc.documentPath}`, '_blank')
                           }
                         }}
                         className="text-blue-600 hover:text-blue-900 mr-3"

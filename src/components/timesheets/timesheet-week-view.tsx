@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { PencilIcon, CheckIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { CheckIcon, ClockIcon, EyeIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { useState } from 'react'
 import { TimesheetJournalForm } from './timesheet-journal-form'
 
 interface TimesheetEntry {
@@ -22,6 +22,13 @@ interface TimesheetEntry {
     firstName: string
     lastName: string
   }
+  rejectedAt?: string
+  rejector?: {
+    firstName: string
+    lastName: string
+    role: string
+  }
+  rejectionReason?: string
   locked: boolean
 }
 
@@ -220,6 +227,9 @@ export function TimesheetWeekView({
   // Ensure totalHours is a valid number
   const safeTotalHours = Number.isFinite(totalHours) ? totalHours : 0
   
+  // Check if any entries in this week have been submitted
+  const hasSubmittedEntries = weekEntries.some(entry => entry.submittedAt)
+  
   console.log('Calculated total hours:', totalHours)
   console.log('Safe total hours:', safeTotalHours)
 
@@ -325,6 +335,8 @@ export function TimesheetWeekView({
                     <button
                       onClick={() => onAddEntry(date)}
                       className="text-gray-400 hover:text-gray-600 text-xs"
+                      disabled={hasSubmittedEntries}
+                      title={hasSubmittedEntries ? "Cannot add entries to submitted week" : "Add entry"}
                     >
                       + Add
                     </button>
@@ -336,12 +348,21 @@ export function TimesheetWeekView({
                         <span className="font-medium">
                           {typeof entry.hours === 'number' ? entry.hours : parseFloat(entry.hours) || 0}h {entry.category}
                         </span>
-                        {!entry.locked && (
+                        {!entry.locked && !entry.submittedAt && (
                           <button
                             onClick={() => onEditEntry(entry)}
                             className="text-gray-400 hover:text-gray-600"
                           >
                             <PencilIcon className="h-3 w-3" />
+                          </button>
+                        )}
+                        {entry.submittedAt && (
+                          <button
+                            onClick={() => onEditEntry(entry)}
+                            className="text-blue-400 hover:text-blue-600"
+                            title="View submitted entry (read-only)"
+                          >
+                            <EyeIcon className="h-3 w-3" />
                           </button>
                         )}
                       </div>
@@ -355,6 +376,31 @@ export function TimesheetWeekView({
                       <div className="pt-1">
                         {getStatusBadge(entry)}
                       </div>
+                      
+                      {entry.rejectionReason && (
+                        <div className="pt-1">
+                          <div className={`border rounded p-2 text-xs ${
+                            entry.rejector?.role === 'FACULTY'
+                              ? 'bg-yellow-50 border-yellow-200' 
+                              : 'bg-red-50 border-red-200'
+                          }`}>
+                            <div className={`font-medium mb-1 ${
+                              entry.rejector?.role === 'FACULTY'
+                                ? 'text-yellow-800' 
+                                : 'text-red-800'
+                            }`}>
+                              Rejected by {entry.rejector ? `${entry.rejector.firstName} ${entry.rejector.lastName}` : 'Supervisor'}
+                            </div>
+                            <div className={`${
+                              entry.rejector?.role === 'FACULTY'
+                                ? 'text-yellow-700' 
+                                : 'text-red-700'
+                            }`}>
+                              <strong>Reason:</strong> {entry.rejectionReason}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -363,6 +409,8 @@ export function TimesheetWeekView({
                   <button
                     onClick={() => onAddEntry(date)}
                     className="text-gray-400 hover:text-gray-600 text-sm"
+                    disabled={hasSubmittedEntries}
+                    title={hasSubmittedEntries ? "Cannot add entries to submitted week" : "Add hours"}
                   >
                     Add Hours
                   </button>

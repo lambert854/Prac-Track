@@ -1,6 +1,6 @@
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcrypt'
+import { randomBytes } from 'crypto'
 import { getServerSession } from 'next-auth'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -20,13 +20,8 @@ export async function POST(
     }
 
     const { id: userId } = await params
-    const { password } = await request.json()
 
-    if (!password || typeof password !== 'string' || password.trim().length === 0) {
-      return NextResponse.json({ error: 'Password is required' }, { status: 400 })
-    }
-
-    // Get the user to reset password for
+    // Get the user to send password reset for
     const user = await prisma.user.findUnique({
       where: { id: userId }
     })
@@ -35,16 +30,16 @@ export async function POST(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Hash the new password
-    const passwordHash = await bcrypt.hash(password.trim(), 12)
+    // Generate a secure reset token
+    const resetToken = randomBytes(32).toString('hex')
+    const resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
-    // Update the user's password
+    // Store the reset token in the database
     await prisma.user.update({
       where: { id: userId },
       data: {
-        passwordHash,
-        resetToken: null, // Clear any existing reset tokens
-        resetTokenExpiry: null
+        resetToken,
+        resetTokenExpiry
       }
     })
 
@@ -52,27 +47,34 @@ export async function POST(
     await prisma.auditLog.create({
       data: {
         userId: session.user.id,
-        action: 'PASSWORD_RESET_BY_ADMIN',
+        action: 'PASSWORD_RESET_LINK_SENT',
         details: JSON.stringify({
           targetUserId: userId,
           targetUserEmail: user.email,
-          resetBy: session.user.email,
-          method: 'direct_admin_reset'
+          sentBy: session.user.email,
+          resetLink: `https://prac-track.com/forgot-password?token=${resetToken}`
         }),
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown'
       }
     })
 
-    console.log(`Password reset by admin for ${user.email}. New password set by ${session.user.email}`)
+    // TODO: Send email with reset link
+    // For now, we'll just return success
+    // In production, you would send an email with the reset link:
+    // https://prac-track.com/forgot-password?token=${resetToken}
+
+    console.log(`Password reset link sent to ${user.email}. Reset token: ${resetToken}`)
+    console.log(`Reset link: https://prac-track.com/forgot-password?token=${resetToken}`)
 
     return NextResponse.json({ 
-      message: 'Password reset successfully',
-      // In development, include the password for testing
-      ...(process.env.NODE_ENV === 'development' && { password: password.trim() })
+      message: 'Password reset link sent successfully',
+      resetLink: `https://prac-track.com/forgot-password?token=${resetToken}`,
+      // In development, include the token for testing
+      ...(process.env.NODE_ENV === 'development' && { resetToken })
     })
 
   } catch (error) {
-    console.error('Password reset error:', error)
+    console.error('Send password reset link error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

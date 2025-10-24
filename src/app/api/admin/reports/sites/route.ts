@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { requireFacultyOrAdmin } from '@/lib/auth-helpers'
+import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
@@ -16,6 +16,9 @@ export async function GET() {
             status: true,
             timesheetEntries: {
               select: { hours: true }
+            },
+            student: {
+              select: { active: true }
             }
           }
         }
@@ -27,7 +30,9 @@ export async function GET() {
       const totalHours = site.placements.reduce((sum, placement) => 
         sum + placement.timesheetEntries.reduce((entrySum, entry) => 
           entrySum + Number(entry.hours), 0), 0)
-      const activeStudents = site.placements.filter(placement => placement.status === 'ACTIVE').length
+      const activeStudents = site.placements.filter(placement => 
+        placement.status === 'ACTIVE' && placement.student.active
+      ).length
 
       return {
         id: site.id,

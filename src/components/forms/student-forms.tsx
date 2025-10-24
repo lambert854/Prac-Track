@@ -1,16 +1,16 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { 
-  DocumentTextIcon, 
-  CheckCircleIcon, 
-  ClockIcon,
-  ExclamationTriangleIcon,
-  EyeIcon,
-  ArrowDownTrayIcon
-} from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import {
+    ArrowDownTrayIcon,
+    CheckCircleIcon,
+    ClockIcon,
+    DocumentTextIcon,
+    ExclamationTriangleIcon,
+    EyeIcon
+} from '@heroicons/react/24/outline'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 
 interface FormSubmission {
   id: string
@@ -137,8 +137,11 @@ export function StudentForms() {
   }
 
   const handleViewUploadedDocument = (documentPath: string) => {
-    // If it&apos;s already a blob URL, open it directly
+    // If it's already a blob URL, open it directly
     if (documentPath.startsWith('https://')) {
+      window.open(documentPath, '_blank')
+    } else if (documentPath.startsWith('/api/documents/')) {
+      // If it already starts with /api/documents/, use it as-is
       window.open(documentPath, '_blank')
     } else {
       // For legacy file paths, use the API route

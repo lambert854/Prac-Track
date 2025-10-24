@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { NotificationTriggers } from '@/lib/notification-triggers'
+import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
   request: NextRequest,
@@ -49,11 +49,11 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // Update placement status to APPROVED_PENDING_CHECKLIST
+    // Update placement status to ACTIVE (single-step approval)
     await prisma.placement.update({
       where: { id: placementId },
       data: {
-        status: 'APPROVED_PENDING_CHECKLIST',
+        status: 'ACTIVE',
         approvedAt: new Date(),
         approvedBy: session.user.id,
       }
@@ -72,8 +72,8 @@ export async function POST(
     }
 
     return NextResponse.json({ 
-      message: 'Placement approved successfully',
-      status: 'APPROVED_PENDING_CHECKLIST'
+      message: 'Placement approved and activated successfully',
+      status: 'ACTIVE'
     })
 
   } catch (error) {

@@ -1,15 +1,12 @@
 'use client'
 
+import {
+    ClockIcon,
+    DocumentTextIcon,
+    UserGroupIcon
+} from '@heroicons/react/24/outline'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { 
-  UserGroupIcon, 
-  ClockIcon, 
-  DocumentTextIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon
-} from '@heroicons/react/24/outline'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 interface SupervisorDashboardProps {
   user: {
@@ -220,26 +217,37 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending Tasks</h2>
           <div className="space-y-3">
-            {pendingTimesheets.map((timesheet: any, index: number) => (
-              <button
-                key={`timesheet-${index}`}
-                onClick={() => handleTaskClick({ type: 'timesheet' })}
-                className="w-full flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 hover:border-yellow-300 transition-colors cursor-pointer text-left"
-              >
-                <div className="flex items-center">
-                  <ClockIcon className="h-5 w-5 text-yellow-600 mr-3" />
-                  <span className="text-sm font-medium text-gray-900">
-                    Approve timesheet for {timesheet.placement?.student?.firstName} {timesheet.placement?.student?.lastName}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
-                    High
-                  </span>
-                  <span className="text-xs text-gray-500">Click to review →</span>
-                </div>
-              </button>
-            ))}
+            {pendingTimesheets.map((timesheet: any, index: number) => {
+              const weekStart = new Date(timesheet.weekStart)
+              const weekEnd = new Date(timesheet.weekEnd)
+              const weekRange = `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`
+              
+              return (
+                <button
+                  key={`timesheet-${index}`}
+                  onClick={() => handleTaskClick({ type: 'timesheet' })}
+                  className="w-full flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 hover:border-yellow-300 transition-colors cursor-pointer text-left"
+                >
+                  <div className="flex items-center">
+                    <ClockIcon className="h-5 w-5 text-yellow-600 mr-3" />
+                    <div>
+                      <span className="text-sm font-medium text-gray-900 block">
+                        Approve timesheet for {timesheet.studentName}
+                      </span>
+                      <span className="text-xs text-gray-600">
+                        Week of {weekRange} • {timesheet.entryCount} entries • {timesheet.totalHours.toFixed(1)} hours
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
+                      High
+                    </span>
+                    <span className="text-xs text-gray-500">Click to review →</span>
+                  </div>
+                </button>
+              )
+            })}
             
             {pendingForms.map((form: any, index: number) => (
               <button

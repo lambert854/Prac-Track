@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(_request: NextRequest) {
   try {
@@ -21,9 +21,14 @@ export async function GET(_request: NextRequest) {
         facultyProfile: true,
         supervisorProfile: true,
       },
-      orderBy: {
-        firstName: 'asc'
-      }
+      orderBy: [
+        {
+          firstName: 'asc'
+        },
+        {
+          lastName: 'asc'
+        }
+      ]
     })
 
     return NextResponse.json(users)

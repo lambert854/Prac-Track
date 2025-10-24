@@ -1,8 +1,9 @@
 'use client'
 
+import { TimesheetRejectionModal } from '@/components/ui/timesheet-rejection-modal'
+import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckIcon, XMarkIcon, EyeIcon } from '@heroicons/react/24/outline'
 
 interface SupervisorTimesheetsProps {
   supervisorId: string
@@ -36,6 +37,7 @@ interface TimesheetGroup {
 export function SupervisorTimesheets({ supervisorId }: SupervisorTimesheetsProps) {
   const [selectedTimesheets, setSelectedTimesheets] = useState<Set<string>>(new Set())
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
+  const [showRejectionModal, setShowRejectionModal] = useState(false)
   const queryClient = useQueryClient()
 
   // Fetch pending timesheets
@@ -53,7 +55,7 @@ export function SupervisorTimesheets({ supervisorId }: SupervisorTimesheetsProps
 
   // Approve/reject timesheets mutation
   const approveTimesheetsMutation = useMutation({
-    mutationFn: async ({ action }: { action: 'approve' | 'reject' }) => {
+    mutationFn: async ({ action, reason }: { action: 'approve' | 'reject'; reason?: string }) => {
       const timesheetIds = Array.from(selectedTimesheets)
       const response = await fetch(`/api/supervisor/${supervisorId}/timesheets/approve`, {
         method: 'POST',
@@ -63,6 +65,7 @@ export function SupervisorTimesheets({ supervisorId }: SupervisorTimesheetsProps
         body: JSON.stringify({
           timesheetIds,
           action,
+          reason,
         }),
       })
 
@@ -76,8 +79,21 @@ export function SupervisorTimesheets({ supervisorId }: SupervisorTimesheetsProps
       queryClient.invalidateQueries({ queryKey: ['supervisor-timesheets', supervisorId] })
       setSelectedTimesheets(new Set())
       setSelectedGroup(null)
+      setShowRejectionModal(false)
     },
   })
+
+  const handleRejectClick = () => {
+    setShowRejectionModal(true)
+  }
+
+  const handleRejectionConfirm = (reason: string) => {
+    approveTimesheetsMutation.mutate({ action: 'reject', reason })
+  }
+
+  const handleRejectionCancel = () => {
+    setShowRejectionModal(false)
+  }
 
   const handleSelectAll = (groupKey: string, entries: TimesheetEntry[]) => {
     if (selectedGroup === groupKey) {
@@ -173,7 +189,7 @@ export function SupervisorTimesheets({ supervisorId }: SupervisorTimesheetsProps
                 Approve Selected
               </button>
               <button
-                onClick={() => approveTimesheetsMutation.mutate({ action: 'reject' })}
+                onClick={handleRejectClick}
                 disabled={approveTimesheetsMutation.isPending}
                 className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -271,6 +287,13 @@ export function SupervisorTimesheets({ supervisorId }: SupervisorTimesheetsProps
           })}
         </div>
       )}
+      {/* Rejection Modal */}
+      <TimesheetRejectionModal
+        isOpen={showRejectionModal}
+        onClose={handleRejectionCancel}
+        onConfirm={handleRejectionConfirm}
+        isLoading={approveTimesheetsMutation.isPending}
+      />
     </div>
   )
 }

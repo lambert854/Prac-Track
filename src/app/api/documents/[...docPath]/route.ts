@@ -1,4 +1,6 @@
+import { readFile } from 'fs/promises'
 import { NextRequest, NextResponse } from 'next/server'
+import { join } from 'path'
 
 export async function GET(
   request: NextRequest,
@@ -14,6 +16,28 @@ export async function GET(
     if (fullPath.startsWith('https://')) {
       // Redirect to the Blob URL directly
       return NextResponse.redirect(fullPath)
+    }
+    
+    // Handle local file paths during development
+    if (!process.env.BLOB_READ_WRITE_TOKEN && fullPath.startsWith('placements/')) {
+      const filePath = join(process.cwd(), 'uploads', fullPath)
+      
+      try {
+        const fileBuffer = await readFile(filePath)
+        return new NextResponse(fileBuffer as BodyInit, {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'inline',
+            'Cache-Control': 'public, max-age=3600'
+          }
+        })
+      } catch (fileError) {
+        console.error('File not found:', filePath, fileError)
+        return NextResponse.json({ 
+          error: 'Document not found',
+          message: 'The requested document could not be found on the server.'
+        }, { status: 404 })
+      }
     }
     
     // Legacy file path handling - redirect to a helpful message

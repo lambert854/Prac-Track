@@ -1,19 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { 
-  ArrowDownTrayIcon, 
-  ChartBarIcon, 
-  ClockIcon, 
-  ExclamationTriangleIcon,
-  UserGroupIcon,
-  BuildingOfficeIcon
-} from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import {
+    ArrowDownTrayIcon,
+    BuildingOfficeIcon,
+    ChartBarIcon,
+    ClockIcon,
+    ExclamationTriangleIcon,
+    UserGroupIcon
+} from '@heroicons/react/24/outline'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 
 interface ReportData {
   totalStudents: number
+  activeStudents: number
   totalSupervisors: number
   totalSites: number
   totalPlacements: number
@@ -30,6 +31,7 @@ interface StudentReport {
   firstName: string
   lastName: string
   email: string
+  active: boolean
   placementCount: number
   totalHours: number
   approvedHours: number
@@ -85,10 +87,11 @@ export function AdminReports() {
     switch (type) {
       case 'students':
         csvContent = [
-          ['Student Name', 'Email', 'Placements', 'Total Hours', 'Approved Hours', 'Missing Evaluations'].join(','),
+          ['Student Name', 'Email', 'Status', 'Placements', 'Total Hours', 'Approved Hours', 'Missing Evaluations'].join(','),
           ...studentReports.map((student: StudentReport) => [
             `${student.firstName} ${student.lastName}`,
             student.email,
+            student.active ? 'Active' : 'Inactive',
             student.placementCount,
             student.totalHours,
             student.approvedHours,
@@ -222,8 +225,9 @@ export function AdminReports() {
               <div className="flex items-center">
                 <UserGroupIcon className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Students</p>
-                  <p className="text-2xl font-bold text-gray-900">{reportData?.totalStudents || 0}</p>
+                  <p className="text-sm font-medium text-gray-600">Active Students</p>
+                  <p className="text-2xl font-bold text-gray-900">{reportData?.activeStudents || 0}</p>
+                  <p className="text-xs text-gray-500">Inactive: {(reportData?.totalStudents || 0) - (reportData?.activeStudents || 0)}</p>
                 </div>
               </div>
             </div>
@@ -332,6 +336,9 @@ export function AdminReports() {
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Placements
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -355,6 +362,15 @@ export function AdminReports() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {student.email}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          student.active 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {student.active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {student.placementCount}
                       </td>
@@ -377,7 +393,7 @@ export function AdminReports() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                       {studentReports === undefined ? 'Loading student data...' : 'No student data available'}
                     </td>
                   </tr>

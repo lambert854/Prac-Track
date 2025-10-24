@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { NotificationTriggers } from '@/lib/notification-triggers'
+import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
   request: NextRequest,
@@ -21,7 +21,7 @@ export async function POST(
     }
 
     const { id: supervisorId } = await params
-    const { timesheetIds, action } = await request.json() // 'approve' or 'reject'
+    const { timesheetIds, action, reason } = await request.json() // 'approve' or 'reject'
 
     if (!Array.isArray(timesheetIds) || timesheetIds.length === 0) {
       return NextResponse.json({ error: 'Invalid timesheet IDs' }, { status: 400 })
@@ -93,6 +93,7 @@ export async function POST(
           status: 'REJECTED' as const,
           rejectedBy: supervisorId,
           rejectedAt: new Date(),
+          rejectionReason: reason || 'No reason provided',
         }
 
     await prisma.timesheetEntry.updateMany({

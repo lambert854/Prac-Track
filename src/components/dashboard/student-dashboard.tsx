@@ -249,6 +249,9 @@ export function StudentDashboard({ user }: StudentDashboardProps) {
                           <li>Compliance Checklist</li>
                         )}
                       </ul>
+                      <p className="text-sm text-yellow-700 mb-4 font-medium">
+                        📅 Due by Week 2 of your Placement
+                      </p>
                       <button 
                         onClick={() => router.push(`/placements/pending/${placement.id}`)}
                         className="btn-primary bg-yellow-600 hover:bg-yellow-700"

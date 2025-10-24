@@ -1,23 +1,22 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
-import { 
-  UserIcon, 
-  AcademicCapIcon, 
-  MapPinIcon, 
-  ClockIcon, 
-  DocumentTextIcon,
-  PencilIcon,
-  TrashIcon,
-  ArrowLeftIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  EyeIcon
-} from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import {
+    AcademicCapIcon,
+    ArrowLeftIcon,
+    CheckCircleIcon,
+    ClockIcon,
+    DocumentTextIcon,
+    EyeIcon,
+    MapPinIcon,
+    TrashIcon,
+    UserIcon,
+    XCircleIcon
+} from '@heroicons/react/24/outline'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { StudentEvaluationsSection } from './student-evaluations-section'
 
 interface StudentDetailViewProps {
@@ -91,6 +90,13 @@ interface Student {
       hours: number
       category: string
       status: string
+      rejectionReason?: string
+      rejectedAt?: string
+      rejector?: {
+        firstName: string
+        lastName: string
+        role: string
+      }
     }>
   }>
 }
@@ -386,20 +392,53 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
                         <h4 className="font-medium text-gray-900 mb-2">Timesheet Entries</h4>
                         <div className="space-y-2">
                           {placement.timesheetEntries.slice(0, 3).map((entry) => (
-                            <div key={entry.id} className="flex items-center justify-between text-sm">
-                              <div className="flex items-center space-x-3">
-                                <ClockIcon className="h-4 w-4 text-gray-400" />
-                                <span>{new Date(entry.date).toLocaleDateString()}</span>
-                                <span>{entry.hours} hours</span>
-                                <span className="text-gray-500">({entry.category})</span>
+                            <div key={entry.id} className="space-y-2">
+                              <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center space-x-3">
+                                  <ClockIcon className="h-4 w-4 text-gray-400" />
+                                  <span>{new Date(entry.date).toLocaleDateString()}</span>
+                                  <span>{entry.hours} hours</span>
+                                  <span className="text-gray-500">({entry.category})</span>
+                                </div>
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                  entry.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                                  entry.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {entry.status}
+                                </span>
                               </div>
-                              <span className={`px-2 py-1 text-xs rounded-full ${
-                                entry.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                                entry.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {entry.status}
-                              </span>
+                              {entry.status === 'REJECTED' && entry.rejectionReason && (
+                                <div className={`ml-7 border rounded p-2 text-xs ${
+                                  entry.rejector?.role === 'FACULTY'
+                                    ? 'bg-yellow-50 border-yellow-200' 
+                                    : 'bg-red-50 border-red-200'
+                                }`}>
+                                  <div className={`font-medium mb-1 ${
+                                    entry.rejector?.role === 'FACULTY'
+                                      ? 'text-yellow-800' 
+                                      : 'text-red-800'
+                                  }`}>
+                                    Rejected by {entry.rejector ? `${entry.rejector.firstName} ${entry.rejector.lastName}` : 'Supervisor'}
+                                    {entry.rejectedAt && (
+                                      <span className={`ml-1 ${
+                                        entry.rejector?.role === 'FACULTY'
+                                          ? 'text-yellow-600' 
+                                          : 'text-red-600'
+                                      }`}>
+                                        ({new Date(entry.rejectedAt).toLocaleDateString()})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className={`${
+                                    entry.rejector?.role === 'FACULTY'
+                                      ? 'text-yellow-700' 
+                                      : 'text-red-700'
+                                  }`}>
+                                    <strong>Reason:</strong> {entry.rejectionReason}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ))}
                           {placement.timesheetEntries.length > 3 && (
@@ -426,103 +465,106 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
               placements={student.studentPlacements}
             />
           </div>
-        </div>
-      </div>
 
-      {/* Student Documents */}
-      <div className="card">
-        <div className="flex items-center mb-4">
-          <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-2" />
-          <h2 className="text-lg font-semibold text-gray-900">Student Documents</h2>
-        </div>
-        
-        <div className="space-y-4">
-          {/* Get all uploaded documents from placements */}
-          {student.studentPlacements.length > 0 ? (
-            student.studentPlacements.map((placement) => {
-              const documents = []
-              
-              // Add placement documents if they exist
-              if (placement.cellPolicy) {
-                documents.push({
-                  id: `cell-policy-${placement.id}`,
-                  name: 'Cell Phone Usage, Confidentiality, Alcohol/Drug Use, and Safety Policy',
-                  type: 'Document Upload',
-                  uploadedAt: placement.approvedAt || placement.startDate,
-                  documentPath: placement.cellPolicy,
-                  siteName: placement.site.name
-                })
-              }
-              
-              if (placement.learningContract) {
-                documents.push({
-                  id: `learning-contract-${placement.id}`,
-                  name: 'Student Learning Contract',
-                  type: 'Document Upload',
-                  uploadedAt: placement.approvedAt || placement.startDate,
-                  documentPath: placement.learningContract,
-                  siteName: placement.site.name
-                })
-              }
-              
-              if (placement.checklist) {
-                documents.push({
-                  id: `checklist-${placement.id}`,
-                  name: 'Placement Checklist',
-                  type: 'Document Upload',
-                  uploadedAt: placement.approvedAt || placement.startDate,
-                  documentPath: placement.checklist,
-                  siteName: placement.site.name
-                })
-              }
-              
-              return documents.map((doc) => (
-                <div key={doc.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <DocumentTextIcon className="h-8 w-8 text-blue-600" />
-                      <div>
-                        <h3 className="font-medium text-gray-900">{doc.name}</h3>
-                        <p className="text-sm text-gray-600">
-                          {doc.siteName} • {doc.type}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
-                        </p>
+          {/* Student Documents */}
+          <div className="card">
+            <div className="flex items-center mb-4">
+              <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-2" />
+              <h2 className="text-lg font-semibold text-gray-900">Student Documents</h2>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Get all uploaded documents from placements */}
+              {student.studentPlacements.length > 0 ? (
+                student.studentPlacements.map((placement) => {
+                  const documents = []
+                  
+                  // Add placement documents if they exist
+                  if (placement.cellPolicy) {
+                    documents.push({
+                      id: `cell-policy-${placement.id}`,
+                      name: 'Cell Phone Usage, Confidentiality, Alcohol/Drug Use, and Safety Policy',
+                      type: 'Document Upload',
+                      uploadedAt: placement.approvedAt || placement.startDate,
+                      documentPath: placement.cellPolicy,
+                      siteName: placement.site.name
+                    })
+                  }
+                  
+                  if (placement.learningContract) {
+                    documents.push({
+                      id: `learning-contract-${placement.id}`,
+                      name: 'Student Learning Contract',
+                      type: 'Document Upload',
+                      uploadedAt: placement.approvedAt || placement.startDate,
+                      documentPath: placement.learningContract,
+                      siteName: placement.site.name
+                    })
+                  }
+                  
+                  if (placement.checklist) {
+                    documents.push({
+                      id: `checklist-${placement.id}`,
+                      name: 'Placement Checklist',
+                      type: 'Document Upload',
+                      uploadedAt: placement.approvedAt || placement.startDate,
+                      documentPath: placement.checklist,
+                      siteName: placement.site.name
+                    })
+                  }
+                  
+                  return documents.map((doc) => (
+                    <div key={doc.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <DocumentTextIcon className="h-8 w-8 text-blue-600" />
+                          <div>
+                            <h3 className="font-medium text-gray-900">{doc.name}</h3>
+                            <p className="text-sm text-gray-600">
+                              {doc.siteName} • {doc.type}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => {
+                              // If it's already a blob URL, open it directly
+                              if (doc.documentPath.startsWith('https://')) {
+                                window.open(doc.documentPath, '_blank')
+                              } else if (doc.documentPath.startsWith('/api/documents/')) {
+                                // If it already starts with /api/documents/, use it as-is
+                                window.open(doc.documentPath, '_blank')
+                              } else {
+                                // For legacy file paths, use the API route
+                                window.open(`/api/documents/${doc.documentPath}`, '_blank')
+                              }
+                            }}
+                            className="bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center"
+                            title="View Document"
+                          >
+                            <EyeIcon className="h-4 w-4 mr-1" />
+                            View
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => {
-                          // If it&apos;s already a blob URL, open it directly
-                          if (doc.documentPath.startsWith('https://')) {
-                            window.open(doc.documentPath, '_blank')
-                          } else {
-                            // For legacy file paths, use the API route
-                            window.open(`/api/documents/${doc.documentPath}`, '_blank')
-                          }
-                        }}
-                        className="bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center"
-                        title="View Document"
-                      >
-                        <EyeIcon className="h-4 w-4 mr-1" />
-                        View
-                      </button>
-                    </div>
-                  </div>
+                  ))
+                }).flat()
+              ) : (
+                <div className="text-center py-8">
+                  <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Uploaded</h3>
+                  <p className="text-gray-600">
+                    This student has not uploaded any documents yet.
+                  </p>
                 </div>
-              ))
-            }).flat()
-          ) : (
-            <div className="text-center py-8">
-              <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Uploaded</h3>
-              <p className="text-gray-600">
-                This student has not uploaded any documents yet.
-              </p>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 

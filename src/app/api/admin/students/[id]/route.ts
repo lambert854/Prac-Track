@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { requireFacultyOrAdmin } from '@/lib/auth-helpers'
+import { prisma } from '@/lib/prisma'
 import { del } from '@vercel/blob'
 import bcrypt from 'bcryptjs'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function PATCH(
   request: NextRequest,
@@ -420,7 +420,16 @@ export async function GET(
                 date: true,
                 hours: true,
                 category: true,
-                status: true
+                status: true,
+                rejectionReason: true,
+                rejectedAt: true,
+                rejector: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                    role: true
+                  }
+                }
               }
             }
           }

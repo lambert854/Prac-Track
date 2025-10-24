@@ -1,25 +1,22 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSession } from 'next-auth/react'
-import { 
-  UserIcon, 
-  AcademicCapIcon, 
-  ClockIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  UserGroupIcon,
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import {
+    CheckCircleIcon,
+    ClockIcon,
+    ExclamationTriangleIcon,
+    PencilIcon,
+    PlusIcon,
+    UserIcon,
+    XMarkIcon
+} from '@heroicons/react/24/outline'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSession } from 'next-auth/react'
+import { useState } from 'react'
+import { ConfirmationModal } from './confirmation-modal'
 import { CreateStudentForm } from './create-student-form'
 import { EditStudentForm } from './edit-student-form'
 import { StudentDetailsModal } from './student-details-modal'
-import { ConfirmationModal } from './confirmation-modal'
 
 interface Student {
   id: string
@@ -93,6 +90,7 @@ export function AdminStudentsManagement() {
   const [studentToDeactivate, setStudentToDeactivate] = useState<Student | null>(null)
   const [studentToReactivate, setStudentToReactivate] = useState<Student | null>(null)
   const [modalAction, setModalAction] = useState<'deactivate' | 'reactivate'>('deactivate')
+  const [activeBadgeFilter, setActiveBadgeFilter] = useState<'all' | 'with-placement' | 'without-placement'>('all')
   const queryClient = useQueryClient()
   const { data: session } = useSession()
 
@@ -151,9 +149,13 @@ export function AdminStudentsManagement() {
       (statusFilter === 'with-placement' && (student.studentPlacements?.length ?? 0) > 0) ||
       (statusFilter === 'without-placement' && (!student.studentPlacements || student.studentPlacements.length === 0))
     
+    const matchesBadgeFilter = activeBadgeFilter === 'all' || 
+      (activeBadgeFilter === 'with-placement' && (student.studentPlacements?.length ?? 0) > 0) ||
+      (activeBadgeFilter === 'without-placement' && (!student.studentPlacements || student.studentPlacements.length === 0))
+    
     const matchesActiveStatus = showInactive ? !student.active : student.active
     
-    return matchesSearch && matchesStatus && matchesActiveStatus
+    return matchesSearch && matchesStatus && matchesBadgeFilter && matchesActiveStatus
   }) || []
 
   // Pagination logic
@@ -174,6 +176,11 @@ export function AdminStudentsManagement() {
 
   const handleFilterChange = (value: string) => {
     setStatusFilter(value)
+    setCurrentPage(1) // Reset to first page when filtering
+  }
+
+  const handleBadgeFilterClick = (filter: 'all' | 'with-placement' | 'without-placement') => {
+    setActiveBadgeFilter(filter)
     setCurrentPage(1) // Reset to first page when filtering
   }
 
@@ -306,7 +313,10 @@ export function AdminStudentsManagement() {
             
             <div className="flex-1 sm:flex-none">
               <button
-                onClick={() => setShowInactive(!showInactive)}
+                onClick={() => {
+                  setShowInactive(!showInactive)
+                  setActiveBadgeFilter('all') // Reset badge filter when switching views
+                }}
                 className={`w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-sm md:text-base ${
                   showInactive
                     ? 'bg-gray-200 text-gray-800'
@@ -323,42 +333,85 @@ export function AdminStudentsManagement() {
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-        <div className="card">
-          <div className="flex items-center">
-            <UserIcon className="h-8 w-8 text-blue-600 mr-3" />
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Students</p>
-              <p className="text-2xl font-bold text-gray-900">{students?.filter((s: Student) => s.active).length || 0}</p>
+      {/* Summary Stats - Only show for active students */}
+      {!showInactive && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+          <button 
+            onClick={() => handleBadgeFilterClick('all')}
+            className={`card transition-all duration-200 hover:shadow-md cursor-pointer ${
+              activeBadgeFilter === 'all' ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+            }`}
+          >
+            <div className="flex items-center">
+              <UserIcon className="h-8 w-8 text-blue-600 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Students</p>
+                <p className="text-2xl font-bold text-gray-900">{students?.filter((s: Student) => s.active).length || 0}</p>
+              </div>
             </div>
+          </button>
+          
+          <button 
+            onClick={() => handleBadgeFilterClick('with-placement')}
+            className={`card transition-all duration-200 hover:shadow-md cursor-pointer ${
+              activeBadgeFilter === 'with-placement' ? 'ring-2 ring-green-500 bg-green-50' : ''
+            }`}
+          >
+            <div className="flex items-center">
+              <CheckCircleIcon className="h-8 w-8 text-green-600 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">With Placements</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {students?.filter((s: Student) => s.active && s.studentPlacements && s.studentPlacements.length > 0).length || 0}
+                </p>
+              </div>
+            </div>
+          </button>
+          
+          <button 
+            onClick={() => handleBadgeFilterClick('without-placement')}
+            className={`card transition-all duration-200 hover:shadow-md cursor-pointer ${
+              activeBadgeFilter === 'without-placement' ? 'ring-2 ring-yellow-500 bg-yellow-50' : ''
+            }`}
+          >
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-gray-600">Without Placements</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {students?.filter((s: Student) => s.active && (!s.studentPlacements || s.studentPlacements.length === 0)).length || 0}
+                </p>
+              </div>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Active Filter Indicator - Only show for active students */}
+      {!showInactive && activeBadgeFilter !== 'all' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd"></path>
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-800">
+                  <strong>Filter Active:</strong> Showing only students {activeBadgeFilter === 'with-placement' ? 'with placements' : 'without placements'} ({filteredStudents.length} of {students?.filter((s: Student) => s.active).length || 0} total)
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => handleBadgeFilterClick('all')}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              Clear Filter
+            </button>
           </div>
         </div>
-        
-        <div className="card">
-          <div className="flex items-center">
-            <CheckCircleIcon className="h-8 w-8 text-green-600 mr-3" />
-            <div>
-              <p className="text-sm font-medium text-gray-600">With Placements</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {students?.filter((s: Student) => s.active && s.studentPlacements && s.studentPlacements.length > 0).length || 0}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="card">
-          <div className="flex items-center">
-            <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600 mr-3" />
-            <div>
-              <p className="text-sm font-medium text-gray-600">Without Placements</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {students?.filter((s: Student) => s.active && (!s.studentPlacements || s.studentPlacements.length === 0)).length || 0}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Students List */}
       <div className="card">

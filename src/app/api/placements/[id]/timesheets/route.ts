@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
+import { canAccessPlacement, requireStudent } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
-import { requireStudent, canAccessPlacement } from '@/lib/auth-helpers'
-import { z } from 'zod'
 import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 
 const createTimesheetEntrySchema = z.object({
   date: z.string().min(1, 'Date is required'),
@@ -78,6 +78,7 @@ export async function GET(
           select: {
             firstName: true,
             lastName: true,
+            role: true,
           },
         },
       },
@@ -211,6 +212,7 @@ export async function POST(
           select: {
             firstName: true,
             lastName: true,
+            role: true,
           },
         },
       },

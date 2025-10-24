@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import { z } from 'zod'
-import { XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 
 const timesheetEntrySchema = z.object({
   date: z.string().min(1, 'Date is required'),
@@ -24,6 +24,14 @@ interface TimesheetEntry {
   category: string
   notes?: string
   locked: boolean
+  submittedAt?: string
+  rejectionReason?: string
+  rejectedAt?: string
+  rejector?: {
+    firstName: string
+    lastName: string
+    role: string
+  }
 }
 
 interface TimesheetEntryFormProps {
@@ -36,6 +44,9 @@ interface TimesheetEntryFormProps {
 export function TimesheetEntryForm({ placementId, date, entry, onClose }: TimesheetEntryFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const queryClient = useQueryClient()
+  
+  // Determine if this is a view-only mode (submitted entry)
+  const isViewOnly = entry?.submittedAt !== null && entry?.submittedAt !== undefined
 
   // Check if placement has supervisor assigned
   const { data: supervisorData, isLoading: checkingSupervisor } = useQuery({
@@ -113,6 +124,11 @@ export function TimesheetEntryForm({ placementId, date, entry, onClose }: Timesh
   })
 
   const onSubmit = async (data: TimesheetEntryData) => {
+    // Prevent submission in view-only mode
+    if (isViewOnly) {
+      return
+    }
+    
     setIsSubmitting(true)
     try {
       await createOrUpdateEntryMutation.mutateAsync(data)
@@ -156,7 +172,7 @@ export function TimesheetEntryForm({ placementId, date, entry, onClose }: Timesh
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            {entry ? 'Edit Timesheet Entry' : 'Add Timesheet Entry'}
+            {isViewOnly ? 'View Timesheet Entry' : entry ? 'Edit Timesheet Entry' : 'Add Timesheet Entry'}
           </h2>
           <button
             onClick={onClose}
@@ -203,7 +219,7 @@ export function TimesheetEntryForm({ placementId, date, entry, onClose }: Timesh
               {...register('date')}
               type="date"
               className="form-input"
-              disabled={!!entry?.locked}
+              disabled={!!entry?.locked || isViewOnly}
             />
             {errors.date && (
               <p className="form-error">{errors.date.message}</p>
@@ -222,7 +238,7 @@ export function TimesheetEntryForm({ placementId, date, entry, onClose }: Timesh
               max="24"
               className="form-input"
               placeholder="Enter hours worked"
-              disabled={!!entry?.locked}
+              disabled={!!entry?.locked || isViewOnly}
             />
             {errors.hours && (
               <p className="form-error">{errors.hours.message}</p>
@@ -236,7 +252,7 @@ export function TimesheetEntryForm({ placementId, date, entry, onClose }: Timesh
             <select
               {...register('category')}
               className="form-input"
-              disabled={!!entry?.locked}
+              disabled={!!entry?.locked || isViewOnly}
             >
               {categoryOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -258,18 +274,62 @@ export function TimesheetEntryForm({ placementId, date, entry, onClose }: Timesh
               rows={3}
               className="form-input"
               placeholder="Describe your activities..."
-              disabled={!!entry?.locked}
+              disabled={!!entry?.locked || isViewOnly}
             />
             {errors.notes && (
               <p className="form-error">{errors.notes.message}</p>
             )}
           </div>
 
-          {entry?.locked && (
+          {(entry?.locked || isViewOnly) && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-yellow-800 text-sm">
-                This entry has been approved and cannot be modified.
+                {isViewOnly 
+                  ? 'This entry has been submitted and cannot be modified.' 
+                  : 'This entry has been approved and cannot be modified.'
+                }
               </p>
+            </div>
+          )}
+
+          {entry?.rejectionReason && (
+            <div className={`border rounded-lg p-3 ${
+              entry.rejector?.role === 'FACULTY'
+                ? 'bg-yellow-50 border-yellow-200' 
+                : 'bg-red-50 border-red-200'
+            }`}>
+              <div className="flex items-start">
+                <ExclamationTriangleIcon className={`h-5 w-5 mt-0.5 mr-2 flex-shrink-0 ${
+                  entry.rejector?.role === 'FACULTY'
+                    ? 'text-yellow-600' 
+                    : 'text-red-600'
+                }`} />
+                <div>
+                  <p className={`text-sm font-medium mb-1 ${
+                    entry.rejector?.role === 'FACULTY'
+                      ? 'text-yellow-800' 
+                      : 'text-red-800'
+                  }`}>
+                    Rejected by {entry.rejector ? `${entry.rejector.firstName} ${entry.rejector.lastName}` : 'Supervisor'}
+                    {entry.rejectedAt && (
+                      <span className={`text-xs ml-2 ${
+                        entry.rejector?.role === 'FACULTY'
+                          ? 'text-yellow-600' 
+                          : 'text-red-600'
+                      }`}>
+                        ({new Date(entry.rejectedAt).toLocaleDateString()})
+                      </span>
+                    )}
+                  </p>
+                  <p className={`text-sm ${
+                    entry.rejector?.role === 'FACULTY'
+                      ? 'text-yellow-700' 
+                      : 'text-red-700'
+                  }`}>
+                    <strong>Reason:</strong> {entry.rejectionReason}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -291,7 +351,7 @@ export function TimesheetEntryForm({ placementId, date, entry, onClose }: Timesh
 
           <div className="flex items-center justify-between pt-6 border-t border-gray-200">
             <div>
-              {entry && !entry.locked && (
+              {entry && !entry.locked && !isViewOnly && (
                 <button
                   type="button"
                   onClick={handleDelete}
@@ -312,20 +372,22 @@ export function TimesheetEntryForm({ placementId, date, entry, onClose }: Timesh
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="btn-primary flex items-center"
-                disabled={isSubmitting || !!entry?.locked}
-              >
-                {isSubmitting ? (
-                  <>
-                    <LoadingSpinner size="sm" className="mr-2" />
-                    Saving...
-                  </>
-                ) : (
-                  entry ? 'Update Entry' : 'Add Entry'
-                )}
-              </button>
+              {!isViewOnly && (
+                <button
+                  type="submit"
+                  className="btn-primary flex items-center"
+                  disabled={isSubmitting || !!entry?.locked}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    entry ? 'Update Entry' : 'Add Entry'
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </form>

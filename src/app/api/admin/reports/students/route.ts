@@ -1,18 +1,19 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { requireFacultyOrAdmin } from '@/lib/auth-helpers'
+import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
     const session = await requireFacultyOrAdmin()
 
     const students = await prisma.user.findMany({
-      where: { role: 'STUDENT' },
+      where: { role: 'STUDENT' }, // Include all students (active + inactive)
       select: {
         id: true,
         firstName: true,
         lastName: true,
         email: true,
+        active: true, // Include active status
         studentPlacements: {
           select: {
             id: true,
@@ -45,6 +46,7 @@ export async function GET() {
         firstName: student.firstName,
         lastName: student.lastName,
         email: student.email,
+        active: student.active, // Include active status
         placementCount,
         totalHours,
         approvedHours,

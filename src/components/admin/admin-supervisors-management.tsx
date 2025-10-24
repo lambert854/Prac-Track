@@ -1,24 +1,21 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { 
-  UserGroupIcon, 
-  UserIcon,
-  BuildingOfficeIcon,
-  PencilIcon,
-  TrashIcon,
-  EnvelopeIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  XMarkIcon,
-  DocumentCheckIcon,
-  EyeIcon
-} from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { EditSupervisorForm } from './edit-supervisor-form'
+import {
+    BuildingOfficeIcon,
+    CheckCircleIcon,
+    ClockIcon,
+    EnvelopeIcon,
+    PencilIcon,
+    TrashIcon,
+    UserGroupIcon,
+    UserIcon,
+    XMarkIcon
+} from '@heroicons/react/24/outline'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { DeleteSupervisorModal } from './delete-supervisor-modal'
-import { ConfirmationModal } from './confirmation-modal'
+import { EditSupervisorForm } from './edit-supervisor-form'
 import { SupervisorEvaluationsSection } from './supervisor-evaluations-section'
 
 interface Supervisor {
@@ -87,6 +84,8 @@ export function AdminSupervisorsManagement() {
   const [deletingSupervisor, setDeletingSupervisor] = useState<Supervisor | null>(null)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [selectedSupervisorForEmail, setSelectedSupervisorForEmail] = useState<Supervisor | null>(null)
+  const [activeBadgeFilter, setActiveBadgeFilter] = useState<'all' | 'with-placements' | 'without-placements'>('all')
+  const [showPendingSection, setShowPendingSection] = useState(true)
   const queryClient = useQueryClient()
 
   const { data: data, isLoading, error } = useQuery({
@@ -209,14 +208,28 @@ Best regards,
 
   const filteredSupervisors = supervisors?.filter((supervisor: Supervisor) => {
     const searchLower = searchQuery.toLowerCase()
-    return (
+    const matchesSearch = (
       supervisor.firstName.toLowerCase().includes(searchLower) ||
       supervisor.lastName.toLowerCase().includes(searchLower) ||
       supervisor.email.toLowerCase().includes(searchLower) ||
       supervisor.supervisorProfile?.site?.name?.toLowerCase().includes(searchLower) ||
       supervisor.supervisorProfile?.title?.toLowerCase().includes(searchLower)
     )
+    
+    const matchesBadgeFilter = activeBadgeFilter === 'all' || 
+      (activeBadgeFilter === 'with-placements' && (supervisor.supervisorPlacements?.length ?? 0) > 0) ||
+      (activeBadgeFilter === 'without-placements' && (!supervisor.supervisorPlacements || supervisor.supervisorPlacements.length === 0))
+    
+    return matchesSearch && matchesBadgeFilter
   }) || []
+
+  const handleBadgeFilterClick = (filter: 'all' | 'with-placements' | 'without-placements') => {
+    setActiveBadgeFilter(filter)
+  }
+
+  const handlePendingApprovalClick = () => {
+    setShowPendingSection(!showPendingSection)
+  }
 
   if (isLoading) {
     return (
@@ -259,7 +272,12 @@ Best regards,
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card">
+        <button 
+          onClick={() => handleBadgeFilterClick('all')}
+          className={`card transition-all duration-200 hover:shadow-md cursor-pointer ${
+            activeBadgeFilter === 'all' ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+          }`}
+        >
           <div className="flex items-center">
             <UserGroupIcon className="h-8 w-8 text-blue-600 mr-3" />
             <div>
@@ -267,9 +285,14 @@ Best regards,
               <p className="text-2xl font-bold text-gray-900">{supervisors?.length || 0}</p>
             </div>
           </div>
-        </div>
+        </button>
         
-        <div className="card">
+        <button 
+          onClick={handlePendingApprovalClick}
+          className={`card transition-all duration-200 hover:shadow-md cursor-pointer ${
+            !showPendingSection ? 'ring-2 ring-orange-500 bg-orange-50' : ''
+          }`}
+        >
           <div className="flex items-center">
             <ClockIcon className="h-8 w-8 text-orange-600 mr-3" />
             <div>
@@ -277,9 +300,14 @@ Best regards,
               <p className="text-2xl font-bold text-gray-900">{pendingSupervisors?.length || 0}</p>
             </div>
           </div>
-        </div>
+        </button>
         
-        <div className="card">
+        <button 
+          onClick={() => handleBadgeFilterClick('with-placements')}
+          className={`card transition-all duration-200 hover:shadow-md cursor-pointer ${
+            activeBadgeFilter === 'with-placements' ? 'ring-2 ring-green-500 bg-green-50' : ''
+          }`}
+        >
           <div className="flex items-center">
             <UserIcon className="h-8 w-8 text-green-600 mr-3" />
             <div>
@@ -289,24 +317,78 @@ Best regards,
               </p>
             </div>
           </div>
-        </div>
+        </button>
         
-        <div className="card">
+        <button 
+          onClick={() => handleBadgeFilterClick('without-placements')}
+          className={`card transition-all duration-200 hover:shadow-md cursor-pointer ${
+            activeBadgeFilter === 'without-placements' ? 'ring-2 ring-purple-500 bg-purple-50' : ''
+          }`}
+        >
           <div className="flex items-center">
             <BuildingOfficeIcon className="h-8 w-8 text-purple-600 mr-3" />
             <div>
-              <p className="text-sm font-medium text-gray-600">Active Placements</p>
+              <p className="text-sm font-medium text-gray-600">Without Placements</p>
               <p className="text-2xl font-bold text-gray-900">
-                {supervisors?.reduce((total: number, s: Supervisor) => 
-                  total + (s.supervisorPlacements?.filter(p => p.status === 'ACTIVE').length || 0), 0) || 0}
+                {supervisors?.filter((s: Supervisor) => !s.supervisorPlacements || s.supervisorPlacements.length === 0).length || 0}
               </p>
             </div>
           </div>
-        </div>
+        </button>
       </div>
 
+      {/* Active Filter Indicator */}
+      {activeBadgeFilter !== 'all' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd"></path>
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-800">
+                  <strong>Filter Active:</strong> Showing only supervisors {activeBadgeFilter === 'with-placements' ? 'with placements' : 'without placements'} ({filteredSupervisors.length} of {supervisors?.length || 0} total)
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => handleBadgeFilterClick('all')}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              Clear Filter
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Section Hidden Indicator */}
+      {pendingSupervisors.length > 0 && !showPendingSection && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <ClockIcon className="h-5 w-5 text-orange-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-orange-800">
+                  <strong>Pending Section Hidden:</strong> {pendingSupervisors.length} supervisor(s) awaiting approval are hidden. Click the "Pending Approval" badge to show them.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPendingSection(true)}
+              className="text-orange-600 hover:text-orange-800 text-sm font-medium"
+            >
+              Show Pending
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Pending Supervisors Section */}
-      {pendingSupervisors.length > 0 && (
+      {pendingSupervisors.length > 0 && showPendingSection && (
         <>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Pending Supervisor Approvals</h2>

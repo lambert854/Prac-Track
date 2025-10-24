@@ -39,6 +39,7 @@ model User {
   supervisorProfile            SupervisorProfile?
   rejectedTimesheets           TimesheetEntry[]         @relation("RejectedTimesheets")
   facultyApprovedTimesheets    TimesheetEntry[]         @relation("FacultyApprovedTimesheets")
+  facultyViewedTimesheets      TimesheetEntry[]         @relation("FacultyViewedTimesheets")
   supervisorApprovedTimesheets TimesheetEntry[]         @relation("SupervisorApprovedTimesheets")
 
   @@map("users")
@@ -292,9 +293,12 @@ model TimesheetEntry {
   rejectedAt           DateTime?
   rejectedBy           String?
   rejectionReason      String?
+  facultyViewedAt      DateTime?
+  facultyViewedBy      String?
   locked               Boolean           @default(false)
   rejector             User?             @relation("RejectedTimesheets", fields: [rejectedBy], references: [id])
   facultyApprover      User?             @relation("FacultyApprovedTimesheets", fields: [facultyApprovedBy], references: [id])
+  facultyViewer        User?             @relation("FacultyViewedTimesheets", fields: [facultyViewedBy], references: [id])
   supervisorApprover   User?             @relation("SupervisorApprovedTimesheets", fields: [supervisorApprovedBy], references: [id])
   placement            Placement         @relation(fields: [placementId], references: [id], onDelete: Cascade)
 

@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { DocumentArrowDownIcon, DocumentArrowUpIcon, EyeIcon, TrashIcon } from '@heroicons/react/24/outline'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ConfirmationModal } from '@/components/admin/confirmation-modal'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { RejectionModal } from '@/components/ui/rejection-modal'
+import { DocumentArrowDownIcon, DocumentArrowUpIcon, EyeIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 interface PlacementPendingApplicationProps {
   placementId: string
@@ -64,6 +65,8 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [docToDelete, setDocToDelete] = useState<string | null>(null)
+  const [showRejectionModal, setShowRejectionModal] = useState(false)
+  const [rejectionType, setRejectionType] = useState<'placement' | 'supervisor' | null>(null)
   const queryClient = useQueryClient()
 
   const { data: placement, isLoading, error } = useQuery<Placement>({
@@ -179,27 +182,6 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
     },
   })
 
-  const activatePlacementMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch(`/api/placements/${placementId}/activate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to complete approval')
-      }
-
-      return response.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['placement', placementId] })
-      // TODO: Send notification to student when placement is activated
-      window.location.reload() // Refresh to show new status
-    },
-  })
-
   const handleFileUpload = (docType: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     console.log('File upload triggered:', { docType, file: file ? { name: file.name, type: file.type, size: file.size } : null })
@@ -235,6 +217,29 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
     }
   }
 
+  const handleRejectionClick = (type: 'placement' | 'supervisor') => {
+    setRejectionType(type)
+    setShowRejectionModal(true)
+  }
+
+  const handleRejectionConfirm = (reason: string) => {
+    if (rejectionType === 'placement') {
+      rejectPlacementMutation.mutate({ reason })
+    } else if (rejectionType === 'supervisor' && placement?.pendingSupervisor) {
+      rejectPendingSupervisorMutation.mutate({
+        id: placement.pendingSupervisor.id,
+        reason
+      })
+    }
+    setShowRejectionModal(false)
+    setRejectionType(null)
+  }
+
+  const handleRejectionCancel = () => {
+    setShowRejectionModal(false)
+    setRejectionType(null)
+  }
+
   const cancelDeleteDocument = () => {
     setShowDeleteModal(false)
     setDocToDelete(null)
@@ -245,8 +250,11 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
   }
 
   const viewDocument = (docPath: string) => {
-    // If it&apos;s already a blob URL, open it directly
+    // If it's already a blob URL, open it directly
     if (docPath.startsWith('https://')) {
+      window.open(docPath, '_blank')
+    } else if (docPath.startsWith('/api/documents/')) {
+      // If it already starts with /api/documents/, use it as-is
       window.open(docPath, '_blank')
     } else {
       // For legacy file paths, use the API route
@@ -324,11 +332,11 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
         <div className="flex items-center space-x-4 text-sm text-gray-600">
           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
             placement.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-            placement.status === 'APPROVED_PENDING_CHECKLIST' ? 'bg-green-100 text-green-800' :
             placement.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
             'bg-gray-100 text-gray-800'
           }`}>
-            {placement.status === 'PENDING' ? 'Pending Review' : 'Approved'}
+            {placement.status === 'PENDING' ? 'Pending Review' : 
+             placement.status === 'ACTIVE' ? 'Approved & Active' : 'Unknown'}
           </span>
           <span>Student: {placement.student.firstName} {placement.student.lastName}</span>
           <span>Class: {placement.class?.name || 'Unknown Class'}</span>
@@ -415,15 +423,7 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
                     )}
                   </button>
                   <button
-                    onClick={() => {
-                      const reason = prompt('Please provide a reason for rejection:')
-                      if (reason && reason.trim()) {
-                        rejectPendingSupervisorMutation.mutate({
-                          id: placement.pendingSupervisor!.id,
-                          reason: reason.trim()
-                        })
-                      }
-                    }}
+                    onClick={() => handleRejectionClick('supervisor')}
                     disabled={rejectPendingSupervisorMutation.isPending}
                     className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   >
@@ -694,12 +694,7 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
               )}
             </button>
             <button
-              onClick={() => {
-                const reason = prompt('Please provide a reason for rejection:')
-                if (reason && reason.trim()) {
-                  rejectPlacementMutation.mutate({ reason: reason.trim() })
-                }
-              }}
+              onClick={() => handleRejectionClick('placement')}
               disabled={rejectPlacementMutation.isPending}
               className="btn-outline text-red-600 border-red-600 hover:bg-red-50 flex items-center"
             >
@@ -728,54 +723,6 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
         </div>
       )}
 
-      {/* Faculty Actions for Checklist Phase */}
-      {isFaculty && placement.status === 'APPROVED_PENDING_CHECKLIST' && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Checklist Phase - Faculty Actions</h2>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => activatePlacementMutation.mutate()}
-              disabled={activatePlacementMutation.isPending}
-              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-            >
-              {activatePlacementMutation.isPending ? (
-                <>
-                  <LoadingSpinner size="sm" className="mr-2" />
-                  Completing...
-                </>
-              ) : (
-                'Complete Approval'
-              )}
-            </button>
-            <button
-              onClick={() => {
-                const reason = prompt('Please provide a reason for rejection:')
-                if (reason && reason.trim()) {
-                  rejectPlacementMutation.mutate({ reason: reason.trim() })
-                }
-              }}
-              disabled={rejectPlacementMutation.isPending}
-              className="btn-outline text-red-600 border-red-600 hover:bg-red-50 flex items-center"
-            >
-              {rejectPlacementMutation.isPending ? (
-                <>
-                  <LoadingSpinner size="sm" className="mr-2" />
-                  Rejecting...
-                </>
-              ) : (
-                'Reject Placement'
-              )}
-            </button>
-          </div>
-            {(activatePlacementMutation.error || rejectPlacementMutation.error || approvePendingSupervisorMutation.error || rejectPendingSupervisorMutation.error) && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4">
-                <p className="text-red-600 text-sm">
-                  {activatePlacementMutation.error?.message || rejectPlacementMutation.error?.message || approvePendingSupervisorMutation.error?.message || rejectPendingSupervisorMutation.error?.message}
-                </p>
-              </div>
-            )}
-        </div>
-      )}
 
       {/* Placement Activated Success Message */}
       {placement.status === 'ACTIVE' && (
@@ -820,6 +767,26 @@ export function PlacementPendingApplication({ placementId, userRole }: Placement
         onCancel={cancelDeleteDocument}
         isLoading={deleteDocumentMutation.isPending}
         variant="danger"
+      />
+
+      {/* Rejection Modal */}
+      <RejectionModal
+        isOpen={showRejectionModal}
+        onClose={handleRejectionCancel}
+        onConfirm={handleRejectionConfirm}
+        title={rejectionType === 'supervisor' ? 'Reject Supervisor' : 'Reject Application'}
+        description={rejectionType === 'supervisor' 
+          ? 'Please provide a reason for rejecting this supervisor. This reason will be shared with the student.'
+          : 'Please provide a reason for rejecting this application. This reason will be shared with the student.'
+        }
+        placeholder={rejectionType === 'supervisor' 
+          ? 'Enter reason for rejecting this supervisor...'
+          : 'Enter reason for rejecting this application...'
+        }
+        isLoading={rejectionType === 'supervisor' 
+          ? rejectPendingSupervisorMutation.isPending 
+          : rejectPlacementMutation.isPending
+        }
       />
     </div>
   )
