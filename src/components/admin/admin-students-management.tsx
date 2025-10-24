@@ -237,7 +237,7 @@ export function AdminStudentsManagement() {
     
     const activePlacement = student.studentPlacements.find(p => p.status === 'ACTIVE')
     if (activePlacement) {
-      return { status: 'Active Placement', color: 'text-green-600', icon: CheckCircleIcon }
+      return { status: 'Active', color: 'text-green-600', icon: CheckCircleIcon }
     }
     
     const pendingPlacement = student.studentPlacements.find(p => p.status === 'PENDING')
@@ -245,7 +245,13 @@ export function AdminStudentsManagement() {
       return { status: 'Pending Placement', color: 'text-yellow-600', icon: ClockIcon }
     }
     
-    return { status: 'Completed', color: 'text-blue-600', icon: CheckCircleIcon }
+    const completedPlacement = student.studentPlacements.find(p => p.status === 'COMPLETE')
+    if (completedPlacement) {
+      return { status: 'Completed', color: 'text-blue-600', icon: CheckCircleIcon }
+    }
+    
+    // For any other status (APPROVED, APPROVED_PENDING_CHECKLIST, etc.), show as Active
+    return { status: 'Active', color: 'text-green-600', icon: CheckCircleIcon }
   }
 
   if (isLoading) {
