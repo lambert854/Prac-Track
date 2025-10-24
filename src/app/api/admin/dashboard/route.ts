@@ -40,7 +40,7 @@ export async function GET(_request: NextRequest) {
       // Total counts
       prisma.user.count({ where: { role: 'STUDENT', active: true } }),
       prisma.site.count({ where: { active: true } }),
-      prisma.placement.count({ where: { status: 'APPROVED' } }),
+      prisma.placement.count({ where: { status: 'ACTIVE' } }),
       prisma.user.count({ where: { role: 'FACULTY', active: true } }),
       prisma.user.count({ where: { role: 'SUPERVISOR', active: true } }),
       
@@ -58,7 +58,7 @@ export async function GET(_request: NextRequest) {
           active: true,
           studentPlacements: {
             none: {
-              status: 'APPROVED'
+              status: 'ACTIVE'
             }
           }
         }
