@@ -634,13 +634,15 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         placement.status === 'ACTIVE' 
                           ? 'bg-green-100 text-green-800'
+                          : placement.status === 'APPROVED_PENDING_CHECKLIST'
+                          ? 'bg-green-100 text-green-800'
                           : placement.status === 'PENDING'
                           ? 'bg-yellow-100 text-yellow-800'
                           : placement.status === 'COMPLETE'
                           ? 'bg-gray-100 text-gray-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {placement.status}
+                        {placement.status === 'APPROVED_PENDING_CHECKLIST' ? 'Approved' : placement.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
