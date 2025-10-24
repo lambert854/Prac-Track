@@ -56,6 +56,7 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
     assignedStudents = [], 
     pendingTimesheets = [], 
     pendingForms = [], 
+    pendingEvaluations = [],
     summaryStats = {} 
   } = dashboardData || {}
 
@@ -75,7 +76,7 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <button 
           onClick={() => router.push('/supervisor/students')}
           className="card card-hover cursor-pointer"
@@ -98,6 +99,19 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
             <div>
               <p className="text-sm font-medium text-gray-600">Pending Timesheets</p>
               <p className="text-2xl font-bold text-gray-900">{summaryStats.pendingTimesheets || 0}</p>
+            </div>
+          </div>
+        </button>
+        
+        <button 
+          onClick={() => router.push('/supervisor/forms')}
+          className="card card-hover cursor-pointer"
+        >
+          <div className="flex items-center">
+            <DocumentTextIcon className="h-8 w-8 text-green-600 mr-3" />
+            <div>
+              <p className="text-sm font-medium text-gray-600">Pending Evaluations</p>
+              <p className="text-2xl font-bold text-gray-900">{summaryStats.pendingEvaluations || 0}</p>
             </div>
           </div>
         </button>
@@ -213,7 +227,7 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
       )}
 
       {/* Pending Tasks */}
-      {(pendingTimesheets.length > 0 || pendingForms.length > 0) && (
+      {(pendingTimesheets.length > 0 || pendingForms.length > 0 || pendingEvaluations.length > 0) && (
         <div className="card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending Tasks</h2>
           <div className="space-y-3">
@@ -266,6 +280,37 @@ export function SupervisorDashboard({ user }: SupervisorDashboardProps) {
                     Medium
                   </span>
                   <span className="text-xs text-gray-500">Click to review →</span>
+                </div>
+              </button>
+            ))}
+
+            {pendingEvaluations.map((evaluation: any, index: number) => (
+              <button
+                key={`evaluation-${index}`}
+                onClick={() => router.push(evaluation.submissionUrl)}
+                className="w-full flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 hover:border-green-300 transition-colors cursor-pointer text-left"
+              >
+                <div className="flex items-center">
+                  <DocumentTextIcon className="h-5 w-5 text-green-600 mr-3" />
+                  <div>
+                    <span className="text-sm font-medium text-gray-900 block">
+                      {evaluation.title}
+                    </span>
+                    <span className="text-xs text-gray-600">
+                      Student: {evaluation.studentName} • {evaluation.evaluationType === 'MIDTERM' ? 'Mid-Term' : 'Final'} Evaluation
+                    </span>
+                    {evaluation.message && (
+                      <span className="text-xs text-gray-500 block mt-1 italic">
+                        "{evaluation.message}"
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                    High
+                  </span>
+                  <span className="text-xs text-gray-500">Click to complete →</span>
                 </div>
               </button>
             ))}

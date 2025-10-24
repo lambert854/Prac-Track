@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
-import { EvaluationConfig } from '@/config/evaluation.config'
+import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 
 interface Field {
   id: string
@@ -29,13 +28,17 @@ interface SchemaFormProps {
   lastSavedAt?: Date | null
 }
 
-export function SchemaForm({ 
+export interface SchemaFormRef {
+  saveCurrentPage: () => Promise<void>
+}
+
+export const SchemaForm = forwardRef<SchemaFormRef, SchemaFormProps>(({ 
   pages, 
   initialAnswers, 
   onSave, 
   isLocked,
   lastSavedAt,
-}: SchemaFormProps) {
+}, ref) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, number | string>>(initialAnswers)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -46,6 +49,15 @@ export function SchemaForm({
 
   const currentPage = pages[currentPageIndex]
 
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    saveCurrentPage: async () => {
+      if (hasUnsavedChanges.current) {
+        await handleSave(answers, currentPage.id)
+      }
+    }
+  }))
+
   // Auto-save effect
   useEffect(() => {
     if (isLocked || !hasUnsavedChanges.current) return
@@ -55,231 +67,159 @@ export function SchemaForm({
       clearTimeout(autoSaveTimerRef.current)
     }
 
-    // Set new timer
+    // Set new timer for auto-save
     autoSaveTimerRef.current = setTimeout(async () => {
-      await saveProgress()
-    }, EvaluationConfig.AUTOSAVE_MS)
+      try {
+        await handleSave(answers, currentPage.id)
+        setLastAutoSave(new Date())
+        hasUnsavedChanges.current = false
+      } catch (error) {
+        console.error('Auto-save failed:', error)
+      }
+    }, 2000) // Auto-save after 2 seconds of inactivity
 
     return () => {
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current)
       }
     }
-  }, [answers, isLocked])
+  }, [answers, currentPage.id, isLocked])
 
-  const saveProgress = useCallback(async () => {
-    if (isLocked || !hasUnsavedChanges.current) return
+  // Update answers when initialAnswers change
+  useEffect(() => {
+    setAnswers(initialAnswers)
+  }, [initialAnswers])
+
+  const handleSave = useCallback(async (answersToSave: Record<string, number | string>, pageId?: string) => {
+    if (isLocked) return
 
     setIsSaving(true)
     try {
-      await onSave(answers, currentPage.id)
-      setLastAutoSave(new Date())
+      await onSave(answersToSave, pageId)
       hasUnsavedChanges.current = false
     } catch (error) {
-      console.error('Auto-save failed:', error)
+      console.error('Save failed:', error)
     } finally {
       setIsSaving(false)
     }
-  }, [answers, currentPage.id, isLocked, onSave])
+  }, [onSave, isLocked])
 
-  const handleAnswerChange = (fieldId: string, value: number | string) => {
-    setAnswers(prev => ({ ...prev, [fieldId]: value }))
-    setErrors(prev => {
-      const newErrors = { ...prev }
-      delete newErrors[fieldId]
-      return newErrors
-    })
+  const handleFieldChange = useCallback((fieldId: string, value: number | string) => {
+    if (isLocked) return
+
+    setAnswers(prev => ({
+      ...prev,
+      [fieldId]: value
+    }))
     hasUnsavedChanges.current = true
-  }
 
-  const validateCurrentPage = (): boolean => {
-    const newErrors: Record<string, string> = {}
-    
-    for (const field of currentPage.fields) {
-      if (field.required) {
-        const value = answers[field.id]
-        if (value === undefined || value === null || value === '') {
-          newErrors[field.id] = 'This field is required'
-        }
-      }
+    // Clear any existing error for this field
+    if (errors[fieldId]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[fieldId]
+        return newErrors
+      })
     }
+  }, [isLocked, errors])
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleNext = async () => {
-    if (!validateCurrentPage()) {
-      // Scroll to first error
-      const firstErrorField = Object.keys(errors)[0]
-      document.getElementById(firstErrorField)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      return
-    }
-
-    // Save before moving to next page
-    await saveProgress()
-
+  const handleNext = useCallback(async () => {
     if (currentPageIndex < pages.length - 1) {
-      setCurrentPageIndex(currentPageIndex + 1)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      // Save current page before moving to next
+      await handleSave(answers, currentPage.id)
+      setCurrentPageIndex(prev => prev + 1)
     }
-  }
+  }, [currentPageIndex, pages.length, handleSave, answers, currentPage.id])
 
-  const handlePrevious = async () => {
-    // Save before moving to previous page
-    await saveProgress()
-
+  const handlePrevious = useCallback(async () => {
     if (currentPageIndex > 0) {
-      setCurrentPageIndex(currentPageIndex - 1)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      // Save current page before moving to previous
+      await handleSave(answers, currentPage.id)
+      setCurrentPageIndex(prev => prev - 1)
     }
-  }
+  }, [currentPageIndex, handleSave, answers, currentPage.id])
 
-  const calculateProgress = (): number => {
-    let answeredRequired = 0
-    let totalRequired = 0
+  const renderField = (field: Field) => {
+    const value = answers[field.id] || ''
 
-    for (const page of pages) {
-      for (const field of page.fields) {
-        if (field.required) {
-          totalRequired++
-          const value = answers[field.id]
-          if (value !== undefined && value !== null && value !== '') {
-            answeredRequired++
-          }
-        }
-      }
+    if (field.type === 'single-select' && field.options) {
+      return (
+        <div className="space-y-2">
+          {field.options.map((option) => (
+            <label key={option.value} className="flex items-center">
+              <input
+                type="radio"
+                name={field.id}
+                value={option.value}
+                checked={value === option.value}
+                onChange={(e) => handleFieldChange(field.id, parseInt(e.target.value))}
+                disabled={isLocked}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <span className="ml-3 text-sm text-gray-700">{option.label}</span>
+            </label>
+          ))}
+        </div>
+      )
     }
 
-    return totalRequired > 0 ? (answeredRequired / totalRequired) * 100 : 0
-  }
+    if (field.type === 'textarea') {
+      return (
+        <textarea
+          value={value}
+          onChange={(e) => handleFieldChange(field.id, e.target.value)}
+          disabled={isLocked}
+          placeholder={field.placeholder}
+          maxLength={field.maxLength}
+          rows={4}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      )
+    }
 
-  const progress = calculateProgress()
+    return null
+  }
 
   return (
     <div className="space-y-6">
-      {/* Progress Bar */}
-      {!isLocked && (
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              Progress: {Math.round(progress)}%
-            </span>
-            {isSaving && (
-              <span className="text-sm text-gray-500 flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Saving...
-              </span>
-            )}
-            {lastAutoSave && !isSaving && (
-              <span className="text-sm text-gray-500">
-                Last saved: {lastAutoSave.toLocaleTimeString()}
-              </span>
-            )}
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Page Navigation */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">
-            Page {currentPageIndex + 1} of {pages.length}
-          </span>
-          <div className="flex space-x-1">
-            {pages.map((_, index) => (
-              <div
-                key={index}
-                className={`h-2 w-8 rounded-full ${
-                  index === currentPageIndex
-                    ? 'bg-blue-600'
-                    : index < currentPageIndex
-                    ? 'bg-green-500'
-                    : 'bg-gray-200'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+      <div className="flex justify-center space-x-2">
+        {pages.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => {
+              setCurrentPageIndex(index)
+            }}
+            className={`h-2 w-8 rounded-full transition-all duration-200 hover:scale-110 cursor-pointer ${
+              index === currentPageIndex
+                ? 'bg-blue-600'
+                : index < currentPageIndex
+                ? 'bg-green-500 hover:bg-green-600'
+                : 'bg-gray-200 hover:bg-gray-300'
+            }`}
+            title={`Go to page ${index + 1}: ${pages[index].title}`}
+          />
+        ))}
       </div>
 
-      {/* Current Page Content */}
+      {/* Current Page */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {currentPage.title}
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900">{currentPage.title}</h2>
           {currentPage.description && (
-            <p className="text-gray-600">{currentPage.description}</p>
+            <p className="mt-2 text-gray-600">{currentPage.description}</p>
           )}
         </div>
 
         <div className="space-y-6">
           {currentPage.fields.map((field) => (
-            <div key={field.id} id={field.id} className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
+            <div key={field.id}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 {field.label}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </label>
-
-              {field.type === 'single-select' && field.options && (
-                <div className="space-y-2">
-                  {field.options.map((option) => (
-                    <label
-                      key={option.value}
-                      className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                        isLocked
-                          ? 'bg-gray-50 cursor-not-allowed'
-                          : answers[field.id] === option.value
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name={field.id}
-                        value={option.value}
-                        checked={answers[field.id] === option.value}
-                        onChange={(e) => handleAnswerChange(field.id, parseInt(e.target.value))}
-                        disabled={isLocked}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 disabled:opacity-50"
-                      />
-                      <span className="ml-3 text-sm text-gray-900">
-                        {option.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              )}
-
-              {field.type === 'textarea' && (
-                <textarea
-                  value={answers[field.id] as string || ''}
-                  onChange={(e) => handleAnswerChange(field.id, e.target.value)}
-                  disabled={isLocked}
-                  maxLength={field.maxLength}
-                  placeholder={field.placeholder}
-                  rows={4}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 ${
-                    errors[field.id] ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-              )}
-
-              {field.maxLength && field.type === 'textarea' && (
-                <p className="text-xs text-gray-500 text-right">
-                  {(answers[field.id] as string || '').length} / {field.maxLength}
-                </p>
-              )}
+              
+              {renderField(field)}
 
               {errors[field.id] && (
                 <p className="text-sm text-red-600">{errors[field.id]}</p>
@@ -324,4 +264,6 @@ export function SchemaForm({
       )}
     </div>
   )
-}
+})
+
+SchemaForm.displayName = 'SchemaForm'

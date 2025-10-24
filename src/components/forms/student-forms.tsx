@@ -47,7 +47,18 @@ interface UploadedDocument {
   placementId: string
 }
 
-type DocumentItem = FormSubmission | UploadedDocument
+interface EvaluationDocument {
+  id: string
+  type: 'EVALUATION'
+  title: string
+  siteName: string
+  documentPath: string
+  uploadedAt: string
+  placementId: string
+  submissionUrl: string
+}
+
+type DocumentItem = FormSubmission | UploadedDocument | EvaluationDocument
 
 export function StudentForms() {
   const [selectedDocument, setSelectedDocument] = useState<DocumentItem | null>(null)
@@ -70,8 +81,16 @@ export function StudentForms() {
     return !('type' in item) || item.type === 'FORM_SUBMISSION' // backward compatibility
   }
 
+  const isEvaluationDocument = (item: DocumentItem): item is EvaluationDocument => {
+    return 'type' in item && item.type === 'EVALUATION'
+  }
+
   const getStatusIcon = (item: DocumentItem) => {
     if (isUploadedDocument(item)) {
+      return <CheckCircleIcon className="h-5 w-5 text-green-600" />
+    }
+    
+    if (isEvaluationDocument(item)) {
       return <CheckCircleIcon className="h-5 w-5 text-green-600" />
     }
     
@@ -106,6 +125,14 @@ export function StudentForms() {
       )
     }
     
+    if (isEvaluationDocument(item)) {
+      return (
+        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+          Completed
+        </span>
+      )
+    }
+    
     if (isFormSubmission(item)) {
       if (item.locked) {
         return (
@@ -134,6 +161,10 @@ export function StudentForms() {
 
   const handleViewDocument = (document: DocumentItem) => {
     setSelectedDocument(document)
+  }
+
+  const handleViewEvaluation = (submissionUrl: string) => {
+    window.open(submissionUrl, '_blank')
   }
 
   const handleViewUploadedDocument = (documentPath: string) => {
@@ -193,14 +224,20 @@ export function StudentForms() {
                   {getStatusIcon(document)}
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {isUploadedDocument(document) ? document.title : document.template.title}
+                      {isUploadedDocument(document) || isEvaluationDocument(document) 
+                        ? document.title 
+                        : document.template.title}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {isUploadedDocument(document) ? document.siteName : document.placement.site.name}
+                      {isUploadedDocument(document) || isEvaluationDocument(document) 
+                        ? document.siteName 
+                        : document.placement.site.name}
                     </p>
                     <p className="text-xs text-gray-500">
                       {isUploadedDocument(document) 
                         ? 'Uploaded Document' 
+                        : isEvaluationDocument(document)
+                        ? 'Self-Evaluation'
                         : document.role === 'STUDENT' ? 'Student Section' : 'Supervisor Section'
                       }
                     </p>
@@ -218,6 +255,14 @@ export function StudentForms() {
                       >
                         <EyeIcon className="h-4 w-4 mr-1" />
                         View
+                      </button>
+                    ) : isEvaluationDocument(document) ? (
+                      <button
+                        onClick={() => handleViewEvaluation(document.submissionUrl)}
+                        className="bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center"
+                      >
+                        <EyeIcon className="h-4 w-4 mr-1" />
+                        View & Print
                       </button>
                     ) : (
                       <>
@@ -250,6 +295,11 @@ export function StudentForms() {
                     <>
                       <span>Uploaded: {new Date(document.uploadedAt).toLocaleDateString()}</span>
                       <span>Type: Document Upload</span>
+                    </>
+                  ) : isEvaluationDocument(document) ? (
+                    <>
+                      <span>Completed: {new Date(document.uploadedAt).toLocaleDateString()}</span>
+                      <span>Type: Self-Evaluation</span>
                     </>
                   ) : (
                     <>
@@ -284,7 +334,7 @@ export function StudentForms() {
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {isUploadedDocument(selectedDocument) 
+                  {isUploadedDocument(selectedDocument) || isEvaluationDocument(selectedDocument)
                     ? selectedDocument.title 
                     : selectedDocument.template.title
                   }
@@ -304,7 +354,7 @@ export function StudentForms() {
                 <div>
                   <p className="text-sm font-medium text-gray-700">Placement</p>
                   <p className="text-sm text-gray-600">
-                    {isUploadedDocument(selectedDocument) 
+                    {isUploadedDocument(selectedDocument) || isEvaluationDocument(selectedDocument)
                       ? selectedDocument.siteName 
                       : selectedDocument.placement.site.name
                     }
@@ -328,6 +378,16 @@ export function StudentForms() {
                       </p>
                     </div>
                   </div>
+                ) : isEvaluationDocument(selectedDocument) ? (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Evaluation Information</p>
+                    <div className="mt-2 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">
+                        This is your completed self-evaluation. You can view and print the evaluation 
+                        by clicking the "View & Print" button. It was completed on {new Date(selectedDocument.uploadedAt).toLocaleDateString()}.
+                      </p>
+                    </div>
+                  </div>
                 ) : (
                   <div>
                     <p className="text-sm font-medium text-gray-700">Form Data</p>
@@ -348,6 +408,14 @@ export function StudentForms() {
                   >
                     <EyeIcon className="h-4 w-4 mr-2" />
                     View Document
+                  </button>
+                ) : isEvaluationDocument(selectedDocument) ? (
+                  <button
+                    onClick={() => handleViewEvaluation(selectedDocument.submissionUrl)}
+                    className="bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 px-4 py-2 rounded-lg font-medium transition-colors flex items-center"
+                  >
+                    <EyeIcon className="h-4 w-4 mr-2" />
+                    View & Print Evaluation
                   </button>
                 ) : selectedDocument.locked && (
                   <button

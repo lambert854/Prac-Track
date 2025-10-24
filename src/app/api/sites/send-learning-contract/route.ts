@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth-helpers'
+import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     // For now, just log the action
     console.log(`Learning contract sent to ${email} for site ${site.name}`)
     console.log(`Token: ${token}`)
-    console.log(`Link: ${process.env.NEXTAUTH_URL}/agency-learning-contract/${token}`)
+    console.log(`Link: ${process.env.NEXTAUTH_URL || 'https://prac-track.com'}/agency-learning-contract/${token}`)
 
     // Create notification for faculty/admin
     await prisma.notification.create({

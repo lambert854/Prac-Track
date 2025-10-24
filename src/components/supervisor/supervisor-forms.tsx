@@ -114,6 +114,10 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
     }
   }
 
+  const handleViewEvaluation = (submissionUrl: string) => {
+    window.open(submissionUrl, '_blank')
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -136,7 +140,7 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
 
   // Separate form submissions from uploaded documents
   const formSubmissions = allDocuments.filter((doc: any) => !doc.type || doc.type === 'FORM_SUBMISSION')
-  const uploadedDocuments = allDocuments.filter((doc: any) => doc.type === 'UPLOADED_DOCUMENT' && doc.title === 'Placement Checklist')
+  const uploadedDocuments = allDocuments.filter((doc: any) => doc.type === 'UPLOADED_DOCUMENT' || doc.type === 'EVALUATION')
 
   // Group forms by status for better organization
   const formsByStatus = formSubmissions.reduce((acc: any, form: any) => {
@@ -227,23 +231,34 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
                       {formatDate(doc.uploadedAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => {
-                          // If it's already a blob URL, open it directly
-                          if (doc.documentPath.startsWith('https://')) {
-                            window.open(doc.documentPath, '_blank')
-                          } else if (doc.documentPath.startsWith('/api/documents/')) {
-                            // If it already starts with /api/documents/, use it as-is
-                            window.open(doc.documentPath, '_blank')
-                          } else {
-                            // For legacy file paths, use the API route
-                            window.open(`/api/documents/${doc.documentPath}`, '_blank')
-                          }
-                        }}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
-                      >
-                        View Document
-                      </button>
+                      {doc.type === 'EVALUATION' ? (
+                        <button
+                          onClick={() => {
+                            window.open(doc.submissionUrl, '_blank')
+                          }}
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                          View Evaluation
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            // If it's already a blob URL, open it directly
+                            if (doc.documentPath.startsWith('https://')) {
+                              window.open(doc.documentPath, '_blank')
+                            } else if (doc.documentPath.startsWith('/api/documents/')) {
+                              // If it already starts with /api/documents/, use it as-is
+                              window.open(doc.documentPath, '_blank')
+                            } else {
+                              // For legacy file paths, use the API route
+                              window.open(`/api/documents/${doc.documentPath}`, '_blank')
+                            }
+                          }}
+                          className="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                          View Document
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -340,6 +355,17 @@ export function SupervisorForms({ supervisorId }: SupervisorFormsProps) {
                               <div>Created: {formatDate(form.createdAt)}</div>
                             )}
                           </div>
+                          {/* Action buttons for evaluations */}
+                          {form.type === 'EVALUATION' && form.submissionUrl && (
+                            <div className="mt-2">
+                              <button
+                                onClick={() => handleViewEvaluation(form.submissionUrl)}
+                                className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                              >
+                                View & Print →
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

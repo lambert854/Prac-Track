@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { XMarkIcon, UserIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { EnvelopeIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 interface Site {
   id: string
@@ -60,7 +60,7 @@ export function SendLearningContractModal({ site, isOpen, onClose }: SendLearnin
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
       // Don't close modal, show the link instead
-      const baseUrl = process.env.NEXTAUTH_URL || 'http://www.prac-track.com'
+      const baseUrl = process.env.NEXTAUTH_URL || 'https://prac-track.com'
       const link = `${baseUrl}/agency-learning-contract/${data.token}`
       setSentLink(link)
       setIsContractSent(true)

@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { canAccessStudentData } from '@/lib/auth-helpers'
 import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
@@ -156,6 +155,9 @@ export async function GET(
         }
       })
 
+      // Track evaluation types to avoid duplicates
+      const addedEvaluationTypes = new Set()
+
       // Add evaluation tasks from notifications
       for (const notification of evaluationNotifications) {
         // Skip if no related entity ID
@@ -177,25 +179,34 @@ export async function GET(
           const isMidTerm = notification.title.includes('Mid-Term')
           const evaluationType = isMidTerm ? 'Mid-Term' : 'Final'
           
+          // Only add if we haven't already added this evaluation type
+          if (!addedEvaluationTypes.has(evaluationType)) {
+            addedEvaluationTypes.add(evaluationType)
+            pendingTasks.push({
+              title: `Complete ${evaluationType} Self-Evaluation`,
+              priority: 'High',
+              type: 'evaluation',
+              notificationId: notification.id,
+              evaluationId: evaluationSubmission.id
+            })
+          }
+        }
+      }
+
+      // Add evaluation tasks from submissions (fallback for any not covered by notifications)
+      pendingEvaluations.forEach(evaluation => {
+        const evaluationType = evaluation.evaluation.type === 'MIDTERM' ? 'Mid-Term' : 'Final'
+        
+        // Only add if we haven't already added this evaluation type
+        if (!addedEvaluationTypes.has(evaluationType)) {
+          addedEvaluationTypes.add(evaluationType)
           pendingTasks.push({
             title: `Complete ${evaluationType} Self-Evaluation`,
             priority: 'High',
             type: 'evaluation',
-            notificationId: notification.id,
-            evaluationId: evaluationSubmission.id
+            evaluationId: evaluation.id
           })
         }
-      }
-
-      // Add evaluation tasks from submissions (fallback)
-      pendingEvaluations.forEach(evaluation => {
-        const evaluationType = evaluation.evaluation.type === 'MIDTERM' ? 'Mid-Term' : 'Final'
-        pendingTasks.push({
-          title: `Complete ${evaluationType} Self-Evaluation`,
-          priority: 'High',
-          type: 'evaluation',
-          evaluationId: evaluation.id
-        })
       })
     }
 

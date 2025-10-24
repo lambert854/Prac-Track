@@ -1,6 +1,6 @@
-import { notFound } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
 import { AgencyLearningContractForm } from '@/components/forms/agency-learning-contract-form'
+import { prisma } from '@/lib/prisma'
+import { notFound } from 'next/navigation'
 
 interface PageProps {
   params: Promise<{ token: string }>
@@ -13,7 +13,22 @@ export default async function AgencyLearningContractPage({ params }: PageProps) 
   const learningContract = await prisma.agencyLearningContract.findUnique({
     where: { token },
     include: {
-      site: true
+      site: {
+        include: {
+          supervisors: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true
+                }
+              }
+            }
+          }
+        }
+      }
     }
   })
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 interface AgencyLearningContract {
   id: string
@@ -44,18 +44,17 @@ interface Site {
   name: string
   supervisors?: Array<{
     id: string
-    firstName: string
-    lastName: string
-    email: string
-    supervisorProfile?: {
-      title?: string
+    title: string | null
+    highestDegree: string | null
+    licenseNumber: string | null
+    licensedSW: string | null
+    otherDegree: string | null
+    user: {
+      id: string
+      firstName: string
+      lastName: string
+      email: string
     }
-  }>
-  pendingSupervisors?: Array<{
-    id: string
-    firstName: string
-    lastName: string
-    email: string
   }>
 }
 
@@ -108,6 +107,27 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
+    
+    // If supervisor name is selected, auto-populate supervisor data
+    if (name === 'fieldInstructorName' && value) {
+      const selectedSupervisor = site.supervisors?.find(profile => 
+        `${profile.user.firstName} ${profile.user.lastName}` === value
+      )
+      
+      if (selectedSupervisor) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          fieldInstructorFirstName: selectedSupervisor.user.firstName,
+          fieldInstructorLastName: selectedSupervisor.user.lastName,
+          fieldInstructorDegree: selectedSupervisor.highestDegree || '',
+          fieldInstructorLicense: selectedSupervisor.licensedSW === 'YES' ? 'YES' : 'NO',
+          fieldInstructorLicenseType: selectedSupervisor.licenseNumber || ''
+        }))
+        return
+      }
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
@@ -156,10 +176,7 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
   }
 
   // Get all available supervisors for the dropdown
-  const allSupervisors = [
-    ...(site.supervisors || []).map(s => ({ ...s, status: 'approved' })),
-    ...(site.pendingSupervisors || []).map(s => ({ ...s, status: 'pending' }))
-  ]
+  const allSupervisors = site.supervisors || []
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -290,8 +307,9 @@ export function AgencyLearningContractForm({ learningContract, site }: AgencyLea
           >
             <option value="">Select existing supervisor or add new below</option>
             {allSupervisors.map((supervisor) => (
-              <option key={supervisor.id} value={`${supervisor.firstName} ${supervisor.lastName}`}>
-                {supervisor.firstName} {supervisor.lastName} ({supervisor.status === 'approved' ? 'Approved' : 'Pending'})
+              <option key={supervisor.id} value={`${supervisor.user.firstName} ${supervisor.user.lastName}`}>
+                {supervisor.user.firstName} {supervisor.user.lastName}
+                {supervisor.title && ` - ${supervisor.title}`}
               </option>
             ))}
           </select>

@@ -45,9 +45,12 @@ export async function GET(
     })
 
     // Add activePlacement field to each student
+    // APPROVED_PENDING_CHECKLIST is functionally active but kept for UI purposes
     const studentsWithActivePlacement = assignedStudents.map(student => ({
       ...student,
-      activePlacement: student.studentPlacements.find(placement => placement.status === 'ACTIVE') || null
+      activePlacement: student.studentPlacements.find(placement => 
+        placement.status === 'ACTIVE' || placement.status === 'APPROVED_PENDING_CHECKLIST'
+      ) || null
     }))
 
     // Get pending timesheets that need supervisor approval - group by week and student
@@ -141,11 +144,77 @@ export async function GET(
       }
     })
 
+    // Get evaluation notifications for this supervisor
+    const evaluationNotifications = await prisma.notification.findMany({
+      where: {
+        userId: supervisorId,
+        type: 'EVALUATION_SENT',
+        read: false
+      },
+      include: {
+        // Get the related evaluation submission to find the submission ID
+        // We need to find the evaluation submission that matches this notification
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    // For each notification, get the corresponding evaluation submission
+    const evaluationTasks = []
+    for (const notification of evaluationNotifications) {
+      // Find the evaluation submission for this supervisor
+      const evaluationSubmission = await prisma.evaluationSubmission.findFirst({
+        where: {
+          evaluation: {
+            placement: {
+              supervisorId: supervisorId
+            },
+            id: notification.relatedEntityId || ''
+          },
+          role: 'SUPERVISOR'
+        },
+        include: {
+          evaluation: {
+            include: {
+              placement: {
+                include: {
+                  student: {
+                    select: {
+                      firstName: true,
+                      lastName: true,
+                      email: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      })
+
+      if (evaluationSubmission) {
+        evaluationTasks.push({
+          id: evaluationSubmission.id,
+          type: 'evaluation',
+          notificationId: notification.id,
+          title: notification.title,
+          message: notification.message,
+          studentName: `${evaluationSubmission.evaluation.placement.student.firstName} ${evaluationSubmission.evaluation.placement.student.lastName}`,
+          studentEmail: evaluationSubmission.evaluation.placement.student.email,
+          evaluationType: evaluationSubmission.evaluation.type,
+          createdAt: notification.createdAt,
+          submissionUrl: `/forms/evaluations/${evaluationSubmission.id}`
+        })
+      }
+    }
+
     // Calculate summary statistics
     const summaryStats = {
       assignedStudents: studentsWithActivePlacement.length,
       pendingTimesheets: pendingTimesheets.length,
       pendingForms: pendingForms.length,
+      pendingEvaluations: evaluationTasks.length,
       activePlacements: studentsWithActivePlacement.filter(student => 
         student.activePlacement !== null
       ).length
@@ -155,6 +224,7 @@ export async function GET(
       assignedStudents: studentsWithActivePlacement,
       pendingTimesheets,
       pendingForms,
+      pendingEvaluations: evaluationTasks,
       summaryStats
     })
 

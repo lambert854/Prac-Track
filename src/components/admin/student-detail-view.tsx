@@ -391,7 +391,9 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
                       <div className="mt-4 pt-4 border-t border-gray-200">
                         <h4 className="font-medium text-gray-900 mb-2">Timesheet Entries</h4>
                         <div className="space-y-2">
-                          {placement.timesheetEntries.slice(0, 3).map((entry) => (
+                          {placement.timesheetEntries
+                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                            .map((entry) => (
                             <div key={entry.id} className="space-y-2">
                               <div className="flex items-center justify-between text-sm">
                                 <div className="flex items-center space-x-3">
@@ -441,11 +443,6 @@ export function StudentDetailView({ studentId }: StudentDetailViewProps) {
                               )}
                             </div>
                           ))}
-                          {placement.timesheetEntries.length > 3 && (
-                            <p className="text-sm text-gray-500">
-                              ...and {placement.timesheetEntries.length - 3} more entries
-                            </p>
-                          )}
                         </div>
                       </div>
                     )}

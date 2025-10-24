@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { XMarkIcon, DocumentTextIcon, UserIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline'
+import { BuildingOfficeIcon, DocumentTextIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 interface LearningContract {
   id: string
@@ -110,6 +109,37 @@ export function LearningContractDetailsModal({ contract, onClose }: LearningCont
                 className="text-gray-400 hover:text-gray-600"
               >
                 <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Application URL */}
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-900 mb-1">
+                  Application URL:
+                </p>
+                <p className="text-sm font-mono text-blue-800 break-all">
+                  {typeof window !== 'undefined' 
+                    ? `${window.location.protocol}//prac-track.com/agency-learning-contract/${contract.token}`
+                    : `https://prac-track.com/agency-learning-contract/${contract.token}`
+                  }
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  const url = typeof window !== 'undefined' 
+                    ? `${window.location.protocol}//prac-track.com/agency-learning-contract/${contract.token}`
+                    : `https://prac-track.com/agency-learning-contract/${contract.token}`
+                  if (url) {
+                    navigator.clipboard.writeText(url)
+                  }
+                }}
+                className="ml-3 text-sm text-blue-600 hover:text-blue-700 underline"
+                title="Copy URL"
+              >
+                Copy
               </button>
             </div>
           </div>

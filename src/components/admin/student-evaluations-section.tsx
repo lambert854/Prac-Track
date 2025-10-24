@@ -1,8 +1,7 @@
 'use client'
 
+import { CheckCircleIcon, DocumentCheckIcon } from '@heroicons/react/24/outline'
 import { useQuery } from '@tanstack/react-query'
-import { DocumentCheckIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
-import { EvaluationConfig } from '@/config/evaluation.config'
 import Link from 'next/link'
 
 interface StudentEvaluationsSectionProps {
@@ -17,17 +16,19 @@ interface StudentEvaluationsSectionProps {
 }
 
 export function StudentEvaluationsSection({ studentId, placements }: StudentEvaluationsSectionProps) {
-  // Fetch evaluations for all active placements
+  // Fetch evaluations for all active placements (both student and supervisor)
   const { data: evaluations, isLoading } = useQuery({
     queryKey: ['student-evaluations', studentId],
     queryFn: async () => {
-      // Get evaluations for all active placements (same logic as student dashboard)
+      // Get evaluations for all active placements (both student and supervisor roles)
       const evaluationPromises = placements
         .filter(placement => ['ACTIVE', 'APPROVED', 'APPROVED_PENDING_CHECKLIST'].includes(placement.status))
-        .map(placement => 
+        .flatMap(placement => [
           fetch(`/api/placements/${placement.id}/evaluations?role=STUDENT`)
+            .then(res => res.ok ? res.json() : []),
+          fetch(`/api/placements/${placement.id}/evaluations?role=SUPERVISOR`)
             .then(res => res.ok ? res.json() : [])
-        )
+        ])
       
       const results = await Promise.all(evaluationPromises)
       return results.flat()
@@ -84,33 +85,42 @@ export function StudentEvaluationsSection({ studentId, placements }: StudentEval
 
   const pendingEvaluations = evaluations.filter(e => e.status !== 'LOCKED')
   const completedEvaluations = evaluations.filter(e => e.status === 'LOCKED')
+  
+  // Separate by role for better organization
+  const studentEvaluations = evaluations.filter(e => e.role === 'STUDENT')
+  const supervisorEvaluations = evaluations.filter(e => e.role === 'SUPERVISOR')
 
   return (
     <div className="space-y-4">
-      {/* Pending Evaluations */}
-      {pendingEvaluations.length > 0 && (
+      {/* Student Evaluations */}
+      {studentEvaluations.length > 0 && (
         <div>
           <div className="flex items-center mb-3">
-            <ClockIcon className="h-5 w-5 text-yellow-600 mr-2" />
-            <h4 className="font-medium text-gray-900">Pending Review</h4>
-            <span className="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-              {pendingEvaluations.length}
+            <CheckCircleIcon className="h-5 w-5 text-blue-600 mr-2" />
+            <h4 className="font-medium text-gray-900">Student Self-Evaluations</h4>
+            <span className="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+              {studentEvaluations.length}
             </span>
           </div>
           <div className="space-y-2">
-            {pendingEvaluations.map((evaluation) => (
-              <div key={evaluation.id} className="border border-yellow-200 rounded-lg p-3 bg-yellow-50">
+            {studentEvaluations.map((evaluation) => (
+              <div key={evaluation.id} className={`border rounded-lg p-3 ${
+                evaluation.status === 'LOCKED' 
+                  ? 'border-green-200 bg-green-50' 
+                  : 'border-yellow-200 bg-yellow-50'
+              }`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-gray-900">
                       {evaluation.type === 'MIDTERM' ? 'Mid-Term' : 'Final'} Self-Evaluation
                     </p>
                     <p className="text-sm text-gray-600">
-                      Status: <span className="font-medium">
-                        {evaluation.status === 'PENDING' ? 'Not Started' : 'In Progress'}
-                      </span>
+                      {evaluation.status === 'LOCKED' 
+                        ? `Completed: ${new Date(evaluation.lockedAt).toLocaleDateString()}`
+                        : `Status: ${evaluation.status === 'PENDING' ? 'Not Started' : 'In Progress'}`
+                      }
                     </p>
-                    {evaluation.lastSavedAt && (
+                    {evaluation.lastSavedAt && evaluation.status !== 'LOCKED' && (
                       <p className="text-xs text-gray-500">
                         Last saved: {new Date(evaluation.lastSavedAt).toLocaleDateString()}
                       </p>
@@ -118,17 +128,25 @@ export function StudentEvaluationsSection({ studentId, placements }: StudentEval
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      evaluation.status === 'PENDING' 
+                      evaluation.status === 'LOCKED' 
+                        ? 'bg-green-100 text-green-800'
+                        : evaluation.status === 'PENDING' 
                         ? 'bg-gray-100 text-gray-800' 
                         : 'bg-blue-100 text-blue-800'
                     }`}>
-                      {evaluation.status === 'PENDING' ? 'Not Started' : 'In Progress'}
+                      {evaluation.status === 'LOCKED' ? 'Completed' : 
+                       evaluation.status === 'PENDING' ? 'Not Started' : 'In Progress'}
                     </span>
                     <Link
                       href={`/forms/evaluations/${evaluation.id}`}
-                      className="bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                      className={`text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        evaluation.status === 'LOCKED' 
+                          ? 'bg-green-600 focus:ring-green-600'
+                          : 'bg-blue-600 focus:ring-blue-600'
+                      }`}
                     >
-                      {evaluation.status === 'PENDING' ? 'Start' : 'Continue'}
+                      {evaluation.status === 'LOCKED' ? 'View' : 
+                       evaluation.status === 'PENDING' ? 'Start' : 'Continue'}
                     </Link>
                   </div>
                 </div>
@@ -138,37 +156,61 @@ export function StudentEvaluationsSection({ studentId, placements }: StudentEval
         </div>
       )}
 
-      {/* Completed Evaluations */}
-      {completedEvaluations.length > 0 && (
+      {/* Supervisor Evaluations */}
+      {supervisorEvaluations.length > 0 && (
         <div>
           <div className="flex items-center mb-3">
-            <CheckCircleIcon className="h-5 w-5 text-green-600 mr-2" />
-            <h4 className="font-medium text-gray-900">Completed</h4>
-            <span className="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-              {completedEvaluations.length}
+            <CheckCircleIcon className="h-5 w-5 text-purple-600 mr-2" />
+            <h4 className="font-medium text-gray-900">Supervisor Evaluations</h4>
+            <span className="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+              {supervisorEvaluations.length}
             </span>
           </div>
           <div className="space-y-2">
-            {completedEvaluations.map((evaluation) => (
-              <div key={evaluation.id} className="border border-green-200 rounded-lg p-3 bg-green-50">
+            {supervisorEvaluations.map((evaluation) => (
+              <div key={evaluation.id} className={`border rounded-lg p-3 ${
+                evaluation.status === 'LOCKED' 
+                  ? 'border-green-200 bg-green-50' 
+                  : 'border-yellow-200 bg-yellow-50'
+              }`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-gray-900">
-                      {evaluation.type === 'MIDTERM' ? 'Mid-Term' : 'Final'} Self-Evaluation
+                      {evaluation.type === 'MIDTERM' ? 'Mid-Term' : 'Final'} Supervisor Evaluation
                     </p>
                     <p className="text-sm text-gray-600">
-                      Completed: {new Date(evaluation.lockedAt).toLocaleDateString()}
+                      {evaluation.status === 'LOCKED' 
+                        ? `Completed: ${new Date(evaluation.lockedAt).toLocaleDateString()}`
+                        : `Status: ${evaluation.status === 'PENDING' ? 'Not Started' : 'In Progress'}`
+                      }
                     </p>
+                    {evaluation.lastSavedAt && evaluation.status !== 'LOCKED' && (
+                      <p className="text-xs text-gray-500">
+                        Last saved: {new Date(evaluation.lastSavedAt).toLocaleDateString()}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                      Completed
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      evaluation.status === 'LOCKED' 
+                        ? 'bg-green-100 text-green-800'
+                        : evaluation.status === 'PENDING' 
+                        ? 'bg-gray-100 text-gray-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {evaluation.status === 'LOCKED' ? 'Completed' : 
+                       evaluation.status === 'PENDING' ? 'Not Started' : 'In Progress'}
                     </span>
                     <Link
                       href={`/forms/evaluations/${evaluation.id}`}
-                      className="bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                      className={`text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        evaluation.status === 'LOCKED' 
+                          ? 'bg-green-600 focus:ring-green-600'
+                          : 'bg-blue-600 focus:ring-blue-600'
+                      }`}
                     >
-                      View
+                      {evaluation.status === 'LOCKED' ? 'View' : 
+                       evaluation.status === 'PENDING' ? 'Start' : 'Continue'}
                     </Link>
                   </div>
                 </div>

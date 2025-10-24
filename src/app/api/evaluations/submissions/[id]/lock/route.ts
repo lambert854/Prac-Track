@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import evaluationSchema from '@/config/evaluations.schema.json'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import evaluationSchema from '@/config/evaluations.schema.json'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
   request: NextRequest,
@@ -131,6 +131,20 @@ export async function POST(
         relatedEntityType: 'EVALUATION',
         priority: 'LOW',
       },
+    })
+
+    // Mark the original EVALUATION_SENT notification as read
+    await prisma.notification.updateMany({
+      where: {
+        userId: session.user.id,
+        type: 'EVALUATION_SENT',
+        relatedEntityId: submission.evaluationId,
+        read: false
+      },
+      data: {
+        read: true,
+        readAt: new Date()
+      }
     })
 
     // Notify faculty that an evaluation was submitted

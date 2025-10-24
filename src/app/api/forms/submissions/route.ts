@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
@@ -56,7 +56,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     })
 
-    // For students, also get their uploaded documents from placements
+    // For students, also get their uploaded documents from placements and completed evaluations
     let uploadedDocuments: any[] = []
     
     if (session.user.role === 'STUDENT') {
@@ -116,6 +116,51 @@ export async function GET() {
         
         return docs
       })
+
+      // Get completed evaluations for the student
+      const completedEvaluations = await prisma.evaluationSubmission.findMany({
+        where: {
+          evaluation: {
+            placement: {
+              studentId: session.user.id
+            }
+          },
+          role: 'STUDENT',
+          status: 'LOCKED'
+        },
+        include: {
+          evaluation: {
+            include: {
+              placement: {
+                include: {
+                  site: {
+                    select: {
+                      name: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        orderBy: {
+          lockedAt: 'desc'
+        }
+      })
+
+      // Add completed evaluations to the uploaded documents list
+      for (const evaluation of completedEvaluations) {
+        uploadedDocuments.push({
+          id: `evaluation-${evaluation.id}`,
+          type: 'EVALUATION',
+          title: `${evaluation.evaluation.type === 'MIDTERM' ? 'Mid-Term' : 'Final'} Self-Evaluation`,
+          siteName: evaluation.evaluation.placement.site.name,
+          documentPath: evaluation.id, // Use submission ID for the link
+          uploadedAt: evaluation.lockedAt,
+          placementId: evaluation.evaluation.placement.id,
+          submissionUrl: `/forms/evaluations/${evaluation.id}`
+        })
+      }
     }
 
     // Combine form submissions and uploaded documents

@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 const sendEvaluationsSchema = z.object({
@@ -26,11 +26,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = sendEvaluationsSchema.parse(body)
 
-    // Find all ACTIVE placements for this faculty member
+    // Find all ACTIVE and APPROVED_PENDING_CHECKLIST placements for this faculty member
+    // APPROVED_PENDING_CHECKLIST is functionally active but kept for UI purposes
     const placements = await prisma.placement.findMany({
       where: {
         facultyId: session.user.id,
-        status: 'ACTIVE',
+        status: {
+          in: ['ACTIVE', 'APPROVED_PENDING_CHECKLIST']
+        },
       },
       include: {
         student: true,
