@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Logo } from '@/components/ui/logo'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { getSession, signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -59,9 +59,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mb-8">
-            <Logo size="3xl" className="mx-auto" />
+        <div>
+          <div className="flex justify-center mb-6 -mt-20">
+            <div className="scale-[2]">
+              <Logo size="2xl" />
+            </div>
           </div>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>

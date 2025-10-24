@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Logo } from '@/components/ui/logo'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -69,11 +69,6 @@ export default function ForgotPasswordPage() {
                 <Logo size="2xl" />
               </div>
             </div>
-            <div className="mt-20">
-              <p className="text-center text-lg text-gray-600">
-                Social Work Practicum Education Management
-              </p>
-            </div>
           </div>
           
           <div className="bg-green-50 border border-green-200 rounded-lg p-6">
@@ -124,18 +119,13 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="flex justify-center mb-6 -mt-20">
-            <div className="scale-[2]">
-              <Logo size="2xl" />
+          <div>
+            <div className="flex justify-center mb-6 -mt-20">
+              <div className="scale-[2]">
+                <Logo size="2xl" />
+              </div>
             </div>
           </div>
-          <div className="mt-20">
-            <p className="text-center text-lg text-gray-600">
-              Social Work Practicum Education Management
-            </p>
-          </div>
-        </div>
         
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900">Forgot Password</h2>
