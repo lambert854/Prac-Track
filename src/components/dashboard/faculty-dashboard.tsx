@@ -134,7 +134,7 @@ export function FacultyDashboard({ user }: FacultyDashboardProps) {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <ClockIcon className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-600">Approved Placements</p>
+              <p className="text-sm font-medium text-gray-600">Active Placements</p>
               <p className="text-2xl font-bold text-gray-900">{summaryStats.approvedPlacements || 0}</p>
             </div>
           </div>
