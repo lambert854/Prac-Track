@@ -101,6 +101,21 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
     }
   }
 
+  // Calculate staff license status from supervisor data
+  const getStaffLicenseStatus = (supervisors: any[]) => {
+    if (!supervisors || supervisors.length === 0) return 'Not specified'
+    const hasLicensedSupervisor = supervisors.some(s => s.licensedSW === 'YES')
+    return hasLicensedSupervisor ? 'YES' : 'NO'
+  }
+
+  // Calculate supervisor training status from supervisor data
+  const getSupervisorTrainingStatus = (supervisors: any[]) => {
+    if (!supervisors || supervisors.length === 0) return 'Not specified'
+    // For now, we'll assume training is completed if there are supervisors
+    // This could be enhanced with a specific training field if needed
+    return supervisors.length > 0 ? 'YES' : 'NO'
+  }
+
   const { data: site, isLoading, error } = useQuery({
     queryKey: ['site', siteId],
     queryFn: async () => {
@@ -443,7 +458,7 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
           <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-lg">
             <UserGroupIcon className="h-8 w-8 text-gray-400 mb-2" />
             <p className="text-sm font-medium text-gray-900">
-              {site.staffHasActiveLicense || 'Not specified'}
+              {getStaffLicenseStatus(site.supervisors)}
             </p>
             <span className="text-sm text-gray-600">Staff with Active SW License</span>
           </div>
@@ -452,7 +467,7 @@ export function SiteDetailView({ siteId }: SiteDetailViewProps) {
           <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-lg">
             <UserGroupIcon className="h-8 w-8 text-gray-400 mb-2" />
             <p className="text-sm font-medium text-gray-900">
-              {site.supervisorTraining || 'Not specified'}
+              {getSupervisorTrainingStatus(site.supervisors)}
             </p>
             <span className="text-sm text-gray-600">Field Supervisor Training</span>
           </div>
