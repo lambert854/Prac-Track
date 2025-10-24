@@ -43,7 +43,9 @@ export async function GET(
 
     // Add activePlacement and document status to each student
     const studentsWithActivePlacement = assignedStudents.map(student => {
-      const activePlacement = student.studentPlacements.find(placement => placement.status === 'ACTIVE') || null
+      const activePlacement = student.studentPlacements.find(placement => 
+        placement.status === 'ACTIVE' || placement.status === 'APPROVED_PENDING_CHECKLIST'
+      ) || null
       const approvedPlacement = student.studentPlacements.find(placement => 
         placement.status === 'APPROVED' || placement.status === 'APPROVED_PENDING_CHECKLIST' || placement.status === 'ACTIVE'
       ) || null
