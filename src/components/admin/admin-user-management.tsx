@@ -7,7 +7,8 @@ import {
     KeyIcon,
     PencilIcon,
     ShieldCheckIcon,
-    UserGroupIcon
+    UserGroupIcon,
+    UserIcon
 } from '@heroicons/react/24/outline'
 import { UserRole } from '@prisma/client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -184,8 +185,8 @@ export function AdminUserManagement() {
 
   // Filter users based on active filter
   const filteredUsers = users.filter((user: User) => {
-    if (activeFilter === 'ALL') return true
-    return user.role === activeFilter
+    if (activeFilter === 'ALL') return user.active // Only show active users by default
+    return user.role === activeFilter && user.active
   })
 
   const handleFilterClick = (filter: UserRole | 'ALL') => {
@@ -254,22 +255,6 @@ export function AdminUserManagement() {
     <div className="space-y-6">
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <button 
-          onClick={() => handleFilterClick('ALL')}
-          className={`bg-white p-6 rounded-lg shadow transition-all duration-200 hover:shadow-md cursor-pointer ${
-            activeFilter === 'ALL' ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-          }`}
-        >
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <UserGroupIcon className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-            </div>
-          </div>
-        </button>
 
         <button 
           onClick={() => handleFilterClick('ADMIN')}
@@ -324,6 +309,26 @@ export function AdminUserManagement() {
               <p className="text-2xl font-bold text-gray-900">
                 {users.filter((u: User) => u.role === 'STUDENT').length}
               </p>
+              <p className="text-xs text-gray-500">Inactive: {users.filter((u: User) => !u.active).length}</p>
+            </div>
+          </div>
+        </button>
+
+        <button 
+          onClick={() => handleFilterClick('SUPERVISOR')}
+          className={`bg-white p-6 rounded-lg shadow transition-all duration-200 hover:shadow-md cursor-pointer ${
+            activeFilter === 'SUPERVISOR' ? 'ring-2 ring-green-500 bg-green-50' : ''
+          }`}
+        >
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <UserIcon className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Supervisors</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {users.filter((u: User) => u.role === 'SUPERVISOR').length}
+              </p>
             </div>
           </div>
         </button>
@@ -374,7 +379,10 @@ export function AdminUserManagement() {
       {/* Users Table */}
       <div className="bg-white shadow rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">System Users</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Active Users</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Users who are currently active in the system
+          </p>
         </div>
         
         <div className="overflow-x-auto">
@@ -474,6 +482,7 @@ export function AdminUserManagement() {
           </table>
         </div>
       </div>
+
 
       {/* Role Update Modal */}
       {showRoleModal && selectedUser && (

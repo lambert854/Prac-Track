@@ -17,7 +17,10 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
+        console.log('🔐 Authorize function called with credentials:', credentials?.email)
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log('❌ Missing credentials')
           return null
         }
 
@@ -43,6 +46,17 @@ export const authOptions: NextAuthOptions = {
 
         if (!isPasswordValid) {
           return null
+        }
+
+        // Update lastLogin timestamp
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLogin: new Date() }
+          })
+          console.log(`✅ Updated lastLogin for user: ${user.email}`)
+        } catch (error) {
+          console.error(`❌ Failed to update lastLogin for user ${user.email}:`, error)
         }
 
         // Debug logging

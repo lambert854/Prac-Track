@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowDownTrayIcon, CalendarIcon, ClockIcon, EyeIcon } from '@heroicons/react/24/outline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ArrowDownTrayIcon, CalendarIcon, ClockIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { JournalViewer } from './journal-viewer'
 
 interface TimesheetEntry {
@@ -17,6 +17,12 @@ interface TimesheetEntry {
   approvedBy?: {
     firstName: string
     lastName: string
+  }
+  rejectionReason?: string
+  rejector?: {
+    firstName: string
+    lastName: string
+    role: string
   }
 }
 
@@ -176,14 +182,14 @@ export function MyHoursReport() {
     if (!timesheetEntries || timesheetEntries.length === 0) return
 
     const csvContent = [
-      ['Date', 'Hours', 'Category', 'Notes', 'Status', 'Approved By'].join(','),
+      ['Date', 'Hours', 'Category', 'Notes', 'Status', 'Rejection Notes'].join(','),
       ...timesheetEntries.map((entry: TimesheetEntry) => [
         formatDate(entry.date),
         entry.hours,
         entry.category,
         entry.notes || '',
-        entry.status === 'APPROVED' ? 'Approved' : 'Pending',
-        entry.approvedBy ? `${entry.approvedBy.firstName} ${entry.approvedBy.lastName}` : ''
+        entry.status === 'APPROVED' ? 'Approved' : entry.status === 'REJECTED' ? 'Rejected' : 'Pending',
+        entry.rejectionReason || ''
       ].map(field => `"${field}"`).join(','))
     ].join('\n')
 
@@ -215,17 +221,28 @@ export function MyHoursReport() {
         }, 0)
     : 0
 
-  const pendingHours = totalHours - approvedHours
+  const rejectedHours = Array.isArray(timesheetEntries)
+    ? timesheetEntries
+        .filter((entry: TimesheetEntry) => entry.status === 'REJECTED')
+        .reduce((sum: number, entry: TimesheetEntry) => {
+          const hours = typeof entry.hours === 'number' ? entry.hours : parseFloat(entry.hours) || 0
+          return sum + hours
+        }, 0)
+    : 0
+
+  const pendingHours = totalHours - approvedHours - rejectedHours
 
   // Debug logging
   console.log('MyHoursReport - timesheetEntries:', timesheetEntries)
   console.log('MyHoursReport - totalHours:', totalHours)
   console.log('MyHoursReport - approvedHours:', approvedHours)
+  console.log('MyHoursReport - rejectedHours:', rejectedHours)
   console.log('MyHoursReport - pendingHours:', pendingHours)
 
   // Ensure all values are valid numbers
   const safeTotalHours = Number.isFinite(totalHours) ? totalHours : 0
   const safeApprovedHours = Number.isFinite(approvedHours) ? approvedHours : 0
+  const safeRejectedHours = Number.isFinite(rejectedHours) ? rejectedHours : 0
   const safePendingHours = Number.isFinite(pendingHours) ? pendingHours : 0
 
   if (placementsLoading || entriesLoading) {
@@ -320,7 +337,7 @@ export function MyHoursReport() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="card">
           <div className="text-center">
             <div className="text-2xl font-bold text-gray-900">{safeTotalHours.toFixed(1)}</div>
@@ -331,6 +348,12 @@ export function MyHoursReport() {
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">{safeApprovedHours.toFixed(1)}</div>
             <div className="text-sm text-gray-600">Approved Hours</div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-600">{safeRejectedHours.toFixed(1)}</div>
+            <div className="text-sm text-gray-600">Rejected Hours</div>
           </div>
         </div>
         <div className="card">
@@ -368,8 +391,29 @@ export function MyHoursReport() {
             <tbody className="bg-white divide-y divide-gray-200">
               {timesheetEntries && groupEntriesByWeek(timesheetEntries).map((week) => {
                 const weekTotalHours = week.entries.reduce((sum, entry) => sum + (typeof entry.hours === 'number' ? entry.hours : parseFloat(entry.hours) || 0), 0)
-                const hasSubmittedEntries = week.entries.some(entry => entry.status === 'PENDING_SUPERVISOR' || entry.status === 'APPROVED')
+                const hasSubmittedEntries = week.entries.some(entry => entry.status === 'PENDING_SUPERVISOR' || entry.status === 'PENDING_FACULTY' || entry.status === 'APPROVED')
+                const hasRejectedEntries = week.entries.some(entry => entry.status === 'REJECTED')
                 const allApproved = week.entries.every(entry => entry.status === 'APPROVED')
+                const allRejected = week.entries.every(entry => entry.status === 'REJECTED')
+                const allDraft = week.entries.every(entry => entry.status === 'DRAFT')
+                
+                // Determine week status
+                let weekStatus = 'Draft'
+                let statusColor = 'bg-gray-100 text-gray-800'
+                
+                if (allRejected) {
+                  weekStatus = 'Rejected'
+                  statusColor = 'bg-red-100 text-red-800'
+                } else if (allApproved) {
+                  weekStatus = 'Approved'
+                  statusColor = 'bg-green-100 text-green-800'
+                } else if (hasRejectedEntries) {
+                  weekStatus = 'Partially Rejected'
+                  statusColor = 'bg-orange-100 text-orange-800'
+                } else if (hasSubmittedEntries) {
+                  weekStatus = 'Pending'
+                  statusColor = 'bg-yellow-100 text-yellow-800'
+                }
                 
                 return (
                   <tr key={`${week.weekStart}-${week.weekEnd}`}>
@@ -383,14 +427,8 @@ export function MyHoursReport() {
                       {week.entries.length} entries
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        allApproved 
-                          ? 'bg-green-100 text-green-800' 
-                          : hasSubmittedEntries
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {allApproved ? 'Approved' : hasSubmittedEntries ? 'Pending' : 'Draft'}
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColor}`}>
+                        {weekStatus}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
